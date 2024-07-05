@@ -8,6 +8,8 @@
 #' @return The print methods have no return value, the summary methods return
 #' an object of class 'summary.CCI'.
 #' @rdname reports
+#' @seealso \code{\link{per.test}},
+#' \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #' @export
 print.CCI <- function(x, ...){
   # Print method for the CCI class

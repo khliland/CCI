@@ -7,6 +7,8 @@
 #'
 #' @return A plot of the null distribution and observed value in ggplot2 format.
 #' @importFrom ggplot2 geom_histogram ggplot
+#' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
+#' \code{\link{perm.test}}, \code{\link{QQplot}}
 #' @export
 #'
 #' @examples

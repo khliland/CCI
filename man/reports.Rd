@@ -27,3 +27,7 @@ an object of class 'summary.CCI'.
 \description{
 Print and summary methods for the CCI class
 }
+\seealso{
+\code{\link{per.test}},
+\code{\link{plot.CCI}}, \code{\link{QQplot}}
+}

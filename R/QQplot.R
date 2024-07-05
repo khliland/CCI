@@ -6,6 +6,8 @@
 #'
 #' @importFrom ggplot2 geom_qq
 #' @return A QQ-plot of the p-values in ggplot2 format.
+#' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
+#' \code{\link{plot.CCI}}, \code{\link{perm.test}}
 #' @export
 #'
 #' @examples

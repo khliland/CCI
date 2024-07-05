@@ -11,6 +11,8 @@
 #' observed value, p-values, the ML model, and the data.
 #' @importFrom stats lm rnorm
 #' @export
+#' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
+#' \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #'
 #' @examples
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
