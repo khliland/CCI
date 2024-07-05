@@ -1,0 +1,17 @@
+# Wrappere
+- XGBr, XGBbinary, XGBmulti
+- Tar seg av datakonvertering og eventuell tilpasning til formel-interface.
+
+# Data til pakken
+- Import fra andre pakker, f.eks. GCM, spesielt om vi vil vise eksempler med begge pakkene.
+- Simulere data, enten som egen funksjon, som pre-genererte data, eller "live" i eksempel.
+
+# Artikkel
+- Tuning
+- Overfitting
+- Beskrivelse av null-fordeling
+- ML-metoder
+- Empirisk vs parametrisk P-verdi
+
+# Eventuelt: Testing av funksjoner
+- Teste funksjoner som er lagt til i pakken mot forhåndslagrede verdier (perm.test)

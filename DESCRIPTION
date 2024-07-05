@@ -1,0 +1,26 @@
+Package: CCI
+Type: Package
+Title: Computational Test for Conditional Independence
+Version: 0.1.0
+Date: 2024-09-30
+Authors@R: 
+    c(person(given = "Christian B. H.",
+             family = "Thorjussen",
+             role = c("aut", "cre"),
+             email = "christianbern@gmail.com",
+             comment = c(ORCID = "0009-0005-5006-6491")),
+      person(given = "Kristian Hovde",
+             family = "Liland",
+             role = c("aut"),
+             email = "kristian.liland@nmbu.no",
+             comment = c(ORCID = "0000-0001-6468-9423")))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+Imports: ggplot2
+License: GPL (>= 2)
+URL: https://github.com/khliland/CCI
+BugReports: https://github.com/khliland/CCI/issues
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
