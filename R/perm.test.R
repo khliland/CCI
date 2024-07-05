@@ -9,12 +9,13 @@
 #'
 #' @return An object of class 'CCI' containing a null distribution,
 #' observed value, p-values, the ML model, and the data.
-#' @importFrom stats lm rnorm
+#' @importFrom stats lm rnorm predict
 #' @export
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #'
 #' @examples
+#' set.seed(123)
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 #' perm.test(y ~ x1 + x2, data = dat)
 perm.test <- function(formula, data, MLfunc = lm, nperm = 1000, dag_n = 1, ...) {
@@ -23,8 +24,18 @@ perm.test <- function(formula, data, MLfunc = lm, nperm = 1000, dag_n = 1, ...) 
   # Create null distribution using MLfunc
   # Calculate empirical p-value
   # Calculate parametric p-value(s)
+
+  # Example of using the MLfunc parameter
+  preds <- predict(MLfunc(formula = formula, data = data, ...))
+
   # Gather everything in "obj"
-  obj <- "Not implemented yet!"
+  obj <- list(status  = "Not implemented yet!",
+              MLfunc  = MLfunc,
+              MLname  = deparse(substitute(MLfunc)),
+              data    = data,
+              formula = formula,
+              dag_n   = dag_n,
+              predictions = preds)
   class(obj) <- c("CCI", "list")
   obj
 }

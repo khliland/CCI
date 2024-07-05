@@ -27,6 +27,7 @@ observed value, p-values, the ML model, and the data.
 Permutation test for conditional independence
 }
 \examples{
+set.seed(123)
 dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 perm.test(y ~ x1 + x2, data = dat)
 }

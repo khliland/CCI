@@ -28,6 +28,6 @@ an object of class 'summary.CCI'.
 Print and summary methods for the CCI class
 }
 \seealso{
-\code{\link{per.test}},
+\code{\link{perm.test}},
 \code{\link{plot.CCI}}, \code{\link{QQplot}}
 }
