@@ -34,13 +34,13 @@ perm.test <- function(formula = NA, data, MLfunc = lm, nperm = 500, dag = NA, da
   if (class(dag) == 'dagitty' & is.na(formula)) {
     ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
     names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
-    formula <- paste(ci_statement$CI$Y, ", ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
+    formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
     
   } else if (!is.na(formula)) {
       formula = formula
   }
+  check_formula(formula)
   
-    
   # Check if formula is a DAGitty object
   # Take appropriate action
   # Create null distribution using MLfunc
