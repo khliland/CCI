@@ -1,7 +1,7 @@
 # Testing script.
 # This script is for running code bits and chunks, feel free to overwrite as you see fit. 
 library(dagitty)
-
+library(xgboost)
 dag <- dagitty('dag {
 bb="-3.56,-3.795,5.103,4.955"
 j [pos="-2.168,-1.552"]

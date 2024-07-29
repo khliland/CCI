@@ -1,3 +1,4 @@
+# Function to check tohe logic if ci statement
 check_formula <- function(formula_str) {
   if (grepl("\\|", formula_str)) {
     parts <- strsplit(formula_str, "\\|")[[1]]
@@ -12,4 +13,14 @@ check_formula <- function(formula_str) {
   } else {
     warning("The formula does not contain the '|' symbol.")
   }
+}
+
+# Function to clean formula string
+clean_formula <- function(formula_str) {
+  formula_str <- gsub("\\s*~\\s*", "~", formula_str)
+  formula_str <- gsub("\\s*\\|\\s*", "|", formula_str)
+  formula_str <- gsub("\\s*,\\s*", ",", formula_str)
+  formula_str <- gsub("\\s+", " ", formula_str)
+  formula_str <- trimws(formula_str)
+  return(formula_str)
 }

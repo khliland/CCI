@@ -18,7 +18,17 @@
 #' set.seed(123)
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 #' perm.test(y ~ x1 | x2, data = dat)
-perm.test <- function(formula = NA, data, MLfunc = lm, nperm = 500, dag = NA, dag_n = 1, ...) {
+perm.test <- function(formula = NA, 
+                      data, 
+                      MLfunc = lm, 
+                      p = 0.8, 
+                      nperm = 500, 
+                      dag = NA, 
+                      dag_n = 1, 
+                      data_type = "continous", 
+                      ...) {
+  # MLfunc either lm, xgboost, cvxgboost or random forest
+  
   if (is.null(data)) {
     stop("Please provide some data")
   }
@@ -33,23 +43,28 @@ perm.test <- function(formula = NA, data, MLfunc = lm, nperm = 500, dag = NA, da
   
   if (class(dag) == 'dagitty' & is.na(formula)) {
     ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
-    names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
+    names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
     formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
     
   } else if (!is.na(formula)) {
-      formula = formula
+      formula = gsub("\\s+", " ", formula)
   }
+  formula <- clean_formula(formula)
   check_formula(formula)
-  
-  # Check if formula is a DAGitty object
-  # Take appropriate action
+
+  parts <- strsplit(formula, "\\|")[[1]]
+  parts2 <- strsplit(parts, "\\~")[[1]]
+  dependent1 <- parts2[1]
+  dependent2 <- parts2[2]
+  conditioning <- c(parts[2])
+
   # Create null distribution using MLfunc
+  preds <- predict(MLfunc(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...))
+  
   # Calculate empirical p-value
   # Calculate parametric p-value(s)
 
-  # Example of using the MLfunc parameter
-  preds <- predict(MLfunc(formula = formula, data = data, ...))
-
+  
   # Gather everything in "obj"
   obj <- list(status  = "Not implemented yet!",
               MLfunc  = MLfunc,
