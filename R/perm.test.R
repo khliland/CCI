@@ -20,9 +20,14 @@
 #' perm.test(y ~ x1 | x2, data = data)
 #' formula <- "y ~ x1 | x2, x3, x4"
 
+if (!require(dplyr)) install.packages("dplyr")
+if (!require(caret)) install.packages("caret")
+if (!require(nnet)) install.packages("nnet")
+if (!require(xgboost)) install.packages("xgboost")
 library(dplyr)
-library(xgboost)
 library(caret)
+library(nnet)
+library(xgboost)
 perm.test <- function(formula = NA, 
                       data, 
                       p = 0.825, 
@@ -81,8 +86,8 @@ perm.test <- function(formula = NA,
   obj
 }
 
-# NullFunc() is the null distribution generator function
-Nullfunc <- function(Y, X, Z, data, data_type = "continuous", method = "lm", nperm = 500, p = 0.825, N = nrow(data), poly = TRUE, degree = 3, ...) {
+# NullFunc() is the null distribution generator function, it can use different models from glm, xgboost and random forest for regression and classification
+Nullfunc <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost", nperm = 500, p = 0.825, N = nrow(data), poly = TRUE, degree = 3, nrounds = 120, lm_family ,...) {
     # Permutation of the "other" variable
     data <- data %>% mutate(!!X := sample(!!sym(X)))    
     
@@ -90,7 +95,7 @@ Nullfunc <- function(Y, X, Z, data, data_type = "continuous", method = "lm", npe
     if (poly == TRUE & degree < 1) {
       stop("Degree of 0 or less is not allowed")
     }
-    # Setting 'poly == true' creates nth degree terms of conditioned variables
+    # Setting 'poly == true' creates nth degree terms of conditional variables
     if (poly == TRUE & degree > 1){
       transformations <- lapply(2:degree, function(d) {
         eval(parse(text = paste0("~ .^", d)))
@@ -125,43 +130,86 @@ Nullfunc <- function(Y, X, Z, data, data_type = "continuous", method = "lm", npe
   # Initialize a matrix for storing of results
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
-  # If statement of all the ML methods one can use to to computational test 
+  # If statement of all the ML methods one can use to do computational test 
   for (iteration in 1:nperm) {
     if (method == "lm" & data_type == "continuous") {
-      model <- glm(formula = formula, data = data, family = gaussian(link = "identity"), subset = train_indices[iteration,])
+      model <- glm(formula = formula, data = data, family = lm_family, subset = train_indices[iteration,], ...)
       testing <- data[-train_indices[iteration,],]
       pred <- predict.glm(model, newdata = testing)
       actual <- testing[[all.vars(formula)[1]]]  
       null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric
-      
     } 
     else if (method == "lm" & data_type == "binary") {
-      model <- glm(formula, data = data, family = binomial(link = "logit"), subset = train_indices[iteration,])
+      model <- glm(formula, data = data, family = binomial(link = "logit"), subset = train_indices[iteration,], ...)
       testing <- data[-train_indices[iteration,],]
       pred <- predict.glm(model, newdata = testing, type = "response")
       actual <- testing[[all.vars(formula)[1]]]
-      
       # Convert probabilities to binary class predictions
       pred_class <- ifelse(pred > 0.5, 1, 0)
-      
       # Calculate Kappa score
       cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
       null[iteration] <- cm$overall["Kappa"] # Storing Kappa score as performance metric
-      
     } 
     else if (method == "lm" & data_type == "multinomial") {
-      model <- nnet::multinom(formula, data = data, subset = train_indices[iteration,])
+      model <- nnet::multinom(formula, data = data, subset = train_indices[iteration,], ...)
       testing <- data[-train_indices[iteration,],]
       pred <- predict(model, newdata = testing)
       actual <- testing[[all.vars(formula)[1]]]
-      
       # Calculate Kappa score
       cm <- caret::confusionMatrix(factor(pred), factor(actual))
       null[iteration] <- cm$overall["Kappa"] # Storing Kappa score as performance metric
-    } else if (method == "xgboost" & data_type == "continuous") {
-      
+    } else if (method == "xgboost" & data_type == "continuous") { # xgb.train does not accept formula, and one has to create xb.matrices
+      # Using formula to extract the names of the variables
+      independent <- all.vars(formula)[-1]
+      dependent <- update(formula, . ~ .)[[2]]
+      # Defining training and testing data for the iteration
+      training <- data[train_indices[iteration,],]
+      testing <- data[-train_indices[iteration,],]
+      # Creating xgb.Dmatrix, depending on if there are factor variables in the data 
+      if (any(sapply(training, is.factor))) {
+        train_features <- model.matrix(~ . - 1, data = training[independent])
+        train_label <- training[[dependent]]
+        
+        test_features <- model.matrix(~ . - 1, data = testing[independent])
+        test_label <- testing[[dependent]]
+        
+        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
+        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
+      } else {
+        train_features <- training[independent]
+        train_label <- training[[dependent]]
+        
+        test_features <- testing[independent]
+        test_label <- testing[[dependent]]
+        
+        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
+        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
+      }
+      params <- list(...)
+        
+      model <- xgboost::xgb.train(data = train_matrix,
+                            objective = "reg:squarederror",
+                            params = params,
+                            nrounds = nrounds,
+                            verbose = 0)
+      pred <- predict(model, newdata = test_matrix)
+      actual <- test_label
+      null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric
     }
+    # Calculate the percentage finished
+    percentage <- (iteration / nperm) * 100
+    # Print the progress
+    cat(sprintf("Creating null distribution: %d%% complete\r", round(percentage)))
+    flush.console()
   }
+  # Naming the result in the null matrix
+  if (data_type == "continuous") {
+    colnames(null) <- "RMSE"  
+  }
+  else {
+    colnames(null) <- "Kappa score"
+  } 
+  
   
   return(null)
 }
