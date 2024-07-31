@@ -16,7 +16,7 @@ Authors@R:
              comment = c(ORCID = "0000-0001-6468-9423")))
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-Imports: ggplot2
+Imports: ggplot2, dplyr, caret, nnet, xgboost, ranger, stats
 License: GPL (>= 2)
 URL: https://github.com/khliland/CCI
 BugReports: https://github.com/khliland/CCI/issues
