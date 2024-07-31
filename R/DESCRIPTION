@@ -1,0 +1,15 @@
+Package: CCI
+Type: Package
+Title: Computational Conditional Independence Test
+Version: 0.1.0
+Author: Christian Thorjussen
+Maintainer: Your Name <christianbern@gmail.com>
+Description: Your package description.
+License: MIT
+Imports:
+    dplyr,
+    caret,
+    nnet,
+    xgboost,
+    ranger,
+    stats
