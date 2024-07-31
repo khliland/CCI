@@ -61,7 +61,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   
   # If statement of all the ML methods one can use to do computational test 
   for (iteration in 1:nperm) {
-    if (method == "lm" & data_type == "continuous") {
+    if (method == "lm" & data_type == "continuous") { # Parametric linear model with continous outcome 
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       model <- glm(formula = formula, data = resampled_data, family = lm_family, subset = train_indices[iteration,], ...)
       testing <- data[-train_indices[iteration,],]
@@ -69,7 +69,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       actual <- testing[[all.vars(formula)[1]]]  
       null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric
     } 
-    else if (method == "lm" & data_type == "binary") {
+    else if (method == "lm" & data_type == "binary") { # Parametric model (logistic) with binary outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       model <- glm(formula, data = resampled_data, family = binomial(link = "logit"), subset = train_indices[iteration,], ...)
       testing <- data[-train_indices[iteration,],]
@@ -81,7 +81,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
       null[iteration] <- cm$overall["Kappa"] # Storing Kappa score as performance metric
     } 
-    else if (method == "lm" & data_type == "multinomial") {
+    else if (method == "lm" & data_type == "categorical") { # Parametric model (logistic) with categorical outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       model <- nnet::multinom(formula, data = resampled_data, subset = train_indices[iteration,], ...)
       testing <- data[-train_indices[iteration,],]
@@ -90,7 +90,8 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       # Calculate Kappa score
       cm <- caret::confusionMatrix(factor(pred), factor(actual))
       null[iteration] <- cm$overall["Kappa"] # Storing Kappa score as performance metric
-    } else if (method == "xgboost" & data_type == "continuous") { # xgb.train does not accept formula, and one has to create xb.matrices
+    } else if (method == "xgboost" & data_type == "continuous") { # XGBoost with continous outcome
+      
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       # Using formula to extract the names of the variables
       independent <- all.vars(formula)[-1]
@@ -98,6 +99,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       # Defining training and testing data for the iteration
       training <- resampled_data[train_indices[iteration,],]
       testing <- resampled_data[-train_indices[iteration,],]
+      # xgb.train does not accept formula, and one has to create xb.matrices
       # Creating xgb.Dmatrix, depending on if there are factor variables in the data 
       if (any(sapply(training, is.factor))) {
         train_features <- model.matrix(~ . - 1, data = training[independent])
@@ -128,7 +130,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       pred <- predict(model, newdata = test_matrix)
       actual <- test_label
       null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric
-    } else if (method == "xgboost" & data_type == "binary") { 
+    } else if (method == "xgboost" & data_type == "binary") { # XGBoost with binary outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       
       independent <- all.vars(formula)[-1]
@@ -168,7 +170,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       pred_class <- ifelse(predictions > 0.5, 1, 0)
       conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
       null[iteration] <- conf_matrix$overall[2]
-    } else if (method == "xgboost" & data_type == "categorical") { 
+    } else if (method == "xgboost" & data_type == "categorical") { # XGBoost with categorical outcome
       if (is.null(num_class)) {
         stop("num_class needs to be set.")
       }
@@ -213,12 +215,30 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
       pred_class <- max.col(pred) - 1
       conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
       null[iteration] <- conf_matrix$overall[2]
-    } else if (method == "RandomForest" & data_type == "continuous") {
-      model <- ranger(formula, data = resampled_data[train_indices[iteration,],], num.trees = nrounds, ...)
+    } else if (method == "RandomForest" & data_type == "continuous") { # Random Forest with continuous outcome
+      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
+      model <- ranger::ranger(formula, data = resampled_data[train_indices[iteration,],], num.trees = nrounds, ...)
       testing <- resampled_data[-train_indices[iteration,],]
       pred <- predict(model, data = testing)$predictions
       actual <- testing[[all.vars(formula)[1]]]
-      null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric 
+      null[iteration] <- sqrt(mean((pred - actual)^2))  
+    } else if (method == "RandomForest" & data_type %in% c("binary", "categorical")) { # Random Forest with binary or categorical outcome
+      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
+      model <- ranger(formula, data = resampled_data[train_indices[iteration,],], probability = TRUE, num.trees = nrounds, ...)
+      testing <- resampled_data[-train_indices[iteration,],]
+      predictions <- predict(model, data = testing)$predictions
+      actual <- testing[[all.vars(formula)[1]]]
+      if (data_type == "binary") {
+        pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
+        # Calculate Kappa score
+        cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
+        null[iteration] <- cm$overall["Kappa"]   
+      } else {
+        pred_class <- apply(predictions, 1, which.max)
+        # Calculate Kappa score
+        cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
+        null[iteration] <- cm$overall["Kappa"]  
+      } 
     } else {
       stop("Method choosen is not supported by the null.gen() function")
     }
@@ -242,19 +262,4 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   return(null_object)
 }
 
-# Function to check the logic of statement
-check_formula <- function(formula_str) {
-  if (grepl("\\|", formula_str)) {
-    parts <- strsplit(formula_str, "\\|")[[1]]
-    if (length(parts) < 2 || nchar(trimws(parts[2])) == 0) {
-      warning("The independence statement is unconditional.")
-    } else {
-      variables_after_pipe <- trimws(parts[2])
-      if (variables_after_pipe == "") {
-        warning("The independence statement is unconditional.")
-      }
-    }
-  } else {
-    warning("The formula does not contain the '|' symbol.")
-  }
 }
