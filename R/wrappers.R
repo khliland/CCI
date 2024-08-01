@@ -54,19 +54,25 @@ multinom_wrapper <- function(formula, data, train_indices, test_indices, iterati
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for training data
 #' @param iteration Current iteration index
-#' @param params The list of parameters
 #' @param nrounds Number of boosting rounds
 #' @param ... Additional arguments passed to xgb.train
 #' 
 #' @return Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
 #' @export
-xgboost_wrapper <- function(formula, data, train_indices, test_indices, iteration, params, nrounds, ...) {
+xgboost_wrapper <- function(formula, 
+                            data, 
+                            train_indices, 
+                            test_indices, 
+                            iteration, 
+                            nrounds, 
+                            objective = c("reg:squarederror", "binary:logistic", "multi:softprob"), 
+                            ...) {
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
   training <- data[train_indices[iteration,],]
   testing <- data[test_indices[iteration,],]
 
-  if (any(sapply(training, is.factor))) {
+  if (any(sapply(training, is.factor))) { # Only check if training data contains factor variables, assuming that testing contains the same
     train_features <- model.matrix(~ . - 1, data = training[independent])
     train_label <- training[[dependent]]
     
@@ -85,12 +91,18 @@ xgboost_wrapper <- function(formula, data, train_indices, test_indices, iteratio
     train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
     test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
   }
-  
   model <- xgboost::xgb.train(data = train_matrix,
-                              objective = "reg:squarederror",
-                              params = params,
+                              objective = objective,
                               nrounds = nrounds,
-                              verbose = 0)
+                              verbose = 0,
+                              ...)
   pred <- predict(model, newdata = test_matrix)
+  if (objective == "reg:squarederror") 
+  {
+    
+  } else if (objective == "binary:logistic")
+  pred_class <- ifelse(predictions > 0.5, 1, 0)
+  conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
+  metric <- conf_matrix$overall[2]
 }
 

@@ -13,7 +13,7 @@
 #' @param degree Degree of polynomial terms
 #' @param nrounds Number of rounds (trees) for xgboost and ranger
 #' @param lm_family Family for glm
-#' @param ... Additional arguments to pass to the modeling function
+#' @param ... Additional arguments to pass to the modeling wrapper function
 #'
 #' @return A list containing the null distribution and the model
 #' @export
@@ -71,7 +71,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
     } 
     else if (method == "lm" & data_type == "binary") { # Parametric model (logistic) with binary outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      null[iteration] <- glm_wrapper(formula, resampled_data, train_indices, iteration, lm_family, ...)
+      null[iteration] <- glm_wrapper(formula, resampled_data, train_indices, test_indices, iteration, lm_family, ...)
     } 
     else if (method == "lm" & data_type == "categorical") { # Parametric model (logistic) with categorical outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
@@ -79,7 +79,7 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
     } else if (method == "xgboost" & data_type == "continuous") { # XGBoost with continous outcome
       
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      null[iteration] <- 
+      null[iteration] <- xgboost_wrapper(formula, resampled_data, train_indices, test_indices, iteration, nrounds, ...)
         
     } else if (method == "xgboost" & data_type == "binary") { # XGBoost with binary outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
@@ -213,4 +213,4 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   return(null_object)
 }
 
-}
+
