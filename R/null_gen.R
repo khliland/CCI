@@ -24,6 +24,9 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   if (poly == TRUE & degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
+  if (method == "xgboost" & data_type == "categorical" & !exists("num_class")) {
+    stop("num_class needs to be set.")
+  }
   # Setting 'poly == true' creates nth degree terms of conditional variables
   if (poly == TRUE & degree > 1){
     transformations <- lapply(2:degree, function(d) {
@@ -65,115 +68,27 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   
   # If statement of all the ML methods one can use to do computational test 
   for (iteration in 1:nperm) {
-    if (method == "lm" & data_type == "continuous") { # Parametric linear model with continous outcome 
+    if (method == "lm" & data_type == "continuous" | data_type == "binary") { # Parametric linear model  
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       null[iteration] <- glm_wrapper(formula, resampled_data, train_indices, test_indices, iteration, lm_family,  ...)
-    } 
-    else if (method == "lm" & data_type == "binary") { # Parametric model (logistic) with binary outcome
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      null[iteration] <- glm_wrapper(formula, resampled_data, train_indices, test_indices, iteration, lm_family, ...)
     } 
     else if (method == "lm" & data_type == "categorical") { # Parametric model (logistic) with categorical outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       null[iteration] <-  multinom_wrapper(formula, resampled_data, train_indices, test_indices, iteration, ...)
-    } else if (method == "xgboost" & data_type == "continuous") { # XGBoost with continous outcome
-      
+    } 
+    else if (method == "xgboost") {
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       null[iteration] <- xgboost_wrapper(formula, resampled_data, train_indices, test_indices, iteration, nrounds, ...)
-        
-    } else if (method == "xgboost" & data_type == "binary") { # XGBoost with binary outcome
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      
-      independent <- all.vars(formula)[-1]
-      dependent <- update(formula, . ~ .)[[2]]
-      
-      training <- resampled_data[train_indices[iteration,],]
-      testing <- resampled_data[-train_indices[iteration,],]
-      
-      if (any(sapply(training, is.factor))) {
-        train_features <- model.matrix(~ . - 1, data = training[independent])
-        train_label <- training[[dependent]]
-        
-        test_features <- model.matrix(~ . - 1, data = testing[independent])
-        test_label <- testing[[dependent]]
-        
-        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-      } else {
-        train_features <- training[independent]
-        train_label <- training[[dependent]]
-        
-        test_features <- testing[independent]
-        test_label <- testing[[dependent]]
-        
-        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-      }
-      params <- list(...)
-      
-      model <- xgboost::xgb.train(data = train_matrix,
-                                  objective = "binary:logistic",
-                                  params = params,
-                                  nrounds = nrounds,
-                                  verbose = 0)
-      
-      predictions <- predict(model, test_matrix)
-      pred_class <- ifelse(predictions > 0.5, 1, 0)
-      conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
-      null[iteration] <- conf_matrix$overall[2]
-    } else if (method == "xgboost" & data_type == "categorical") { # XGBoost with categorical outcome
-      if (is.null(num_class)) {
-        stop("num_class needs to be set.")
-      }
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      
-      independent <- all.vars(formula)[-1]
-      dependent <- update(formula, . ~ .)[[2]]
-      
-      training <- resampled_data[train_indices[iteration,],]
-      testing <- resampled_data[-train_indices[iteration,],]
-      
-      if (any(sapply(training, is.factor))) {
-        train_features <- model.matrix(~ . - 1, data = training[independent])
-        train_label <- training[[dependent]]
-        
-        test_features <- model.matrix(~ . - 1, data = testing[independent])
-        test_label <- testing[[dependent]]
-        
-        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-      } else {
-        train_features <- training[independent]
-        train_label <- training[[dependent]]
-        
-        test_features <- testing[independent]
-        test_label <- testing[[dependent]]
-        
-        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-      }
-      params <- list(...)
-      
-      model <- xgboost::xgb.train(data = train_matrix,
-                                  objective = "multi:softprob",
-                                  params = params,
-                                  nrounds = nrounds,
-                                  num_class = num_class,
-                                  verbose = 0)
-      
-      predictions <- predict(model, test_matrix)
-      pred <- matrix(predictions, ncol=num_class, byrow=TRUE)
-      pred_class <- max.col(pred) - 1
-      conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
-      null[iteration] <- conf_matrix$overall[2]
-    } else if (method == "RandomForest" & data_type == "continuous") { # Random Forest with continuous outcome
+    } 
+    else if (method == "RandomForest" & data_type == "continuous") { # Random Forest with continuous outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       model <- ranger::ranger(formula, data = resampled_data[train_indices[iteration,],], num.trees = nrounds, ...)
       testing <- resampled_data[-train_indices[iteration,],]
       pred <- predict(model, data = testing)$predictions
       actual <- testing[[all.vars(formula)[1]]]
       null[iteration] <- sqrt(mean((pred - actual)^2))  
-    } else if (method == "RandomForest" & data_type %in% c("binary", "categorical")) { # Random Forest with binary or categorical outcome
+    } 
+    else if (method == "RandomForest" & data_type %in% c("binary", "categorical")) { # Random Forest with binary or categorical outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       model <- ranger(formula, data = resampled_data[train_indices[iteration,],], probability = TRUE, num.trees = nrounds, ...)
       testing <- resampled_data[-train_indices[iteration,],]

@@ -97,12 +97,55 @@ xgboost_wrapper <- function(formula,
                               verbose = 0,
                               ...)
   pred <- predict(model, newdata = test_matrix)
-  if (objective == "reg:squarederror") 
-  {
-    
-  } else if (objective == "binary:logistic")
-  pred_class <- ifelse(predictions > 0.5, 1, 0)
-  conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
-  metric <- conf_matrix$overall[2]
+  if (objective == "reg:squarederror") {
+    actual <- testing[[dependent]]
+    metric <- sqrt(mean((pred - actual)^2))
+  } else if (objective == "binary:logistic") {
+    pred_class <- ifelse(pred > 0.5, 1, 0)
+    conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
+    metric <- conf_matrix$overall[2]
+  } else if (objective == "multi:softprob") {
+    pred <- matrix(pred, ncol=num_class, byrow=TRUE)
+    pred_class <- max.col(pred) - 1
+    conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
+    metric <- conf_matrix$overall[2]
+  } else {
+    stop("Objective function for XGBoost is not supported by perm.test()")
+  }
+  return(metric)
 }
 
+# Wrapper function for Ranger model training and evaluation
+#' 
+#' @param formula Model formula
+#' @param data Data frame
+#' @param train_indices Indices for training data
+#' @param test_indices Indices for training data
+#' @param iteration Current iteration index
+#' @param num.trees Number of boosting rounds
+#' @param probability Grow a probability forest for binary or categorical outcomes
+#' @param ... Additional arguments passed to ranger
+#' 
+#' @return Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
+#' @export
+ranger_wrapper <- function(formula, data, train_indices, test_indices, iteration, num.trees, probability = FALSE, ...) {
+  # Train the Ranger model
+  model <- ranger(formula, data = data[train_indices[iteration,],], num.trees = num.trees, probability = probability, ...)
+  
+  # Test the model
+  testing <- data[-train_indices[iteration,],]
+  predictions <- predict(model, data = testing)$predictions
+  actual <- testing[[all.vars(formula)[1]]]
+  
+  if (probability) {
+    # For classification, calculate Kappa score
+    pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
+    cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
+    metric <- cm$overall["Kappa"]
+  } else {
+    # For regression, calculate RMSE
+    metric <- sqrt(mean((predictions - actual)^2))
+  }
+  
+  return(metric)
+}
