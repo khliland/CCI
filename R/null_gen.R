@@ -47,13 +47,17 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   
   # Create nperm number of Monte Carlo Cross Validation sets
   train_indices <- matrix(NA, nrow = nperm, ncol = round(p * N))
+  test_indices <- matrix(NA, nrow = nperm, ncol = round((1-p) * N))
+  
   for (i in 1:nperm) {
     if (data_type == "continuous") {
       inTraining <- sample(1:nrow(data), size = floor(p * N), replace = F)
       train_indices[i, ]  <- inTraining
+      test_indices[i, ] <. -inTraining
     } else if (data_type %in% c('binary', 'categorical')) {
       inTraining <- caret::createDataPartition(y = factor(data[[Y]]), p = p, list = FALSE)
       train_indices[i, ]  <- inTraining
+      test_indices[i, ] <. -inTraining
     }
   }
   # Initialize a matrix for storing of results
@@ -63,73 +67,20 @@ null.gen <- function(Y, X, Z, data, data_type = "continuous", method = "xgboost"
   for (iteration in 1:nperm) {
     if (method == "lm" & data_type == "continuous") { # Parametric linear model with continous outcome 
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      model <- glm(formula = formula, data = resampled_data, family = lm_family, subset = train_indices[iteration,], ...)
-      testing <- data[-train_indices[iteration,],]
-      pred <- predict.glm(model, newdata = testing)
-      actual <- testing[[all.vars(formula)[1]]]  
-      null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric
+      null[iteration] <- glm_wrapper(formula, resampled_data, train_indices, test_indices, iteration, lm_family,  ...)
     } 
     else if (method == "lm" & data_type == "binary") { # Parametric model (logistic) with binary outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      model <- glm(formula, data = resampled_data, family = binomial(link = "logit"), subset = train_indices[iteration,], ...)
-      testing <- data[-train_indices[iteration,],]
-      pred <- predict.glm(model, newdata = testing, type = "response")
-      actual <- testing[[all.vars(formula)[1]]]
-      # Convert probabilities to binary class predictions
-      pred_class <- ifelse(pred > 0.5, 1, 0)
-      # Calculate Kappa score
-      cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
-      null[iteration] <- cm$overall["Kappa"] # Storing Kappa score as performance metric
+      null[iteration] <- glm_wrapper(formula, resampled_data, train_indices, iteration, lm_family, ...)
     } 
     else if (method == "lm" & data_type == "categorical") { # Parametric model (logistic) with categorical outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      model <- nnet::multinom(formula, data = resampled_data, subset = train_indices[iteration,], ...)
-      testing <- data[-train_indices[iteration,],]
-      pred <- predict(model, newdata = testing)
-      actual <- testing[[all.vars(formula)[1]]]
-      # Calculate Kappa score
-      cm <- caret::confusionMatrix(factor(pred), factor(actual))
-      null[iteration] <- cm$overall["Kappa"] # Storing Kappa score as performance metric
+      null[iteration] <-  multinom_wrapper(formula, resampled_data, train_indices, test_indices, iteration, ...)
     } else if (method == "xgboost" & data_type == "continuous") { # XGBoost with continous outcome
       
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
-      # Using formula to extract the names of the variables
-      independent <- all.vars(formula)[-1]
-      dependent <- update(formula, . ~ .)[[2]]
-      # Defining training and testing data for the iteration
-      training <- resampled_data[train_indices[iteration,],]
-      testing <- resampled_data[-train_indices[iteration,],]
-      # xgb.train does not accept formula, and one has to create xb.matrices
-      # Creating xgb.Dmatrix, depending on if there are factor variables in the data 
-      if (any(sapply(training, is.factor))) {
-        train_features <- model.matrix(~ . - 1, data = training[independent])
-        train_label <- training[[dependent]]
+      null[iteration] <- 
         
-        test_features <- model.matrix(~ . - 1, data = testing[independent])
-        test_label <- testing[[dependent]]
-        
-        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-      } else {
-        train_features <- training[independent]
-        train_label <- training[[dependent]]
-        
-        test_features <- testing[independent]
-        test_label <- testing[[dependent]]
-        
-        train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-        test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-      }
-      params <- list(...)
-      
-      model <- xgboost::xgb.train(data = train_matrix,
-                                  objective = "reg:squarederror",
-                                  params = params,
-                                  nrounds = nrounds,
-                                  verbose = 0)
-      pred <- predict(model, newdata = test_matrix)
-      actual <- test_label
-      null[iteration] <- sqrt(mean((pred - actual)^2)) # Storing RMSE as performance metric
     } else if (method == "xgboost" & data_type == "binary") { # XGBoost with binary outcome
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       

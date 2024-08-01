@@ -25,7 +25,7 @@ perm.test <- function(formula = NA,
                       nperm = 500, 
                       dag = NA, 
                       dag_n = 1, 
-                      data_type = "continuous",
+                      data_type = c("continuous", "binary", "categorical"),
                       method = NA,
                       ...) {
   
