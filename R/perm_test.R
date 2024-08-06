@@ -25,7 +25,7 @@ perm.test <- function(formula = NA,
                       nperm = 500, 
                       dag = NA, 
                       dag_n = 1, 
-                      data_type = c("continuous", "binary", "categorical"),
+                      data_type = "continous",
                       method = NA,
                       ...) {
   
@@ -59,8 +59,8 @@ perm.test <- function(formula = NA,
   dependent2 <- parts2[2]
   conditioning <- unlist(strsplit(parts[2], split = ","))
   
-  # Create null distribution using Nullfunc
-  preds <- null.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...)
+  # Create null distribution using null.gen()
+  null_dist <- null.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...)
   
   # Calculate empirical p-value
   # Calculate parametric p-value(s)

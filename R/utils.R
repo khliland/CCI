@@ -34,3 +34,32 @@ clean_formula <- function(formula_str) {
   formula_str <- trimws(formula_str)
   return(formula_str)
 }
+
+#' P-value calculation based on null distribution and test statistic
+#'
+#' @param formula_str Formula string
+#'
+#' @return P-value
+#' @export
+
+get_pvalues <- function(dist, metric, type = c("Empirical", "Parametric")) {
+  dist <- as.numeric(dist)
+  metric <- as.numeric(metric)
+  null_mean <- mean(dist)
+  null_sd <- sd(dist)
+  
+  
+  p_value1 <- (sum(NullDist1 <= mean_test1_metric) + 1) / (length(NullDist1) + 1)
+  
+  p_value2 <- if (objective %in% 'reg:squarederror') {
+    (sum(NullDist2 <= mean_test2_metric) + 1) / (length(NullDist2) + 1)
+  } else {
+    (sum(NullDist2 >= mean_test2_metric) + 1) / (length(NullDist2) + 1)
+  }
+  means <- (p_value1 + p_value2)/2
+  
+  result <- c(p_value1, p_value2, means)
+  names(result) <- c('p_value1', 'p_value2', 'mean')
+  
+  return(result)
+}
