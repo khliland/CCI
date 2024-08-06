@@ -48,9 +48,6 @@ get_pvalues <- function(dist, metric, type = c("Empirical", "Parametric")) {
   null_mean <- mean(dist)
   null_sd <- sd(dist)
   
-  
-  p_value1 <- (sum(NullDist1 <= mean_test1_metric) + 1) / (length(NullDist1) + 1)
-  
   p_value2 <- if (objective %in% 'reg:squarederror') {
     (sum(NullDist2 <= mean_test2_metric) + 1) / (length(NullDist2) + 1)
   } else {
@@ -62,4 +59,21 @@ get_pvalues <- function(dist, metric, type = c("Empirical", "Parametric")) {
   names(result) <- c('p_value1', 'p_value2', 'mean')
   
   return(result)
+}
+
+#' Calculation of log loss for categorical outcome
+#'
+#' @param actual The observed categorical (factor) outcome variable.
+#' @param predicted The predicted probabilities for each category.
+#' @param all_levels A vector of all possible levels (categories) of the outcome variable. 
+#' @return Log loss of classification model
+#' @export
+
+multi_class_log_loss <- function(actual, predicted, all_levels) {
+  # Ensure actual is a factor
+  actual <- factor(actual, levels = all_levels)
+  actual_matrix <- model.matrix(~ actual - 1)
+  predicted <- pmax(pmin(predicted, 1 - eps), eps)
+  log_loss <- -sum(actual_matrix * log(predicted)) / nrow(predicted)
+  return(log_loss)
 }
