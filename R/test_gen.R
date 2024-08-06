@@ -1,4 +1,4 @@
-#' Generate null distribution using permutation
+#' Generate the test statistic or null distribution using permutation
 #'
 #' @param Y Dependent variable
 #' @param X Independent variable to be permuted
@@ -6,7 +6,7 @@
 #' @param data Data frame
 #' @param data_type Type of data: "continuous", "binary", or "multinomial"
 #' @param method Method for modeling: "lm", "xgboost", "rf"
-#' @param nperm Number of permutations
+#' @param nperm Number of generated samples
 #' @param p Proportion of data used for training
 #' @param N Number of observations
 #' @param poly Logical, whether to include polynomial terms
@@ -14,16 +14,18 @@
 #' @param nrounds Number of rounds (trees) for xgboost and ranger
 #' @param lm_family Family for glm
 #' @param objective Objective function for xgboost
+#' @param probability Logical, whether the ranger_wrapper should do classification
+#' @param permutation Logical, whether the perform permutation to generat a null distribution
 #' @importFrom stats glm predict update as.formula
 #' @importFrom caret createDataPartition confusionMatrix
 #' @importFrom dplyr mutate across all_of sym
 #' @importFrom nnet multinom
 #' @importFrom xgboost xgb.train xgb.DMatrix
 #' @importFrom ranger ranger
-#' @return A list containing the null distribution and the model
+#' @return A list containing the test distribution 
 #' @export
 
-null.gen <- function(Y, 
+test.gen <- function(Y, 
                      X, 
                      Z, 
                      data, 
@@ -38,6 +40,7 @@ null.gen <- function(Y,
                      lm_family,
                      objective = "reg:squarederror",
                      probability = FALSE,
+                     permutation = FALSE,
                      ...) {
   
   # Create formula for the prediction 
@@ -47,7 +50,6 @@ null.gen <- function(Y,
   if (method %in% "xgboost" & data_type %in% "categorical" & !exists("num_class")) {
     stop("num_class needs to be set.")
   }
-  
   
   # Setting 'poly == true' creates nth degree terms of conditional variables
   if (poly == TRUE & degree > 1){
@@ -69,13 +71,13 @@ null.gen <- function(Y,
     formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = "+")))
   }
   
-  # Initialize a matrix for storing of results
+  # Initialize a matrix for storing results
   null <- matrix(NA, nrow = nperm, ncol = 1)
   
   # If statement of all the ML methods one can use to do computational test 
   for (iteration in 1:nperm) {
     if (data_type %in% "continuous") {
-      inTraining <- sample(1:nrow(data), size = floor(p * N), replace = F)
+      inTraining <- sample(1:nrow(data), size = floor(p * N), replace = FALSE)
       train_indices  <- inTraining
       test_indices <- setdiff(1:nrow(data), inTraining)
     } else if (data_type %in% c('binary', 'categorical')) {
@@ -83,8 +85,13 @@ null.gen <- function(Y,
       train_indices  <- inTraining
       test_indices <- setdiff(1:nrow(data), inTraining)
     }
+    
+    resampled_data <- data
+    if (permutation) {
+      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))
+    }
+    
     if (method %in% "lm" & data_type %in% "continuous")  { # Parametric linear model  
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       null[iteration] <- glm_wrapper(formula, 
                                      resampled_data, 
                                      train_indices, 
@@ -93,7 +100,6 @@ null.gen <- function(Y,
                                      data_type,
                                      ...)
     } else if (method %in% "lm" & data_type %in% "binary"){
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       null[iteration] <- glm_wrapper(formula, 
                                      resampled_data, 
                                      train_indices, 
@@ -102,7 +108,6 @@ null.gen <- function(Y,
                                      data_type,
                                      ...)
     } else if (method %in% "lm" & data_type %in% "categorical") { # Parametric model (logistic) with categorical outcome
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))    
       null[iteration] <-  multinom_wrapper(formula, 
                                            resampled_data, 
                                            train_indices, 
@@ -110,7 +115,6 @@ null.gen <- function(Y,
                                            ...)
     } 
     else if (method %in% "xgboost") {
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))
       if (data_type %in% c("binary")) {
         objective <-  "binary:logistic"
       } else if (data_type %in% c("categorical")) {
@@ -119,7 +123,7 @@ null.gen <- function(Y,
         objective <- "reg:squarederror"
       }
       null[iteration] <- xgboost_wrapper(formula, 
-                                         data, 
+                                         resampled_data, 
                                          train_indices, 
                                          test_indices,
                                          nrounds, 
@@ -127,7 +131,6 @@ null.gen <- function(Y,
                                          ...)
     } 
     else if (method %in% "rf") { # Random Forest with continuous outcome
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))
       null[iteration] <- ranger_wrapper(formula, 
                                         resampled_data, 
                                         train_indices, 
@@ -136,24 +139,32 @@ null.gen <- function(Y,
                                         probability,
                                         ...)
     } else {
-      stop("Method choosen is not supported by the null.gen() function")
+      stop("Method chosen is not supported by the test_gen function")
     }
-    # Calculate the percentage finished
+    
     percentage <- (iteration / nperm) * 100
-    # Print the progress
-    cat(sprintf("Creating null distribution: %d%% complete\r", round(percentage)))
-    flush.console()
+    
+    if (permutation == TRUE) {
+      cat(sprintf("Creating null distribution: %d%% complete\r", round(percentage)))
+      flush.console()
+    } else if (permutation == FALSE & nperm == 1){
+      cat(sprintf("Test statistic complete"))
+      flush.console()
+    } else if (permutation == FALSE){
+      cat(sprintf("Creating test distribution: %d%% complete\r", round(percentage)))
+      flush.console()
+    }
+    
   }
+  
   # Naming the result in the null matrix
   if (data_type %in% "continuous") {
     colnames(null) <- "RMSE"
   } else {
     colnames(null) <- "Kappa score"
   }
-
+  
   null_object <- list(distribution  = null)
   
   return(null_object)
 }
-
-

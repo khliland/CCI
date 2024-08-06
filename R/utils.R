@@ -37,28 +37,46 @@ clean_formula <- function(formula_str) {
 
 #' P-value calculation based on null distribution and test statistic
 #'
-#' @param formula_str Formula string
+#' @param dist A vector representing the null-distribution
+#' @param test_statistic The test statistic
+#' @param metric_type The performance metric used to create the null-distribution and the test statistic
+#' @param metric_type The performance metric used to create the null-distribution and the test statistic
 #'
 #' @return P-value
 #' @export
 
-get_pvalues <- function(dist, metric, type = c("Empirical", "Parametric")) {
+get_pvalues <- function(dist, test_statistic, metric_type = c("Kappa score", "RMSE"), parametric = FALSE, tail = c("left", "right")) {
   dist <- as.numeric(dist)
-  metric <- as.numeric(metric)
+  test_statistic <- as.numeric(test_statistic)
   null_mean <- mean(dist)
   null_sd <- sd(dist)
   
-  p_value2 <- if (objective %in% 'reg:squarederror') {
-    (sum(NullDist2 <= mean_test2_metric) + 1) / (length(NullDist2) + 1)
-  } else {
-    (sum(NullDist2 >= mean_test2_metric) + 1) / (length(NullDist2) + 1)
+  if (parametric == FALSE) {
+    pvalue <- if (metric_type %in% 'Kappa score') {
+      if (tail %in% "left") {
+        (sum(dist <= test_statistic) + 1) / (length(dist) + 1)
+      } else {
+        (sum(dist >= test_statistic) + 1) / (length(dist) + 1)
+      }
+    } else if (metric_type %in% 'RMSE') {
+      if (tail %in% "left") {
+        (sum(dist <= test_statistic) + 1) / (length(dist) + 1)
+      } else {
+        (sum(dist >= test_statistic) + 1) / (length(dist) + 1)
+      }
+    } 
+  } else if (parametric == TRUE) {
+    z_value <- (test_statistic - null_mean) / null_sd
+    if (metric_type %in% 'Kappa score' || metric_type %in% 'RMSE') {
+      if (tail %in% "left") {
+        pvalue <- pnorm(z_value)  # One-tailed test (left)
+      } else {
+        pvalue <- 1 - pnorm(z_value)  # One-tailed test (right)
+      }
+    }
   }
-  means <- (p_value1 + p_value2)/2
   
-  result <- c(p_value1, p_value2, means)
-  names(result) <- c('p_value1', 'p_value2', 'mean')
-  
-  return(result)
+  return(pvalue)
 }
 
 #' Calculation of log loss for categorical outcome

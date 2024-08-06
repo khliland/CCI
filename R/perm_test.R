@@ -61,8 +61,10 @@ perm.test <- function(formula = NA,
   
   # Create null distribution using null.gen()
   null_dist <- null.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...)
+  test_dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...)
   
   # Calculate empirical p-value
+  p.value <- get_pvalues(dist = null_dist, metric = test_metric) 
   # Calculate parametric p-value(s)
   
   
