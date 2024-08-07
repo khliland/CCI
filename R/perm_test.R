@@ -24,31 +24,51 @@ perm.test <- function(formula = NA,
                       p = 0.825, 
                       nperm = 500, 
                       dag = NA, 
-                      dag_n = 1, 
-                      data_type = "continous",
-                      method = NA,
+                      dag_n = NA, 
+                      data_type = "continuous",
+                      method = "rf",
+                      nrounds = 120,
+                      parametric = FALSE,
+                      poly = TRUE,
+                      degree = 3,
+                      lm_family = gaussian(),
+                      objective = "reg:squarederror",
+                      probability = FALSE,
+                      tail = NULL,
                       ...) {
   
+  if (is.null(tail)) {
+    if (data_type %in% c("binary", "categorical")) {
+      tail <- "right"
+    } else if (data_type == "continuous") {
+      tail <- "left"
+    } 
+  }
+  
   if (is.null(data)) {
+    status <- "Error: data is missing"
     stop("Please provide some data")
   }
   
   if (is.na(formula) & is.na(dag)) {
+    status <- "Error: Formula and DAG are missing"
     stop("Formula and dag object is missing")
   } 
   
-  if (is.na(formula) & class(dag) != 'dagitty') {
+  if (!is.na(dag) & class(dag) != 'dagitty') {
     stop("DAG needs to be of class dagitty.")
   } 
   
-  if (class(dag) == 'dagitty' & is.na(formula)) {
-    ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
-    names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
-    formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
-    
-  } else if (!is.na(formula)) {
-    formula = gsub("\\s+", " ", formula)
-  }
+  if (!is.na(dag)) {
+    if (!is.na(formula)) {
+      formula = gsub("\\s+", " ", formula)
+    } else if (is.na(formula)) {
+      ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
+      names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
+      formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
+    }
+  } 
+  
   formula <- clean_formula(formula)
   check_formula(formula)
   
@@ -59,23 +79,36 @@ perm.test <- function(formula = NA,
   dependent2 <- parts2[2]
   conditioning <- unlist(strsplit(parts[2], split = ","))
   
-  # Create null distribution using null.gen()
-  null_dist <- null.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...)
-  test_dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, ...)
+  # Creating the null distribution
+  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nrounds = nrounds, p = p, permutation = TRUE, ...)
+  # Creating the test statistic
+  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, ...)
   
-  # Calculate empirical p-value
-  p.value <- get_pvalues(dist = null_dist, metric = test_metric) 
-  # Calculate parametric p-value(s)
-  
+  p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
+      
+  status <- "Complete"
+  additional_args <- list(...)
   
   # Gather everything in "obj"
-  obj <- list(status  = "Not implemented yet!",
-              MLfunc  = MLfunc,
-              MLname  = deparse(substitute(MLfunc)),
+  obj <- list(status  = status,
+              MLfunc  = method,
               data    = data,
               formula = formula,
+              dag     = dag,
               dag_n   = dag_n,
-              predictions = preds)
+              nperm   = nperm,
+              nrounds = nrounds,
+              train_test_ratio = p,
+              lm_family = lm_family,
+              data_type = data_type,
+              parametric = parametric,
+              null.distribution = dist,
+              test.statistic = test_statistic,
+              tail = tail,
+              p.value =  p.value,
+              additional_args = additional_args
+              )
+  
   class(obj) <- c("CCI", "list")
-  obj
+  return(obj)
 }

@@ -32,7 +32,7 @@ test.gen <- function(Y,
                      data_type = "continuous", 
                      method = "rf",
                      nperm = 100, 
-                     p = 0.825, 
+                     p, 
                      N = nrow(data), 
                      poly = TRUE, 
                      degree = 3, 
@@ -42,7 +42,7 @@ test.gen <- function(Y,
                      probability = FALSE,
                      permutation = FALSE,
                      ...) {
-  
+  set.seed(1984)
   # Create formula for the prediction 
   if (poly & degree < 1) {
     stop("Degree of 0 or less is not allowed")
@@ -165,6 +165,6 @@ test.gen <- function(Y,
   }
   
   null_object <- list(distribution  = null)
-  
+  set.seed(Sys.time())
   return(null_object)
 }

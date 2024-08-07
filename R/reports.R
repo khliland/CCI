@@ -11,30 +11,39 @@
 #' @seealso \code{\link{perm.test}},
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #' @export
-print.CCI <- function(x, ...){
-  # Print method for the CCI class
-  cat(paste0("Conditional independence test using '", x$MLname, "'.\n"))
-  cat("Not implemented yet!\n")
+print.summary.CCI <- function(x, ...) {
+  cat(paste0("Computational conditional independence test using '", x$method, "'.\n"))
+  
+  if (!is.null(x$formula) && is.character(x$formula)) {
+    cat("Formula: ", x$formula, "\n")
+  } else if (!is.null(x$dag_n)) {
+    cat("DAGitty test: ", x$dag_n, "\n")
+  }
+  
+  cat("Number of Monte Carlo samples: ", x$nperm, "\n")
+  cat("Test Statistic: ", unlist(x$test.statistic), "\n")
+  cat("P-value: ", x$p.value, "\n")
+  cat("Summary of Null Distribution:\n")
+  print(summary(unlist(x$null.distribution)))
+  
+  invisible(x)
 }
+
 
 #' @export
 #' @rdname reports
-summary.CCI <- function(object, ...){
-  # An extended overview of the results of the permutation testing
-  # Returns important statistics etc.
-  obj <- object # Or a subset or after doing some calculations
-  class(obj) <- "summary.CCI"
-  obj
-}
 
-#' @export
-#' @rdname reports
-print.summary.CCI <- function(x, ...){
-  # Print method for the summary.CCI class
-  cat(paste0("Conditional independence test using '", x$MLname, "'.\n"))
-  if(inherits(x$formula, "formula"))
-    cat("Formula: ", deparse(x$formula), "\n")
-  else
-    cat("DAGitty test: ", x$dag_n, "\n") # Change x$dag_n to something more informative
-  cat("Not implemented yet!\n")
+summary.CCI <- function(object, ...) {
+  summary_list <- list(
+    method = object$MLfunc,
+    formula = object$formula,
+    nperm = object$nperm,
+    dag = object$dag,
+    dag_n = object$dag_n,
+    p.value = object$p.value,
+    null.distribution = object$null.distribution,
+    test.statistic = object$test.statistic
+  )
+  class(summary_list) <- "summary.CCI"
+  return(summary_list)
 }
