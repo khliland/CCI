@@ -80,9 +80,9 @@ perm.test <- function(formula = NA,
   conditioning <- unlist(strsplit(parts[2], split = ","))
   
   # Creating the null distribution
-  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nrounds = nrounds, p = p, permutation = TRUE, ...)
+  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nrounds = nrounds, p = p, permutation = TRUE, lm_family = lm_family, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, ...)
+  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, lm_family = lm_family, ...)
   
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
       
@@ -90,13 +90,14 @@ perm.test <- function(formula = NA,
   additional_args <- list(...)
   
   # Gather everything in "obj"
-  obj <- list(status  = status,
-              MLfunc  = method,
-              data    = data,
+  obj <- list(status = status,
+              MLfunc = method,
+              data = data,
               formula = formula,
-              dag     = dag,
-              dag_n   = dag_n,
-              nperm   = nperm,
+              p = p,
+              dag = dag,
+              dag_n = dag_n,
+              nperm = nperm,
               nrounds = nrounds,
               train_test_ratio = p,
               lm_family = lm_family,

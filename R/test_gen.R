@@ -24,7 +24,6 @@
 #' @importFrom ranger ranger
 #' @return A list containing the test distribution 
 #' @export
-
 test.gen <- function(Y, 
                      X, 
                      Z, 
@@ -41,7 +40,9 @@ test.gen <- function(Y,
                      objective = "reg:squarederror",
                      probability = FALSE,
                      permutation = FALSE,
+                     seed,
                      ...) {
+  
   set.seed(1984)
   # Create formula for the prediction 
   if (poly & degree < 1) {
@@ -50,8 +51,7 @@ test.gen <- function(Y,
   if (method %in% "xgboost" & data_type %in% "categorical" & !exists("num_class")) {
     stop("num_class needs to be set.")
   }
-  
-  # Setting 'poly == true' creates nth degree terms of conditional variables
+ 
   if (poly == TRUE & degree > 1){
     transformations <- lapply(2:degree, function(d) {
       eval(parse(text = paste0("~ .^", d)))
@@ -146,9 +146,6 @@ test.gen <- function(Y,
     
     if (permutation == TRUE) {
       cat(sprintf("Creating null distribution: %d%% complete\r", round(percentage)))
-      flush.console()
-    } else if (permutation == FALSE & nperm == 1){
-      cat(sprintf("Test statistic complete"))
       flush.console()
     } else if (permutation == FALSE){
       cat(sprintf("Creating test distribution: %d%% complete\r", round(percentage)))

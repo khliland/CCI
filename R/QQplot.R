@@ -12,34 +12,39 @@
 #'
 #' @examples
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-#' cci <- perm.test(y ~ x1 + x2, data = dat)
-#' QQplot(cci, 1000)
-QQplot <- function(object, ...) {
+#' cci <- perm.test("y ~ x1 | x2", data = dat)
+#' QQplot(cci)
 
-  if (!inherits(object, "CCI"))
+QQplot <- function(object, ...) {
+  if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
+  }
   
-  # All arguments from perm.test()
+  # Extracting parameters from the CCI object
   null_dist <- object$null.distribution
   nperm <- object$nperm
-  method <- object$method
+  nrounds <- object$nrounds
+  method <- object$MLfunc
   formula <- object$formula
   dag <- object$dag
   dag_n <- object$dag_n
   data <- object$data
+  N <- nrow(data)
   data_type <- object$data_type
-  add_arguments <- object$additional_arguments
   tail <- object$tail
+  parametric <- object$parametric
+  p <- object$p
+  additional_args <- object$additional_args
   
   if (!is.na(dag)) {
     if (!is.na(formula)) {
       formula = gsub("\\s+", " ", formula)
     } else if (is.na(formula)) {
       ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
-      names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
+      names(ci_statement)[names(ci_statement) == dag_n] <- "CI"  
       formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
     }
-  } 
+  }
   
   formula <- clean_formula(formula)
   check_formula(formula)
@@ -51,28 +56,39 @@ QQplot <- function(object, ...) {
   dependent2 <- parts2[2]
   conditioning <- unlist(strsplit(parts[2], split = ","))
   
-  test_result <- test.gen(Y = object$Y, X = object$X, Z = object$Z, data = data, 
-                            data_type = data_type, method = method, nperm = nperm, permutation = FALSE, nrounds = nrounds)
+  test_result <- do.call(test.gen, c(
+    list(
+      Y = dependent1,
+      X = dependent2,
+      Z = conditioning,
+      data = data,
+      permutation = FALSE,
+      data_type = data_type,
+      method = method,
+      nperm = nperm,
+      nrounds = nrounds,
+      p = p,
+      ...
+    ),
+    additional_args
+  ))
+  
 
+  test_stats <- unlist(test_result$distribution)
   
-  # Calculate p-values for each test statistic
-  p_values <- sapply(test_stats, function(stat) {
-    get_pvalues(unlist(null_dist), stat, parametric = object$parametric, tail = tail)
-  })
+   
+  p_values <- data.frame(sapply(test_stats, function(stat) {
+    get_pvalues(unlist(null_dist), stat, parametric = parametric, tail = tail)
+  }))
+  colnames(p_values) <- c("pvalues")
   
-  # Create QQ-plot
-  qq_data <- data.frame(
-    observed = -log10(sort(p_values)),
-    expected = -log10(ppoints(length(p_values)))
-  )
-  
-  ggobj <- ggplot(qq_data, aes(x = expected, y = observed)) +
-    geom_point(color = "blue") +
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
-    labs(title = "QQ Plot of P-values",
-         x = "Expected -log10(p-value)",
-         y = "Observed -log10(p-value)") +
-    theme_minimal()
+  ggobj <- ggplot(p_values, aes(sample = pvalues)) +
+    geom_qq(distribution = stats::qunif, , size = 0.1)  +
+    geom_abline(slope = 1, intercept = 0, color = "blue") +
+    labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
+         title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
+    theme_minimal() +
+    theme(text = element_text(size = 17), legend.position = 'none')
   
   return(ggobj)
 }
