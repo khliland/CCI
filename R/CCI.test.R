@@ -2,6 +2,7 @@
 #'
 #' @param formula Model formula or DAGitty object
 #' @param data Data frame
+#' @param plot Logical, indicating if a plot of null distribution with test statistic should be generated (default: TRUE)
 #' @param p Proportion of data used for training
 #' @param nperm Number of permutations
 #' @param dag DAGitty object for conditional independence testing
@@ -14,16 +15,16 @@
 #' @export
 CCI.test <- function(formula = NA,
                      data,
+                     plot = TRUE,
                      p = 0.825,
                      nperm = 500,
                      dag = NA,
                      dag_n = 1,
                      data_type = "continuous",
-                     method = NA,
+                     method = 'rf',
                      parametric = FALSE,
                      ...) {
 
-  # Perform the permutation test
   result <- perm.test(formula = formula,
                       data = data,
                       p = p,
@@ -35,12 +36,15 @@ CCI.test <- function(formula = NA,
                       parametric = parametric,
                       ...)
 
-  # Print the summary of the test
-  print(summary(result))
 
-  # Plot the null distribution with the test statistic
+  print.summary.CCI(result)
+
+  if (plot) {
   plot_null_distribution(result)
+  cat("Plot generated.\n")
+  } else {
+    cat("No plot generated.\n")
+  }
 
-  # Return the result invisibly
   invisible(result)
 }

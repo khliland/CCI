@@ -22,19 +22,19 @@
 #' @importFrom nnet multinom
 #' @importFrom xgboost xgb.train xgb.DMatrix
 #' @importFrom ranger ranger
-#' @return A list containing the test distribution 
+#' @return A list containing the test distribution
 #' @export
-test.gen <- function(Y, 
-                     X, 
-                     Z, 
-                     data, 
-                     data_type = "continuous", 
+test.gen <- function(Y,
+                     X,
+                     Z,
+                     data,
+                     data_type = "continuous",
                      method = "rf",
-                     nperm = 100, 
-                     p, 
-                     N = nrow(data), 
-                     poly = TRUE, 
-                     degree = 3, 
+                     nperm = 100,
+                     p,
+                     N = nrow(data),
+                     poly = TRUE,
+                     degree = 3,
                      nrounds = 120,
                      lm_family,
                      objective = "reg:squarederror",
@@ -42,25 +42,25 @@ test.gen <- function(Y,
                      permutation = FALSE,
                      seed,
                      ...) {
-  
+
   set.seed(1984)
-  # Create formula for the prediction 
+  # Create formula for the prediction
   if (poly & degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
   if (method %in% "xgboost" & data_type %in% "categorical" & !exists("num_class")) {
     stop("num_class needs to be set.")
   }
- 
+
   if (poly == TRUE & degree > 1){
     transformations <- lapply(2:degree, function(d) {
       eval(parse(text = paste0("~ .^", d)))
     })
     names(transformations) <- paste0("d_", 2:degree)
-    
+
     data <- data %>%
       mutate(across(all_of(Z), transformations, .names = "{col}_{fn}"))
-    
+
     new_terms <- unlist(lapply(Z, function(var) {
       sapply(2:degree, function(d) {
         paste0(var, "_d_", d)
@@ -70,11 +70,11 @@ test.gen <- function(Y,
   } else {
     formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = "+")))
   }
-  
+
   # Initialize a matrix for storing results
   null <- matrix(NA, nrow = nperm, ncol = 1)
-  
-  # If statement of all the ML methods one can use to do computational test 
+
+  # If statement of all the ML methods one can use to do computational test
   for (iteration in 1:nperm) {
     if (data_type %in% "continuous") {
       inTraining <- sample(1:nrow(data), size = floor(p * N), replace = FALSE)
@@ -85,35 +85,35 @@ test.gen <- function(Y,
       train_indices  <- inTraining
       test_indices <- setdiff(1:nrow(data), inTraining)
     }
-    
+
     resampled_data <- data
     if (permutation) {
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))
     }
-    
-    if (method %in% "lm" & data_type %in% "continuous")  { # Parametric linear model  
-      null[iteration] <- glm_wrapper(formula, 
-                                     resampled_data, 
-                                     train_indices, 
-                                     test_indices, 
+
+    if (method %in% "lm" & data_type %in% "continuous")  { # Parametric linear model
+      null[iteration] <- glm_wrapper(formula,
+                                     resampled_data,
+                                     train_indices,
+                                     test_indices,
                                      lm_family,
                                      data_type,
                                      ...)
     } else if (method %in% "lm" & data_type %in% "binary"){
-      null[iteration] <- glm_wrapper(formula, 
-                                     resampled_data, 
-                                     train_indices, 
-                                     test_indices, 
-                                     lm_family,  
+      null[iteration] <- glm_wrapper(formula,
+                                     resampled_data,
+                                     train_indices,
+                                     test_indices,
+                                     lm_family,
                                      data_type,
                                      ...)
     } else if (method %in% "lm" & data_type %in% "categorical") { # Parametric model (logistic) with categorical outcome
-      null[iteration] <-  multinom_wrapper(formula, 
-                                           resampled_data, 
-                                           train_indices, 
+      null[iteration] <-  multinom_wrapper(formula,
+                                           resampled_data,
+                                           train_indices,
                                            test_indices,
                                            ...)
-    } 
+    }
     else if (method %in% "xgboost") {
       if (data_type %in% c("binary")) {
         objective <-  "binary:logistic"
@@ -122,28 +122,28 @@ test.gen <- function(Y,
       } else {
         objective <- "reg:squarederror"
       }
-      null[iteration] <- xgboost_wrapper(formula, 
-                                         resampled_data, 
-                                         train_indices, 
+      null[iteration] <- xgboost_wrapper(formula,
+                                         resampled_data,
+                                         train_indices,
                                          test_indices,
-                                         nrounds, 
+                                         nrounds,
                                          objective,
                                          ...)
-    } 
+    }
     else if (method %in% "rf") { # Random Forest with continuous outcome
-      null[iteration] <- ranger_wrapper(formula, 
-                                        resampled_data, 
-                                        train_indices, 
-                                        test_indices, 
-                                        num.trees = nrounds, 
+      null[iteration] <- ranger_wrapper(formula,
+                                        resampled_data,
+                                        train_indices,
+                                        test_indices,
+                                        num.trees = nrounds,
                                         probability,
                                         ...)
     } else {
-      stop("Method chosen is not supported by the test_gen function")
+      stop("Method chosen is not supported by the test.gen() function")
     }
-    
+
     percentage <- (iteration / nperm) * 100
-    
+
     if (permutation == TRUE) {
       cat(sprintf("Creating null distribution: %d%% complete\r", round(percentage)))
       flush.console()
@@ -151,16 +151,16 @@ test.gen <- function(Y,
       cat(sprintf("Creating test distribution: %d%% complete\r", round(percentage)))
       flush.console()
     }
-    
+
   }
-  
+
   # Naming the result in the null matrix
   if (data_type %in% "continuous") {
     colnames(null) <- "RMSE"
   } else {
     colnames(null) <- "Kappa score"
   }
-  
+
   null_object <- list(distribution  = null)
   set.seed(Sys.time())
   return(null_object)

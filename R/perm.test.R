@@ -19,12 +19,12 @@
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
 #' perm.test(y ~ x1 | x2, data = data)
 #' formula <- "y ~ x1 | x2, x3, x4"
-perm.test <- function(formula = NA, 
-                      data, 
-                      p = 0.825, 
-                      nperm = 500, 
-                      dag = NA, 
-                      dag_n = NA, 
+perm.test <- function(formula = NA,
+                      data,
+                      p = 0.825,
+                      nperm = 500,
+                      dag = NA,
+                      dag_n = NA,
                       data_type = "continuous",
                       method = "rf",
                       nrounds = 120,
@@ -36,29 +36,29 @@ perm.test <- function(formula = NA,
                       probability = FALSE,
                       tail = NULL,
                       ...) {
-  
+
   if (is.null(tail)) {
     if (data_type %in% c("binary", "categorical")) {
       tail <- "right"
     } else if (data_type == "continuous") {
       tail <- "left"
-    } 
+    }
   }
-  
+
   if (is.null(data)) {
     status <- "Error: data is missing"
     stop("Please provide some data")
   }
-  
+
   if (is.na(formula) & is.na(dag)) {
     status <- "Error: Formula and DAG are missing"
     stop("Formula and dag object is missing")
-  } 
-  
+  }
+
   if (!is.na(dag) & class(dag) != 'dagitty') {
     stop("DAG needs to be of class dagitty.")
-  } 
-  
+  }
+
   if (!is.na(dag)) {
     if (!is.na(formula)) {
       formula = gsub("\\s+", " ", formula)
@@ -67,28 +67,28 @@ perm.test <- function(formula = NA,
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
       formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
     }
-  } 
-  
+  }
+
   formula <- clean_formula(formula)
   check_formula(formula)
-  
+
   parts <- strsplit(formula, "\\|")[[1]]
   parts2 <- strsplit(parts, "\\~")[[1]]
-  
+
   dependent1 <- parts2[1]
   dependent2 <- parts2[2]
   conditioning <- unlist(strsplit(parts[2], split = ","))
-  
+
   # Creating the null distribution
-  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nrounds = nrounds, p = p, permutation = TRUE, lm_family = lm_family, ...)
+  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, lm_family = lm_family, ...)
   # Creating the test statistic
   test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, lm_family = lm_family, ...)
-  
+
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
-      
+
   status <- "Complete"
   additional_args <- list(...)
-  
+
   # Gather everything in "obj"
   obj <- list(status = status,
               MLfunc = method,
@@ -109,7 +109,7 @@ perm.test <- function(formula = NA,
               p.value =  p.value,
               additional_args = additional_args
               )
-  
+
   class(obj) <- c("CCI", "list")
   return(obj)
 }
