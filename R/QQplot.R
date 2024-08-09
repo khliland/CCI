@@ -47,14 +47,11 @@ QQplot <- function(object, ...) {
   }
 
   formula <- clean_formula(formula)
-  check_formula(formula)
+  check_formula(formula, data) # Check that all variables are found in the data
 
-  parts <- strsplit(formula, "\\|")[[1]]
-  parts2 <- strsplit(parts, "\\~")[[1]]
-
-  dependent1 <- parts2[1]
-  dependent2 <- parts2[2]
-  conditioning <- unlist(strsplit(parts[2], split = ","))
+  dependent1 <- formula[[2]]
+  dependent2 <- formula[[3]][[2]]
+  conditioning <- unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
 
   test_result <- do.call(test.gen, c(
     list(

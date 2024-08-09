@@ -4,43 +4,49 @@
 #'
 #' @return NULL
 #' @export
-check_formula <- function(formula_str) {
-  if (grepl("\\|", formula_str)) {
-    parts <- strsplit(formula_str, "\\|")[[1]]
-    if (length(parts) < 2 || nchar(trimws(parts[2])) == 0) {
-      warning("The independence statement is unconditional.")
-    } else {
-      variables_after_pipe <- trimws(parts[2])
-      if (variables_after_pipe == "") {
-        warning("The independence statement is unconditional.")
-      }
-    }
+check_formula <- function(formula, data) {
+  all_vars <- all.vars(formula)
+  if (all(all_vars %in% colnames(data))) {
+    cat("All variables are present in the data.\n")
   } else {
-    warning("The formula does not contain the '|' symbol.")
+    missing_vars <- all_vars[!all_vars %in% colnames(data)]
+    stop("The following variables are missing from the data: ", paste(missing_vars, collapse = ", "))
   }
+  }
+
+
+#' #' Clean formula string
+#' #'
+#' #' @param formula Formula
+#' #'
+#' #' @return Cleaned formula in the right format
+#' #' @export
+
+clean_formula <- function(formula) {
+  tryCatch({ if (formula[[3]][[1]] == "+") {
+                        response <- as.character(formula[[2]])
+                        predictors <- as.character(deparse(formula[[3]]))
+                        split_predictors <- strsplit(predictors, " \\+ ")
+                        split_predictors <- unlist(split_predictors)
+                        new_formula <-  as.formula(paste(response, "~", split_predictors[1], "|", paste(split_predictors[-1], collapse = " + ")))
+  } else if (formula[[3]][[1]] == "|") {
+    new_formula <- formula
+  } else if (formula[[3]][[1]] != "+" & formula[[3]][[1]] != "|") {
+    stop("The formula is not of the right format")
+  }
+  return(new_formula)
+  }, error = function(e) {
+    stop("The formula indicate an unconditional independence statement. Ensure that you include conditioning variables.")
+  })
 }
 
-#' Clean formula string
-#'
-#' @param formula_str Formula string
-#'
-#' @return Cleaned formula string
-#' @export
-clean_formula <- function(formula_str) {
-  formula_str <- gsub("\\s*~\\s*", "~", formula_str)
-  formula_str <- gsub("\\s*\\|\\s*", "|", formula_str)
-  formula_str <- gsub("\\s*,\\s*", ",", formula_str)
-  formula_str <- gsub("\\s+", " ", formula_str)
-  formula_str <- trimws(formula_str)
-  return(formula_str)
-}
 
 #' P-value calculation based on null distribution and test statistic
 #'
 #' @param dist A vector representing the null-distribution
 #' @param test_statistic The test statistic
-#' @param parametric Logical, whether the perform to calculate parametric p-values 
-#' @param tail Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used 
+#' @param parametric Logical, whether the perform to calculate parametric p-values
+#' @param tail Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used
 #'
 #' @return P-value
 #' @export
@@ -50,9 +56,9 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
   test_statistic <- as.numeric(test_statistic)
   null_mean <- mean(dist)
   null_sd <- sd(dist)
-  
+
   tail <- match.arg(tail)  # Ensure tail is either "left" or "right"
-  
+
   pvalue <- if (parametric == FALSE) {
     if (tail == "left") {
       (sum(dist <= test_statistic) + 1) / (length(dist) + 1)
@@ -67,7 +73,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
       (1 - pnorm(z_value))
     }
   }
-  
+
   return(pvalue)
 }
 
@@ -75,7 +81,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #'
 #' @param actual The observed categorical (factor) outcome variable.
 #' @param predicted The predicted probabilities for each category.
-#' @param all_levels A vector of all possible levels (categories) of the outcome variable. 
+#' @param all_levels A vector of all possible levels (categories) of the outcome variable.
 #' @return Log loss of classification model
 #' @export
 

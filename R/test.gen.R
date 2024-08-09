@@ -16,7 +16,7 @@
 #' @param objective Objective function for xgboost
 #' @param probability Logical, whether the ranger_wrapper should do classification
 #' @param permutation Logical, whether the perform permutation to generat a null distribution
-#' @param mlfunc custom ML function provided by the user, the function must have the arguments: formula, resampled_data, test_indicies
+#' @param mlfunc custom ML function provided by the user, the function must have the arguments: formula, resampled_data, train_indices, test_indicies and return a single value performance metric
 #' @importFrom stats glm predict update as.formula
 #' @importFrom caret createDataPartition confusionMatrix
 #' @importFrom dplyr mutate across all_of sym

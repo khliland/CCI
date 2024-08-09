@@ -16,14 +16,10 @@
 #'
 #' @examples
 #' set.seed(123)
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
-#' perm.test(y ~ x1 | x2, data = data)
-#' CICondition <- "y ~ x1 | x2, x3, x4"
-#'
-#' min.funksjon(formula = y ~ x1, condition = ~ x2 + x3 + x4, ...)
-#'
-formula <-
-perm.test <- function(formula = NA,
+#' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+#' perm.test(y ~ x1 | x2 + x3 + x4, data = dat)
+
+perm.test <- function(formula,
                       data,
                       p = 0.825,
                       nperm = 500,
@@ -38,10 +34,10 @@ perm.test <- function(formula = NA,
                       family = gaussian(),
                       objective = "reg:squarederror",
                       probability = FALSE,
-                      tail = NULL,
+                      tail = NA,
                       ...) {
 
-  if (is.null(tail)) {
+  if (is.na(tail)) {
     if (data_type %in% c("binary", "categorical")) {
       tail <- "right"
     } else if (data_type == "continuous") {
@@ -54,7 +50,7 @@ perm.test <- function(formula = NA,
     stop("Please provide some data")
   }
 
-  if (is.na(formula) & is.na(dag)) {
+  if (is.null(formula) & is.na(dag)) {
     status <- "Error: Formula and DAG are missing"
     stop("Formula and dag object is missing")
   }
@@ -64,24 +60,20 @@ perm.test <- function(formula = NA,
   }
 
   if (!is.na(dag)) {
-    if (!is.na(formula)) {
-      formula = gsub("\\s+", " ", formula)
-    } else if (is.na(formula)) {
+    if (!is.null(formula)) {
+      formula = as.formula(formula)
+    } else if (is.null(formula)) {
       ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
-      formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
+      formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
   }
-
   formula <- clean_formula(formula)
-  check_formula(formula)
+  check_formula(formula, data) # Check that all variables are found in the data
 
-  parts <- strsplit(formula, "\\|")[[1]]
-  parts2 <- strsplit(parts, "\\~")[[1]]
-
-  dependent1 <- parts2[1]
-  dependent2 <- parts2[2]
-  conditioning <- unlist(strsplit(parts[2], split = ","))
+  dependent1 <- formula[[2]]
+  dependent2 <- formula[[3]][[2]]
+  conditioning <- unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
 
   # Creating the null distribution
   dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, ...)
