@@ -44,7 +44,7 @@ test.gen <- function(Y,
                      ...) {
 
   set.seed(1984)
-  # Create formula for the prediction
+
   if (poly & degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }

@@ -23,4 +23,4 @@ BugReports: https://github.com/khliland/CCI/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2

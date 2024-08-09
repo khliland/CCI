@@ -18,7 +18,10 @@
 #' set.seed(123)
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
 #' perm.test(y ~ x1 | x2, data = data)
-#' formula <- "y ~ x1 | x2, x3, x4"
+#' CICondition <- "y ~ x1 | x2, x3, x4"
+#'
+#' min.funksjon(formula = y ~ x1, condition = ~ x2 + x3 + x4, ...)
+#'
 perm.test <- function(formula = NA,
                       data,
                       p = 0.825,

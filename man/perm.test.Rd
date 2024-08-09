@@ -4,20 +4,38 @@
 \alias{perm.test}
 \title{Permutation test for conditional independence}
 \usage{
-perm.test(formula, data, MLfunc = lm, nperm = 1000, dag_n = 1, ...)
+perm.test(
+  formula = NA,
+  data,
+  p = 0.825,
+  nperm = 500,
+  dag = NA,
+  dag_n = NA,
+  data_type = "continuous",
+  method = "rf",
+  nrounds = 120,
+  parametric = FALSE,
+  poly = TRUE,
+  degree = 3,
+  lm_family = gaussian(),
+  objective = "reg:squarederror",
+  probability = FALSE,
+  tail = NULL,
+  ...
+)
 }
 \arguments{
 \item{formula}{Model formula or DAGitty object}
 
 \item{data}{Data frame}
 
-\item{MLfunc}{Model fitting function similar to \code{lm} (default)}
-
 \item{nperm}{Number of permutations}
 
 \item{dag_n}{Which test to perform if using a DAGitty object}
 
 \item{...}{Additional arguments to pass to \code{MLfunc}}
+
+\item{MLfunc}{Model fitting function similar to \code{lm} (default)}
 }
 \value{
 An object of class 'CCI' containing a null distribution,
@@ -28,8 +46,12 @@ Permutation test for conditional independence
 }
 \examples{
 set.seed(123)
-dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-perm.test(y ~ x1 + x2, data = dat)
+data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+perm.test(y ~ x1 | x2, data = data)
+CICondition <- "y ~ x1 | x2, x3, x4"
+
+min.funksjon(formula = y ~ x1, condition = ~ x2 + x3 + x4, ...)
+
 }
 \seealso{
 \code{\link{print.CCI}}, \code{\link{summary.CCI}},
