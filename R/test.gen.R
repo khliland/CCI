@@ -12,10 +12,11 @@
 #' @param poly Logical, whether to include polynomial terms
 #' @param degree Degree of polynomial terms
 #' @param nrounds Number of rounds (trees) for xgboost and ranger
-#' @param lm_family Family for glm
+#' @param family Family for glm
 #' @param objective Objective function for xgboost
 #' @param probability Logical, whether the ranger_wrapper should do classification
 #' @param permutation Logical, whether the perform permutation to generat a null distribution
+#' @param mlfunc custom ML function provided by the user, the function must have the arguments: formula, resampled_data, test_indicies
 #' @importFrom stats glm predict update as.formula
 #' @importFrom caret createDataPartition confusionMatrix
 #' @importFrom dplyr mutate across all_of sym
@@ -36,14 +37,12 @@ test.gen <- function(Y,
                      poly = TRUE,
                      degree = 3,
                      nrounds = 120,
-                     lm_family,
+                     family,
                      objective = "reg:squarederror",
                      probability = FALSE,
                      permutation = FALSE,
-                     seed,
+                     mlfunc = NULL,
                      ...) {
-
-  set.seed(1984)
 
   if (poly & degree < 1) {
     stop("Degree of 0 or less is not allowed")
@@ -91,12 +90,14 @@ test.gen <- function(Y,
       resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))
     }
 
-    if (method %in% "lm" & data_type %in% "continuous")  { # Parametric linear model
+    if (!is.null(mlfunc)) {
+      null[iteration] <- mlfunc(formula, resampled_data, train_indices, test_indices, ...)
+    } else if (method %in% "lm" & data_type %in% "continuous")  { # Parametric linear model
       null[iteration] <- glm_wrapper(formula,
                                      resampled_data,
                                      train_indices,
                                      test_indices,
-                                     lm_family,
+                                     family,
                                      data_type,
                                      ...)
     } else if (method %in% "lm" & data_type %in% "binary"){
@@ -104,7 +105,7 @@ test.gen <- function(Y,
                                      resampled_data,
                                      train_indices,
                                      test_indices,
-                                     lm_family,
+                                     family,
                                      data_type,
                                      ...)
     } else if (method %in% "lm" & data_type %in% "categorical") { # Parametric model (logistic) with categorical outcome
@@ -154,14 +155,7 @@ test.gen <- function(Y,
 
   }
 
-  # Naming the result in the null matrix
-  if (data_type %in% "continuous") {
-    colnames(null) <- "RMSE"
-  } else {
-    colnames(null) <- "Kappa score"
-  }
 
   null_object <- list(distribution  = null)
-  set.seed(Sys.time())
   return(null_object)
 }

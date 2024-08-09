@@ -22,6 +22,7 @@
 #'
 #' min.funksjon(formula = y ~ x1, condition = ~ x2 + x3 + x4, ...)
 #'
+formula <-
 perm.test <- function(formula = NA,
                       data,
                       p = 0.825,
@@ -34,7 +35,7 @@ perm.test <- function(formula = NA,
                       parametric = FALSE,
                       poly = TRUE,
                       degree = 3,
-                      lm_family = gaussian(),
+                      family = gaussian(),
                       objective = "reg:squarederror",
                       probability = FALSE,
                       tail = NULL,
@@ -83,9 +84,9 @@ perm.test <- function(formula = NA,
   conditioning <- unlist(strsplit(parts[2], split = ","))
 
   # Creating the null distribution
-  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, lm_family = lm_family, ...)
+  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, lm_family = lm_family, ...)
+  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, family = family, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
@@ -103,7 +104,7 @@ perm.test <- function(formula = NA,
               nperm = nperm,
               nrounds = nrounds,
               train_test_ratio = p,
-              lm_family = lm_family,
+              family = family,
               data_type = data_type,
               parametric = parametric,
               null.distribution = dist,
