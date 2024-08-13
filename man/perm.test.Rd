@@ -5,7 +5,7 @@
 \title{Permutation test for conditional independence}
 \usage{
 perm.test(
-  formula = NA,
+  formula,
   data,
   p = 0.825,
   nperm = 500,
@@ -17,10 +17,10 @@ perm.test(
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
-  lm_family = gaussian(),
+  family = gaussian(),
   objective = "reg:squarederror",
   probability = FALSE,
-  tail = NULL,
+  tail = NA,
   ...
 )
 }
@@ -46,12 +46,8 @@ Permutation test for conditional independence
 }
 \examples{
 set.seed(123)
-data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
-perm.test(y ~ x1 | x2, data = data)
-CICondition <- "y ~ x1 | x2, x3, x4"
-
-min.funksjon(formula = y ~ x1, condition = ~ x2 + x3 + x4, ...)
-
+dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+perm.test(y ~ x1 | x2 + x3 + x4, data = dat)
 }
 \seealso{
 \code{\link{print.CCI}}, \code{\link{summary.CCI}},

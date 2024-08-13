@@ -17,11 +17,11 @@ test.gen(
   poly = TRUE,
   degree = 3,
   nrounds = 120,
-  lm_family,
+  family,
   objective = "reg:squarederror",
   probability = FALSE,
   permutation = FALSE,
-  seed,
+  mlfunc = NULL,
   ...
 )
 }
@@ -50,13 +50,15 @@ test.gen(
 
 \item{nrounds}{Number of rounds (trees) for xgboost and ranger}
 
-\item{lm_family}{Family for glm}
+\item{family}{Family for glm}
 
 \item{objective}{Objective function for xgboost}
 
 \item{probability}{Logical, whether the ranger_wrapper should do classification}
 
 \item{permutation}{Logical, whether the perform permutation to generat a null distribution}
+
+\item{mlfunc}{custom ML function provided by the user, the function must have the arguments: formula, resampled_data, train_indices, test_indicies and return a single value performance metric}
 }
 \value{
 A list containing the test distribution

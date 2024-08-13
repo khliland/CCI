@@ -40,11 +40,11 @@ CCI.test <- function(formula = NA,
   print.summary.CCI(result)
 
   if (plot) {
-  plot_null_distribution(result)
+  plot(result)
   cat("Plot generated.\n")
   } else {
     cat("No plot generated.\n")
   }
 
-  invisible(result)
+  return(result)
 }

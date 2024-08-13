@@ -30,9 +30,9 @@ plot.CCI <- function(x, y, title = "Null Distribution with Test Statistic",
   df <- data.frame(null_dist = null_dist)
 
   # Generate the plot
-  plot <- ggplot2::ggplot(df, aes(x = null_dist)) +
-    ggplot2::geom_histogram(aes(y = after_stat(density)), bins = 10, fill = "lightblue", color = "black", alpha = 0.7) +
-    ggplot2::geom_vline(aes(xintercept = test_stat), color = "black", linetype = "dashed", linewidth = 1) +
+  plot <- ggplot2::ggplot(df, ggplot2::aes(x = null_dist)) +
+    ggplot2::geom_histogram(ggplot2::aes(y = ggplot2::after_stat(density)), bins = 10, fill = "lightblue", color = "black", alpha = 0.7) +
+    ggplot2::geom_vline(ggplot2::aes(xintercept = test_stat), color = "black", linetype = "dashed", linewidth = 1) +
     ggplot2::labs(title = title,
          x = xtitle,
          y = ytitle) +

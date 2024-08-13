@@ -2,16 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{clean_formula}
 \alias{clean_formula}
-\title{Clean formula string}
+\title{#' Clean formula string
+#'
+#' @param formula Formula
+#'
+#' @return Cleaned formula in the right format
+#' @export}
 \usage{
-clean_formula(formula_str)
-}
-\arguments{
-\item{formula_str}{Formula string}
-}
-\value{
-Cleaned formula string
+clean_formula(formula)
 }
 \description{
-Clean formula string
+#' Clean formula string
+#'
+#' @param formula Formula
+#'
+#' @return Cleaned formula in the right format
+#' @export
 }

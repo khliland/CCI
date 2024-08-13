@@ -4,7 +4,7 @@
 \alias{check_formula}
 \title{Check the logic of the statement}
 \usage{
-check_formula(formula_str)
+check_formula(formula, data)
 }
 \arguments{
 \item{formula_str}{Formula string}

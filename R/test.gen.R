@@ -43,7 +43,9 @@ test.gen <- function(Y,
                      permutation = FALSE,
                      mlfunc = NULL,
                      ...) {
-
+  if (nperm < 10) {
+    stop("nperm can't be less than 10")
+  }
   if (poly & degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }

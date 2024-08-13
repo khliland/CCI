@@ -14,8 +14,11 @@ Authors@R:
              role = c("aut"),
              email = "kristian.liland@nmbu.no",
              comment = c(ORCID = "0000-0001-6468-9423")))
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: The CCI (Computational Conditional Independence) package provides tools for performing computational tests 
+             for conditional independence between variables in a dataset. The package supports machine learning regression and classification models
+             including generlized linear regression, random forest, and XGBoost. Users can also integrate their custom models through a wrapper function interface. 
+             CCI implements permutation in combination with Monte Carlo Cross-Validation in generating null distributions and test statistics, 
+             allowing users to assess the significance of observed relationships under the null hypothesis of conditional independence.
 Imports: ggplot2, dplyr, caret, nnet, xgboost, ranger, stats
 License: GPL (>= 2)
 URL: https://github.com/khliland/CCI

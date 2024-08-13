@@ -7,9 +7,10 @@
 #' @param iteration Current iteration index
 #' @param family Family for GLM
 #' @param data_type Type of data (continuous or binary)
+#' @param metricfunc A user specified function which calculates a metric
 #' @param ... Additional arguments passed to glm
 #'
-#' @return Performance metric (RMSE for continuous, Kappa for binary)
+#' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
 glm_wrapper <- function(formula,
                         data,
@@ -17,9 +18,13 @@ glm_wrapper <- function(formula,
                         test_indices,
                         family,
                         data_type,
+                        metricfunc = NULL,
                         ...) {
   model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
-  if (data_type %in% "continuous") {
+  if (!is.null(metricfunc)) {
+    actual <- data[test_indices,][[all.vars(formula)[1]]]
+    metric <- metricfunc(data, actual, model, test_indices)
+  } else if (data_type %in% "continuous") {
     pred <- predict.glm(model, newdata = data[test_indices,])
     actual <- data[test_indices,][[all.vars(formula)[1]]]
     metric <- sqrt(mean((pred - actual)^2))
@@ -48,16 +53,21 @@ multinom_wrapper <- function(formula,
                              data,
                              train_indices,
                              test_indices,
+                             metricfunc = NULL,
                              ...) {
   model <- nnet::multinom(formula, data = data, subset = train_indices, ...)
   pred <- predict(model, newdata = data[test_indices,])
   actual <- data[test_indices[iteration,],][[all.vars(formula)[1]]]
-  cm <- caret::confusionMatrix(factor(pred), factor(actual))
-  metric <- cm$overall["Kappa"]
+  if (!is.null(metricfunc)) {
+    metric <- metricfunc()
+  } else {
+    cm <- caret::confusionMatrix(factor(pred), factor(actual))
+    metric <- cm$overall["Kappa"]
+  }
   return(metric)
 }
 
-# Wrapper function for XGBoost model training and evaluation
+#' Wrapper function for XGBoost model training and evaluation
 #'
 #' @param formula Model formula
 #' @param data Data frame
@@ -76,6 +86,7 @@ xgboost_wrapper <- function(formula,
                             test_indices,
                             nrounds,
                             objective,
+                            metricfunc = NULL,
                             ...) {
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
@@ -108,7 +119,9 @@ xgboost_wrapper <- function(formula,
                               nrounds = nrounds,
                               verbose = 0)
   pred <- predict(model, newdata = test_matrix)
-  if (objective %in% "reg:squarederror") {
+  if (!is.null(metricfunc)) {
+    metric <- metricfunc()
+  } else if (objective %in% "reg:squarederror") {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
   } else if (objective %in% "binary:logistic") {
@@ -126,7 +139,7 @@ xgboost_wrapper <- function(formula,
   return(metric)
 }
 
-# Wrapper function for Ranger model training and evaluation
+#' Wrapper function for Ranger model training and evaluation
 #'
 #' @param formula Model formula
 #' @param data Data frame
@@ -145,6 +158,7 @@ ranger_wrapper <- function(formula,
                            test_indices,
                            probability = FALSE,
                            num.trees,
+                           metricfunc = NULL,
                            ...) {
   training <- data[train_indices, ]
   testing <- data[test_indices, ]
@@ -153,12 +167,14 @@ ranger_wrapper <- function(formula,
   predictions <- predict(model, data = testing)$predictions
   actual <- testing[[all.vars(formula)[1]]]
 
-  if (probability) {
+
+  if (!is.null(metricfunc)) {
+    metric <- metricfunc()
+  } else if (probability) {
     pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
     cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
     metric <- cm$overall["Kappa"]
   } else {
-
     metric <- sqrt(mean((predictions - actual)^2))
   }
 

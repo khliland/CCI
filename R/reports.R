@@ -13,19 +13,13 @@
 #' @export
 print.summary.CCI <- function(x, ...) {
   cat(paste0("Computational conditional independence test using '", x$method, "'.\n"))
-  
-  if (!is.null(x$formula) && is.character(x$formula)) {
-    cat("Formula: ", x$formula, "\n")
-  } else if (!is.null(x$dag_n)) {
-    cat("DAGitty test: ", x$dag_n, "\n")
-  }
-  
+  cat("Formula: ", x$formula, "\n")
   cat("Number of Monte Carlo samples: ", x$nperm, "\n")
   cat("Test Statistic: ", unlist(x$test.statistic), "\n")
   cat("P-value: ", x$p.value, "\n")
   cat("Summary of Null Distribution:\n")
   print(summary(unlist(x$null.distribution)))
-  
+
   invisible(x)
 }
 

@@ -4,15 +4,7 @@
 \alias{glm_wrapper}
 \title{Wrapper function for GLM model training and evaluation}
 \usage{
-glm_wrapper(
-  formula,
-  data,
-  train_indices,
-  test_indices,
-  lm_family,
-  data_type,
-  ...
-)
+glm_wrapper(formula, data, train_indices, test_indices, family, data_type, ...)
 }
 \arguments{
 \item{formula}{Model formula}
@@ -23,7 +15,7 @@ glm_wrapper(
 
 \item{test_indices}{Indices for testing data}
 
-\item{lm_family}{Family for GLM}
+\item{family}{Family for GLM}
 
 \item{data_type}{Type of data (continuous or binary)}
 
