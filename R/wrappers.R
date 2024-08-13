@@ -22,8 +22,7 @@ glm_wrapper <- function(formula,
                         ...) {
   model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
   if (!is.null(metricfunc)) {
-    actual <- data[test_indices,][[all.vars(formula)[1]]]
-    metric <- metricfunc(data, actual, model, test_indices)
+    metric <- metricfunc(data = data, model = model, ...)
   } else if (data_type %in% "continuous") {
     pred <- predict.glm(model, newdata = data[test_indices,])
     actual <- data[test_indices,][[all.vars(formula)[1]]]
@@ -56,11 +55,12 @@ multinom_wrapper <- function(formula,
                              metricfunc = NULL,
                              ...) {
   model <- nnet::multinom(formula, data = data, subset = train_indices, ...)
-  pred <- predict(model, newdata = data[test_indices,])
-  actual <- data[test_indices[iteration,],][[all.vars(formula)[1]]]
+
   if (!is.null(metricfunc)) {
-    metric <- metricfunc()
+    metric <- metricfunc(data = data, model = model, ...)
   } else {
+    pred <- predict(model, newdata = data[test_indices,])
+    actual <- data[test_indices,][[all.vars(formula)[1]]]
     cm <- caret::confusionMatrix(factor(pred), factor(actual))
     metric <- cm$overall["Kappa"]
   }
@@ -120,7 +120,7 @@ xgboost_wrapper <- function(formula,
                               verbose = 0)
   pred <- predict(model, newdata = test_matrix)
   if (!is.null(metricfunc)) {
-    metric <- metricfunc()
+    metricfunc(data = data, model = model, ...)
   } else if (objective %in% "reg:squarederror") {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
@@ -169,7 +169,7 @@ ranger_wrapper <- function(formula,
 
 
   if (!is.null(metricfunc)) {
-    metric <- metricfunc()
+    metricfunc(data = data, model = model, ...)
   } else if (probability) {
     pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
     cm <- caret::confusionMatrix(factor(pred_class), factor(actual))

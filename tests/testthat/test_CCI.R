@@ -4,16 +4,19 @@ library(CCI)
 set.seed(123)
 # Testing utils functions
 # Clean formula
+#-------------------------------------------------------------------------------
 test_that("clean_formula outputs correct formula", {
   clean_formula <- clean_formula(y ~ x | z)
   expect_true(class(clean_formula) == "formula")
   expect_equal(clean_formula, y ~ x | z)
 })
+#-------------------------------------------------------------------------------
 test_that("clean_formula outputs correct formula", {
   clean_formula <- clean_formula(y ~ x + z)
   expect_true(class(clean_formula) == "formula")
   expect_equal(clean_formula, y ~ x | z)
 })
+#-------------------------------------------------------------------------------
 # Get pvalues
 dist <- rnorm(10)
 test_statistic <- rnorm(1)
@@ -22,13 +25,13 @@ test_that("get_pvalues outputs p-values", {
   expect_lt(p_value,1)
   expect_gt(p_value, 0)
 })
-
+#-------------------------------------------------------------------------------
 test_that("get_pvalues outputs p-values", {
   p_value <- get_pvalues(dist = dist, test_statistic = test_statistic, parametric = TRUE, tail = "right")
   expect_lt(p_value,1)
   expect_gt(p_value, 0)
 })
-
+#-------------------------------------------------------------------------------
 # Testing wrapper functions
 dat <- data.frame(
   x1 = rnorm(100),
@@ -39,7 +42,7 @@ dat <- data.frame(
 )
 train_indices <- c(1:80)
 test_indices <- c(81:100)
-
+#-------------------------------------------------------------------------------
 test_that("glm_wrapper outputs a metric score (basic use)", {
   metric <- glm_wrapper(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous", family = gaussian(link = "identity"))
   expect_true(class(metric) == "numeric")
@@ -54,7 +57,8 @@ normal_data <- function(N){
   return(df)
 }
 
-metricfunc <- function(data, actual, model, test_indices) {
+metricfunc <- function(data, model, test_indices) {
+  actual <- data[test_indices,][['Y']]
   pred <- predict.glm(model, newdata = data[test_indices,])
   sst <- sum((actual - mean(actual))^2)
   ssr <- sum((actual - pred)^2)
@@ -62,7 +66,7 @@ metricfunc <- function(data, actual, model, test_indices) {
   return(metric)
 }
 
-test_that("glm_wrapper outputs a metric score (advance use)", {
+test_that("glm_wrapper outputs a custom metric score (advance use)", {
   dat <- normal_data(200)
   inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
   train_indices  <- inTraining
@@ -76,10 +80,38 @@ test_that("glm_wrapper outputs a metric score (advance use)", {
                         metricfunc = metricfunc)
   expect_true(class(metric) == "numeric")
 })
+#-------------------------------------------------------------------------------
+
+test_that("glm_wrapper outputs a metric score (binary var)", {
+  dat <- binomial_data(300, 1, 1)
+  inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(dat), inTraining)
+  metric <- glm_wrapper(formula = Y ~ X + Z1 + Z2,
+                        data = dat,
+                        train_indices = train_indices,
+                        test_indices = test_indices,
+                        data_type = "binary",
+                        family = binomial(link = "logit"))
+  expect_true(class(metric) == "numeric")
+})
+
+#-------------------------------------------------------------------------------
+
+multi_class_log_loss <- function(data, model, all_levels, eps = 0.001) {
+  pred <- predict(model, newdata = data[test_indices,], type = "probs")
+  actual <- data[test_indices,][[all.vars(formula)[1]]]
+  actual <- factor(actual, levels = all_levels)
+  actual_matrix <- model.matrix(~ actual - 1)
+  predicted <- pmax(pmin(pred, 1 - eps), eps)
+  log_loss <- -sum(actual_matrix * log(predicted)) / nrow(predicted)
+  return(log_loss)
+}
+
 
 
 test_that("multinom_wrapper outputs a metric score", {
-  dat <- normal_data(200)
+  dat <- CategorizeInteractiondData(200)
   inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(dat), inTraining)
@@ -87,9 +119,9 @@ test_that("multinom_wrapper outputs a metric score", {
                         data = dat,
                         train_indices = train_indices,
                         test_indices = test_indices,
-                        data_type = "continuous",
-                        family = gaussian(link = "identity"),
-                        metricfunc = metricfunc)
+                        data_type = "categorical",
+                        metricfunc = metricfunc
+                        )
   expect_true(class(metric) == "numeric")
 })
 

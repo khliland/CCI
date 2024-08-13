@@ -35,6 +35,7 @@ perm.test <- function(formula,
                       objective = "reg:squarederror",
                       probability = FALSE,
                       tail = NA,
+                      seed = NULL,
                       ...) {
 
   if (is.na(tail)) {
