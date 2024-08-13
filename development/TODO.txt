@@ -1,5 +1,6 @@
 # Wrappere
-- XGBr, XGBbinary, XGBmulti
+- Linear model, ranger and xgboost
+
 - Tar seg av datakonvertering og eventuell tilpasning til formel-interface.
 
 # Data til pakken
