@@ -22,7 +22,7 @@ glm_wrapper <- function(formula,
                         ...) {
   model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(data = data, model = model, ...)
+    metric <- metricfunc(data, model, test_indices)
   } else if (data_type %in% "continuous") {
     pred <- predict.glm(model, newdata = data[test_indices,])
     actual <- data[test_indices,][[all.vars(formula)[1]]]
@@ -54,14 +54,14 @@ multinom_wrapper <- function(formula,
                              test_indices,
                              metricfunc = NULL,
                              ...) {
-  model <- nnet::multinom(formula, data = data, subset = train_indices, ...)
+  model <- nnet::multinom(formula = Y ~ X + Z1 + Z2, data = data, subset = train_indices, trace = FALSE, ...)
 
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(data = data, model = model, ...)
+    metric <- metricfunc(data, model, test_indices)
   } else {
     pred <- predict(model, newdata = data[test_indices,])
     actual <- data[test_indices,][[all.vars(formula)[1]]]
-    cm <- caret::confusionMatrix(factor(pred), factor(actual))
+    cm <- caret::confusionMatrix(factor(pred, levels = levels(actual)), factor(actual))
     metric <- cm$overall["Kappa"]
   }
   return(metric)
@@ -76,6 +76,7 @@ multinom_wrapper <- function(formula,
 #' @param iteration Current iteration index
 #' @param nrounds Number of boosting rounds
 #' @param objective Objective function for XGBoost
+#' @param metricfunc A user specific metric function which have the arguments data, model and test_indices and returns a numeric value
 #' @param ... Additional arguments passed to xgb.train
 #'
 #' @return Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
@@ -87,6 +88,7 @@ xgboost_wrapper <- function(formula,
                             nrounds,
                             objective,
                             metricfunc = NULL,
+                            num_class,
                             ...) {
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
@@ -114,14 +116,17 @@ xgboost_wrapper <- function(formula,
   }
   params <- list(objective = objective,
                  ...)
+
   model <- xgboost::xgb.train(data = train_matrix,
                               params = params,
                               nrounds = nrounds,
-                              verbose = 0)
+                              verbose = 0,
+                              num_class = num_class)
+
   pred <- predict(model, newdata = test_matrix)
   if (!is.null(metricfunc)) {
-    metricfunc(data = data, model = model, ...)
-  } else if (objective %in% "reg:squarederror") {
+    metric <- metricfunc(data, model, test_indices)
+  } else if (objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
   } else if (objective %in% "binary:logistic") {
@@ -169,7 +174,7 @@ ranger_wrapper <- function(formula,
 
 
   if (!is.null(metricfunc)) {
-    metricfunc(data = data, model = model, ...)
+    metric <- metricfunc(data, model, test_indices)
   } else if (probability) {
     pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
     cm <- caret::confusionMatrix(factor(pred_class), factor(actual))

@@ -23,6 +23,7 @@ CCI.test <- function(formula = NA,
                      data_type = "continuous",
                      method = 'rf',
                      parametric = FALSE,
+                     seed = NULL,
                      ...) {
 
   result <- perm.test(formula = formula,
@@ -34,6 +35,7 @@ CCI.test <- function(formula = NA,
                       data_type = data_type,
                       method = method,
                       parametric = parametric,
+                      seed = seed,
                       ...)
 
 

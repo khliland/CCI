@@ -140,7 +140,7 @@ simulateComplexCategorization <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
-multinominal <- function(N, zeta = 1.5) {
+multinominal_data <- function(N, zeta = 1.5) {
   Z1 <- rnorm(N)
 
   Z2 <- rnorm(N)
