@@ -87,6 +87,7 @@ test_that("glm_wrapper outputs a metric score (binary var)", {
 })
 
 #-------------------------------------------------------------------------------
+# Example of a custom function for calculating log loss with categorical outcome
 multi_class_log_loss <- function(data, model, test_indices) {
   eps = 0.001
   pred <- predict(model, newdata = data[test_indices,], type = "probs")
@@ -98,10 +99,11 @@ multi_class_log_loss <- function(data, model, test_indices) {
   return(log_loss)
 }
 
-test_that("multinom_wrapper outputs a log loss metric score", {
+test_that("multinom_wrapper outputs a custom log loss metric score", {
   data <- multinominal_data(1000)
   data$X <- as.factor(data$X)
   data$Y <- as.factor(data$Y)
+
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -118,7 +120,7 @@ test_that("multinom_wrapper outputs a log loss metric score", {
 #-------------------------------------------------------------------------------
 
 test_that("xgboost_wrapper rmse output", {
-  set.seed(1)
+
   data <- uniform_noise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
@@ -135,8 +137,8 @@ test_that("xgboost_wrapper rmse output", {
 })
 
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper rmse output", {
-  set.seed(1)
+test_that("xgboost_wrapper rmse output using a different objective", {
+
   data <- uniform_noise(1000)
   data$Y <- abs(data$Y)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
@@ -154,7 +156,7 @@ test_that("xgboost_wrapper rmse output", {
 })
 
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper rmse output", {
+test_that("xgboost_wrapper rmse output with reg:pseudohubererror and various parameter settings", {
 
   data <- uniform_noise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
@@ -166,7 +168,41 @@ test_that("xgboost_wrapper rmse output", {
                             train_indices = train_indices,
                             test_indices = test_indices,
                             objective = "reg:pseudohubererror",
-                            nrounds = 120)
+                            nrounds = 120,
+                            eta = 0.1,
+                            max_depth = 4,
+                            lambda = 0.5)
+
+  expect_true(class(metric) == "numeric")
+})
+
+#-------------------------------------------------------------------------------
+rSquared <- function(data, model, test_matrix) {
+  actual <- data[test_indices,][['Y']]
+  pred <- predict(model, newdata = test_matrix)
+  sst <- sum((actual - mean(actual))^2)
+  ssr <- sum((actual - pred)^2)
+  metric <- 1 - (ssr / sst)
+  return(metric)
+}
+
+test_that("xgboost_wrapper rmse output with reg:squarederror, various parameter settings and custom performance metric (R-squared)", {
+
+  data <- uniform_noise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            objective = "reg:squarederror",
+                            nrounds = 90,
+                            eta = 0.1,
+                            max_depth = 4,
+                            lambda = 0.5,
+                            metricfunc = rSquared)
 
   expect_true(class(metric) == "numeric")
 })
@@ -174,7 +210,7 @@ test_that("xgboost_wrapper rmse output", {
 #-------------------------------------------------------------------------------
 test_that("xgboost_wrapper Kappa score output", {
 
-  data <- binomial_data(300, 1, 1)
+  data <- binomial_data(1000, 1, 1)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -190,9 +226,22 @@ test_that("xgboost_wrapper Kappa score output", {
 
 #-------------------------------------------------------------------------------
 
-test_that("xgboost_wrapper Kappa score output", {
+multi_class_log_loss <- function(data, model, test_matrix) {
+  eps = 0.001
+  pred <- predict(model, newdata = test_matrix)
+  actual <- data[test_indices,][['Y']]
+  actual_matrix <- model.matrix(~ actual - 1)
+  predicted <- pmax(pmin(pred, 1 - eps), eps)
+  log_loss <- -sum(actual_matrix * log(predicted)) / nrow(predicted)
+  return(log_loss)
+}
 
-  data <- binomial_data(1000, 1, 1)
+test_that("xgboost_wrapper log loss score output", {
+
+  data <- multinominal_data(1000)
+  data$Y <- as.numeric(as.factor(data$Y))-1
+  data$X <- as.numeric(as.factor(data$X))-1
+
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -202,11 +251,13 @@ test_that("xgboost_wrapper Kappa score output", {
                             train_indices = train_indices,
                             test_indices = test_indices,
                             objective = "multi:softprob",
-                            num_class = 2,
                             nrounds = 120,
+                            num_class = 3,
                             eta = 0.1,
                             lambda = 0.5,
-                            alpha = 0.5)
+                            alpha = 0.5,
+                            metricfunc = multi_class_log_loss)
+
   expect_true(class(metric) == "numeric")
 })
 

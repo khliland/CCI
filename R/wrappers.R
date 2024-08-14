@@ -76,10 +76,11 @@ multinom_wrapper <- function(formula,
 #' @param iteration Current iteration index
 #' @param nrounds Number of boosting rounds
 #' @param objective Objective function for XGBoost
-#' @param metricfunc A user specific metric function which have the arguments data, model and test_indices and returns a numeric value
+#' @param num_class Number of categorical classes
+#' @param metricfunc A user specific metric function which have the arguments data, model and test_matrix and returns a numeric value
 #' @param ... Additional arguments passed to xgb.train
 #'
-#' @return Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
+#' @return Performance metric
 #' @export
 xgboost_wrapper <- function(formula,
                             data,
@@ -88,7 +89,7 @@ xgboost_wrapper <- function(formula,
                             nrounds,
                             objective,
                             metricfunc = NULL,
-                            num_class,
+                            num_class = NULL,
                             ...) {
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
@@ -114,18 +115,17 @@ xgboost_wrapper <- function(formula,
     train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
     test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
   }
-  params <- list(objective = objective,
-                 ...)
+
+  params <- list(objective = objective, num_class = num_class, ...)
 
   model <- xgboost::xgb.train(data = train_matrix,
                               params = params,
                               nrounds = nrounds,
-                              verbose = 0,
-                              num_class = num_class)
+                              verbose = 0)
 
   pred <- predict(model, newdata = test_matrix)
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(data, model, test_indices)
+    metric <- metricfunc(data, model, test_matrix)
   } else if (objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
