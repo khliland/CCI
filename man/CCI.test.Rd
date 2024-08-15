@@ -15,6 +15,7 @@ CCI.test(
   data_type = "continuous",
   method = "rf",
   parametric = FALSE,
+  seed = NULL,
   ...
 )
 }

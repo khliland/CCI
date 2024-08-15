@@ -4,7 +4,14 @@
 \alias{multinom_wrapper}
 \title{Wrapper function for multinomial regression model training and evaluation}
 \usage{
-multinom_wrapper(formula, data, train_indices, test_indices, ...)
+multinom_wrapper(
+  formula,
+  data,
+  train_indices,
+  test_indices,
+  metricfunc = NULL,
+  ...
+)
 }
 \arguments{
 \item{formula}{Model formula}
@@ -14,6 +21,8 @@ multinom_wrapper(formula, data, train_indices, test_indices, ...)
 \item{train_indices}{Indices for training data}
 
 \item{test_indices}{Indices for testing data}
+
+\item{metricfunc}{A user specific metric function which have the arguments data, model and test_indices, returns a numeric value}
 
 \item{...}{Additional arguments passed to multinom}
 

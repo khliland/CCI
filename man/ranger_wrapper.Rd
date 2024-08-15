@@ -10,7 +10,8 @@ ranger_wrapper(
   train_indices,
   test_indices,
   probability = FALSE,
-  num.trees,
+  num.trees = 500,
+  metricfunc = NULL,
   ...
 )
 }
@@ -27,12 +28,12 @@ ranger_wrapper(
 
 \item{num.trees}{Number of boosting rounds}
 
-\item{...}{Additional arguments passed to ranger}
+\item{metricfunc}{A user specific metric function which have the arguments data, model and test_indices, returns a numeric value}
 
-\item{iteration}{Current iteration index}
+\item{...}{Additional arguments passed to ranger}
 }
 \value{
-Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
+Performance metric
 }
 \description{
 Wrapper function for Ranger model training and evaluation

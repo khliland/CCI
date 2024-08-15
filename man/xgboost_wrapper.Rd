@@ -11,6 +11,8 @@ xgboost_wrapper(
   test_indices,
   nrounds,
   objective,
+  num_class = NULL,
+  metricfunc = NULL,
   ...
 )
 }
@@ -27,12 +29,16 @@ xgboost_wrapper(
 
 \item{objective}{Objective function for XGBoost}
 
+\item{num_class}{Number of categorical classes}
+
+\item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
+
 \item{...}{Additional arguments passed to xgb.train}
 
 \item{iteration}{Current iteration index}
 }
 \value{
-Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
+Performance metric
 }
 \description{
 Wrapper function for XGBoost model training and evaluation

@@ -16,7 +16,8 @@
 #' @param objective Objective function for xgboost
 #' @param probability Logical, whether the ranger_wrapper should do classification
 #' @param permutation Logical, whether the perform permutation to generat a null distribution
-#' @param mlfunc custom ML function provided by the user, the function must have the arguments: formula, resampled_data, train_indices, test_indicies and return a single value performance metric
+#' @param mlfunc custom ML function provided by the user, the function must have the arguments: formula, data, train_indices, test_indices and ..., and return a single value performance metric
+#' @param ... additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}. Or to a custom build wrapper function.
 #' @importFrom stats glm predict update as.formula
 #' @importFrom caret createDataPartition confusionMatrix
 #' @importFrom dplyr mutate across all_of sym
@@ -32,7 +33,7 @@ test.gen <- function(Y,
                      data_type = "continuous",
                      method = "rf",
                      nperm = 100,
-                     p,
+                     p = 0.85,
                      N = nrow(data),
                      poly = TRUE,
                      degree = 3,
@@ -76,7 +77,6 @@ test.gen <- function(Y,
     formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = "+")))
   }
 
-  # Initialize a matrix for storing results
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
   # If statement of all the ML methods one can use to do computational test
@@ -98,7 +98,7 @@ test.gen <- function(Y,
 
     if (!is.null(mlfunc)) {
       null[iteration] <- mlfunc(formula, resampled_data, train_indices, test_indices, ...)
-    } else if (method %in% "lm" & data_type %in% "continuous")  { # Parametric linear model
+    } else if (method %in% "lm" & data_type %in% c("continuous", "binary"))  { # Parametric linear model
       null[iteration] <- glm_wrapper(formula,
                                      resampled_data,
                                      train_indices,
@@ -106,14 +106,7 @@ test.gen <- function(Y,
                                      family,
                                      data_type,
                                      ...)
-    } else if (method %in% "lm" & data_type %in% "binary"){
-      null[iteration] <- glm_wrapper(formula,
-                                     resampled_data,
-                                     train_indices,
-                                     test_indices,
-                                     family,
-                                     data_type,
-                                     ...)
+
     } else if (method %in% "lm" & data_type %in% "categorical") { # Parametric model (logistic) with categorical outcome
       null[iteration] <-  multinom_wrapper(formula,
                                            resampled_data,

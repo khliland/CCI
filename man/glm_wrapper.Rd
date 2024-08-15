@@ -4,7 +4,16 @@
 \alias{glm_wrapper}
 \title{Wrapper function for GLM model training and evaluation}
 \usage{
-glm_wrapper(formula, data, train_indices, test_indices, family, data_type, ...)
+glm_wrapper(
+  formula,
+  data,
+  train_indices,
+  test_indices,
+  family,
+  data_type,
+  metricfunc = NULL,
+  ...
+)
 }
 \arguments{
 \item{formula}{Model formula}
@@ -19,12 +28,14 @@ glm_wrapper(formula, data, train_indices, test_indices, family, data_type, ...)
 
 \item{data_type}{Type of data (continuous or binary)}
 
+\item{metricfunc}{A user specified function which calculates a metric}
+
 \item{...}{Additional arguments passed to glm}
 
 \item{iteration}{Current iteration index}
 }
 \value{
-Performance metric (RMSE for continuous, Kappa for binary)
+Performance metric (defaults are RMSE for continuous, Kappa for binary)
 }
 \description{
 Wrapper function for GLM model training and evaluation

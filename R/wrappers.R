@@ -21,6 +21,7 @@ glm_wrapper <- function(formula,
                         metricfunc = NULL,
                         ...) {
   model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
+
   if (!is.null(metricfunc)) {
     metric <- metricfunc(data, model, test_indices)
   } else if (data_type %in% "continuous") {
@@ -44,6 +45,8 @@ glm_wrapper <- function(formula,
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for testing data
 #' @param iteration Current iteration index
+#' @param metricfunc A user specific metric function which have the arguments data, model and test_indices, returns a numeric value
+
 #' @param ... Additional arguments passed to multinom
 #'
 #' @return Performance metric (Kappa for binary)
@@ -77,19 +80,20 @@ multinom_wrapper <- function(formula,
 #' @param nrounds Number of boosting rounds
 #' @param objective Objective function for XGBoost
 #' @param num_class Number of categorical classes
-#' @param metricfunc A user specific metric function which have the arguments data, model and test_matrix and returns a numeric value
+#' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param ... Additional arguments passed to xgb.train
 #'
 #' @return Performance metric
 #' @export
+
 xgboost_wrapper <- function(formula,
                             data,
                             train_indices,
                             test_indices,
                             nrounds,
                             objective,
-                            metricfunc = NULL,
                             num_class = NULL,
+                            metricfunc = NULL,
                             ...) {
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
@@ -116,16 +120,21 @@ xgboost_wrapper <- function(formula,
     test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
   }
 
-  params <- list(objective = objective, num_class = num_class, ...)
+  params <- list(objective = objective, ...)
+
+
+  if (!is.null(num_class) && objective == "multi:softprob") {
+    params$num_class <- num_class
+  }
 
   model <- xgboost::xgb.train(data = train_matrix,
-                              params = params,
                               nrounds = nrounds,
+                              params = params,
                               verbose = 0)
 
   pred <- predict(model, newdata = test_matrix)
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(data, model, test_matrix)
+    metric <- metricfunc(data, model, test_indices, test_matrix)
   } else if (objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
@@ -150,36 +159,41 @@ xgboost_wrapper <- function(formula,
 #' @param data Data frame
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for training data
-#' @param iteration Current iteration index
-#' @param num.trees Number of boosting rounds
 #' @param probability Grow a probability forest for binary or categorical outcomes
+#' @param num.trees Number of boosting rounds
+#' @param metricfunc A user specific metric function which have the arguments data, model and test_indices, returns a numeric value
 #' @param ... Additional arguments passed to ranger
 #'
-#' @return Performance metric (RMSE for continuous, Kappa for binary, Kappa for categorical)
+#' @return Performance metric
 #' @export
 ranger_wrapper <- function(formula,
                            data,
                            train_indices,
                            test_indices,
                            probability = FALSE,
-                           num.trees,
+                           num.trees = 500,
                            metricfunc = NULL,
                            ...) {
-  training <- data[train_indices, ]
-  testing <- data[test_indices, ]
-  model <- ranger::ranger(formula, data = training, num.trees, probability = probability, ...)
 
-  predictions <- predict(model, data = testing)$predictions
-  actual <- testing[[all.vars(formula)[1]]]
+  model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = probability, ...)
 
+  predictions <- predict(model, data = data[test_indices, ])$predictions
+  actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
     metric <- metricfunc(data, model, test_indices)
   } else if (probability) {
-    pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
-    cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
-    metric <- cm$overall["Kappa"]
-  } else {
+    if (nlevels(factor(actual)) > 2) {
+      pred_class <- apply(predictions, 1, which.max)
+      pred_class <- factor(pred_class, levels = 1:nlevels(factor(actual)), labels = levels(factor(actual)))
+      cm <- caret::confusionMatrix(pred_class, factor(actual))
+      metric <- cm$overall["Kappa"]
+    } else {
+      pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
+      cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
+      metric <- cm$overall["Kappa"]
+      }
+    } else {
     metric <- sqrt(mean((predictions - actual)^2))
   }
 

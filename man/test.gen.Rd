@@ -22,6 +22,7 @@ test.gen(
   probability = FALSE,
   permutation = FALSE,
   mlfunc = NULL,
+  seed = NULL,
   ...
 )
 }

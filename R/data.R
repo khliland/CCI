@@ -185,6 +185,24 @@ binomial_data <- function(n, coef_Z1, coef_Z2, intercept = 0, seed = NULL) {
   return(data)
 }
 
+categorical_data <- function(N) {
+
+  Z1 <- rnorm(N, mean = 0, sd = 1)
+  Z2 <- rnorm(N, mean = 0, sd = 1)
+  X <- rnorm(N, Z1 + Z2, sd = 1)
+
+  logits <- cbind(1  - 0.5 * Z1,
+                  -1  + 0.5 * Z2,
+                  1 - 0.5 * Z1 + 0.5 * Z2)
+
+  exp_logits <- exp(logits)
+  probs <- exp_logits / rowSums(exp_logits)
+  Y <- apply(probs, 1, function(p) sample(1:3, 1, prob = p)) - 1
+  data <- data.frame(Y, X, Z1, Z2)
+
+  return(data)
+}
+
 ########## Continuous Multivariate Functions ###########
 
 normal_data <- function(N){
