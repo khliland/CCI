@@ -10,6 +10,7 @@
 #' @param data_type Type of data: "continuous", "binary", or "categorical"
 #' @param method Method for modeling: "lm", "xgboost", "rf", etc.
 #' @param parametric Logical, indicating if parametric p-value should be computed
+#' @param seed Set seed value for reproduce results
 #' @param ... Additional arguments to pass to \code{perm.test}
 #' @return Invisibly returns the result of \code{perm.test}
 #' @export
@@ -24,6 +25,7 @@ CCI.test <- function(formula = NA,
                      method = 'rf',
                      parametric = FALSE,
                      seed = NULL,
+                     tail = NULL,
                      ...) {
 
   result <- perm.test(formula = formula,
@@ -36,6 +38,7 @@ CCI.test <- function(formula = NA,
                       method = method,
                       parametric = parametric,
                       seed = seed,
+                      tail = tail,
                       ...)
 
 

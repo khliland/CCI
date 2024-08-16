@@ -49,17 +49,17 @@ test.gen <- function(Y,
   if (!is.null(seed)) {
     set.seed(seed)
   }
-  if (nperm < 10) {
+  if (permutation && nperm < 10) {
     stop("nperm can't be less than 10")
   }
-  if (poly & degree < 1) {
+  if (poly && degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
-  if (method %in% "xgboost" & data_type %in% "categorical" & !exists("num_class")) {
+  if (method %in% "xgboost" && data_type %in% "categorical" && !exists("num_class")) {
     stop("num_class needs to be set.")
   }
 
-  if (poly == TRUE & degree > 1){
+  if (poly && degree > 1){
     transformations <- lapply(2:degree, function(d) {
       eval(parse(text = paste0("~ .^", d)))
     })
@@ -129,6 +129,7 @@ test.gen <- function(Y,
                                          test_indices,
                                          nrounds,
                                          objective,
+                                         num_class,
                                          ...)
     }
     else if (method %in% "rf") { # Random Forest with continuous outcome

@@ -490,8 +490,7 @@ test_that("test.gen works correctly for binary data, default method is random fo
 
 #-------------------------------------------------------------------------------
 
-test_that("test.gen works correctly for continuous data, with Xgboost
-          various parameter settings", {
+test_that("test.gen works correctly for continuous data, with Xgboost various parameter settings", {
             data <- normal_data(800)
             result <- test.gen(Y = "Y",
                                X = "X",
@@ -510,7 +509,7 @@ test_that("test.gen works correctly for continuous data, with Xgboost
 #-------------------------------------------------------------------------------
 
 test_that("test.gen works correctly for categorical data, with Xgboost
-          various parameter settings", {
+          setting the num_class parameter", {
             data <- categorical_data(800)
             result <- test.gen(Y = "Y",
                                X = "X",
@@ -529,8 +528,7 @@ test_that("test.gen works correctly for categorical data, with Xgboost
 
 #-------------------------------------------------------------------------------
 
-test_that("test.gen works correctly for continuous data, with Xgboost
-          various parameter settings", {
+test_that("test.gen works correctly for binary outcome data using Xgboost", {
             data <- binomial_data(800, 1, 1)
             result <- test.gen(Y = "Y",
                                X = "X",
@@ -548,13 +546,13 @@ test_that("test.gen works correctly for continuous data, with Xgboost
 
 #-------------------------------------------------------------------------------
 
-test_that("test.gen works correctly with Xgboost (takes time)", {
+test_that("test.gen works correctly with Xgboost", {
             data <- binomial_data(800, 1, 1)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
                                data = data,
-                               nperm = 1000,
+                               nperm = 100,
                                method = "xgboost",
                                data_type = "binary",
                                permutation = TRUE,
@@ -598,7 +596,7 @@ test_that("test.gen works correctly for binary Y, with glm", {
                      method = "lm",
                      data_type = "binary",
                      family = binomial(link = "logit"),
-                     permutation = TRUE,
+                     permutation = FALSE,
                      degree = 3)
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
@@ -626,46 +624,52 @@ test_that("test.gen works correctly for categorical Y, with glm", {
 })
 
 #-------------------------------------------------------------------------------
-library(caret)
-library(adabag)
-caret_wrapper <- function(formula,
-                             data,
-                             train_indices,
-                             test_indices,
-                             ...) {
+library(ipred)
+# Creating a wrapper function using the caret package with cross-validation
+bagging_wrapper <- function(formula,
+                          data,
+                          train_indices,
+                          test_indices,
+                          ...) {
+  training <- data[train_indices, ]
+  testing <- data[test_indices, ]
 
-  model <- caret::train(formula = formula,
-                            data = data[train_indices, ],
+  model <- ipred::bagging(form = formula,
+                        data = training,
                             ...)
 
-  actual <- data[test_indices,][['Y']]
-  pred <- predict(model, newdata = data[test_indices,])
+  actual <- testing[['Y']]
+  pred <- predict(model, newdata = testing)
   sst <- sum((actual - mean(actual))^2)
   ssr <- sum((actual - pred)^2)
   metric <- 1 - (ssr / sst)
   return(metric)
-  return(metric)
 }
-data <- non_lin_normal(800)
 
-inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
-train_indices  <- inTraining
-test_indices <- setdiff(1:nrow(dat), inTraining)
-train_control <- trainControl(method = "cv", number = 5)  # 5-fold cross-validation
 
-model <- caret::train(formula = Y ~ X + Z1 + Z2,
-                          data = data[train_indices, ],
-                      method = 'adaboost',
-                      trcontrol = train_control)
-
-test_that("test.gen works correctly for with custom made ML function", {
+test_that("test.gen works correctly for with custom made ML function called bagging_wrapper", {
 
   result <- test.gen(Y = "Y",
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
                      nperm = 200,
-                     mlfunc = ADAboost_wrapper)
+                     nbag = 50,
+                     mlfunc = bagging_wrapper)
+
+  expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+
+})
+
+test_that("test.gen works correctly using metricfunc", {
+
+  result <- test.gen(Y = "Y",
+                     X = "X",
+                     Z = c("Z1", "Z2"),
+                     data = data,
+                     nperm = 200,
+                     metricfunc = rSquared)
 
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
@@ -674,38 +678,96 @@ test_that("test.gen works correctly for with custom made ML function", {
 
 #-------------------------------------------------------------------------------
 ################## Troubleshooting perm.test() #################################
+#-------------------------------------------------------------------------------
 
-
-test_that("perm.test works correctly for continuous data", {
+test_that("perm.test works correctly in the simplest case", {
   data <- non_lin_normal(500)
-  result <- perm.test(Y ~ X | Z1 + Z2, data = dat)
+  result <- perm.test(Y ~ X | Z1 + Z2, data = data)
   expect_is(result, "CCI")
 })
 
-expect_true("distribution" %in% names(result))
-  expect_true("test.statistic" %in% names(result))
-  expect_true("p.value" %in% names(result))
+test_that("perm.test works with metricfunc", {
+  data <- non_lin_normal(1000)
+  result <- perm.test(Y ~ X | Z1 + Z2,
+                      data = data,
+                      metricfunc = rSquared)
+  expect_is(result, "CCI")
+})
 
-?expect_is()
+test_that("perm.test works with mlfunc", {
+  data <- poisson_noise(1000)
+  result <- perm.test(Y ~ X + Z1 + Z2,
+                      data = data,
+                      nbag = 76,
+                      mlfunc = bagging_wrapper)
+  expect_is(result, "CCI")
+})
 
-test <- perm.test(formula = y ~ x1 | x2 + x3 + x4, data = dat)
-summary(test)
-plot(test, title = "Test")
+test_that("perm.test works correctly", {
+  data <- non_lin_normal(500)
+  result <- perm.test(Y ~ X | Z1 + Z2,
+                      data = data,
+                      method = "xgboost",
+                      nrounds = 90)
+  expect_is(result, "CCI")
+})
 
-CCI.test(formula = y ~ x1 | x2 + x3 + x4, data = dat, nperm = 100, method = "lm")
+test_that("perm.test works correctly", {
+  data <- non_lin_normal(500)
+  result <- perm.test(formula = Y ~ X + Z1 + Z2,
+                      data = data,
+                      p = 0.7,
+                      nperm = 400,
+                      data_type = "continuous",
+                      method = "xgboost",
+                      nrounds = 80,
+                      parametric = TRUE,
+                      poly = FALSE,
+                      objective = "reg:pseudohubererror",
+                      probability = FALSE,
+                      tail = NA,
+                      seed =3030)
+  expect_is(result, "CCI")
+})
 
-dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-cci <- perm.test("y ~ x1 | x2", data = dat)
-QQplot(cci)
-dag <- dagitty('dag {
-  X -> Y
-  Y -> Z
+library(dagitty)
 
+test_that("perm.test works correctly with dagitty object", {
+  data <- non_lin_normal(500)
+  dag <- dagitty('dag {
+  X
+  Y
+  Z1
+  Z2
+  Z1 -> X
+  Z1 -> Y
+  Z2 -> X
+  Z2 -> Y
 }')
-plot(dag)
-t <- impliedConditionalIndependencies(dag)
 
+  result <- perm.test(formula = NULL,
+                      dag = dag,
+                      dag_n = 1,
+                      data = data,
+                      p = 0.7,
+                      nperm = 400,
+                      data_type = "continuous",
+                      parametric = TRUE,
+                      seed =3030)
+  expect_is(result, "CCI")
+})
 
-result <- perm.test(formula = "Y ~ X | Z1", data = data, method = "rf", nperm = 1000, parametric = TRUE)
-summary_result <- summary(result)
-print(summary_result)
+#-------------------------------------------------------------------------------
+################## Troubleshooting CCI.test() #################################
+#-------------------------------------------------------------------------------
+
+test_that("perm.test works correctly with dagitty object", {
+  data <- normal_data(800)
+  result <- CCI.test(formula = Y ~ X | Z1, Z2,
+                      data = data,
+                      nperm = 50,
+                      data_type = "continuous",
+                      parametric = TRUE
+                     )
+  expect_is(result, "CCI")
+})

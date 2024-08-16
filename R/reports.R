@@ -13,7 +13,7 @@
 #' @export
 print.summary.CCI <- function(x, ...) {
   cat(paste0("Computational conditional independence test using '", x$method, "'.\n"))
-  cat("Formula: ", x$formula, "\n")
+  cat("Formula: ", deparse(x$formula), "\n")
   cat("Number of Monte Carlo samples: ", x$nperm, "\n")
   cat("Test Statistic: ", unlist(x$test.statistic), "\n")
   cat("P-value: ", x$p.value, "\n")

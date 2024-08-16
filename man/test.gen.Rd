@@ -12,13 +12,14 @@ test.gen(
   data_type = "continuous",
   method = "rf",
   nperm = 100,
-  p,
+  p = 0.85,
   N = nrow(data),
   poly = TRUE,
   degree = 3,
   nrounds = 120,
   family,
   objective = "reg:squarederror",
+  num_class = NULL,
   probability = FALSE,
   permutation = FALSE,
   mlfunc = NULL,
@@ -59,7 +60,9 @@ test.gen(
 
 \item{permutation}{Logical, whether the perform permutation to generat a null distribution}
 
-\item{mlfunc}{custom ML function provided by the user, the function must have the arguments: formula, resampled_data, train_indices, test_indicies and return a single value performance metric}
+\item{mlfunc}{custom ML function provided by the user, the function must have the arguments: formula, data, train_indices, test_indices and ..., and return a single value performance metric}
+
+\item{...}{additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}. Or to a custom build wrapper function.}
 }
 \value{
 A list containing the test distribution
