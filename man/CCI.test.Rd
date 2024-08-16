@@ -16,6 +16,9 @@ CCI.test(
   method = "rf",
   parametric = FALSE,
   seed = NULL,
+  metricfunc = NULL,
+  mlfunc = NULL,
+  tail = NA,
   ...
 )
 }
@@ -39,6 +42,8 @@ CCI.test(
 \item{method}{Method for modeling: "lm", "xgboost", "rf", etc.}
 
 \item{parametric}{Logical, indicating if parametric p-value should be computed}
+
+\item{seed}{Set seed value for reproduce results}
 
 \item{...}{Additional arguments to pass to \code{perm.test}}
 }

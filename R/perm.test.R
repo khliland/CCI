@@ -35,6 +35,8 @@ perm.test <- function(formula,
                       objective = "reg:squarederror",
                       probability = FALSE,
                       tail = NA,
+                      metricfunc = NULL,
+                      mlfunc = NULL,
                       seed = NULL,
                       ...) {
 

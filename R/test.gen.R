@@ -43,6 +43,7 @@ test.gen <- function(Y,
                      num_class = NULL,
                      probability = FALSE,
                      permutation = FALSE,
+                     metricfunc = NULL,
                      mlfunc = NULL,
                      seed = NULL,
                      ...) {

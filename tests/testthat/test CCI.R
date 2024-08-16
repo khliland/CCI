@@ -469,6 +469,7 @@ test_that("test.gen works correctly for binary data, default method is random fo
   expect_true(class(mean(unlist(result))) == "numeric")
 
 })
+
 #-------------------------------------------------------------------------------
 
 test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
@@ -565,7 +566,6 @@ test_that("test.gen works correctly with Xgboost", {
 
 #-------------------------------------------------------------------------------
 
-
 test_that("test.gen works correctly for continuous data, with GLM
           various parameter settings", {
             data <- normal_data(800)
@@ -648,7 +648,7 @@ bagging_wrapper <- function(formula,
 
 
 test_that("test.gen works correctly for with custom made ML function called bagging_wrapper", {
-
+  data <- normal_data(500)
   result <- test.gen(Y = "Y",
                      X = "X",
                      Z = c("Z1", "Z2"),
@@ -763,9 +763,9 @@ test_that("perm.test works correctly with dagitty object", {
 
 test_that("perm.test works correctly with dagitty object", {
   data <- normal_data(800)
-  result <- CCI.test(formula = Y ~ X | Z1, Z2,
+  result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                       data = data,
-                      nperm = 50,
+                      nperm = 500,
                       data_type = "continuous",
                       parametric = TRUE
                      )

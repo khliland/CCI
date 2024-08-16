@@ -25,7 +25,9 @@ CCI.test <- function(formula = NA,
                      method = 'rf',
                      parametric = FALSE,
                      seed = NULL,
-                     tail = NULL,
+                     metricfunc = NULL,
+                     mlfunc = NULL,
+                     tail = NA,
                      ...) {
 
   result <- perm.test(formula = formula,
