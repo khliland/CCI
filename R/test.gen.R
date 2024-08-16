@@ -40,6 +40,7 @@ test.gen <- function(Y,
                      nrounds = 120,
                      family,
                      objective = "reg:squarederror",
+                     num_class = NULL,
                      probability = FALSE,
                      permutation = FALSE,
                      mlfunc = NULL,
@@ -97,7 +98,7 @@ test.gen <- function(Y,
     }
 
     if (!is.null(mlfunc)) {
-      null[iteration] <- mlfunc(formula, resampled_data, train_indices, test_indices, ...)
+      null[iteration] <- mlfunc(formula, data = resampled_data, train_indices, test_indices, ...)
     } else if (method %in% "lm" & data_type %in% c("continuous", "binary"))  { # Parametric linear model
       null[iteration] <- glm_wrapper(formula,
                                      resampled_data,

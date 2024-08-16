@@ -21,6 +21,7 @@ perm.test(
   objective = "reg:squarederror",
   probability = FALSE,
   tail = NA,
+  seed = NULL,
   ...
 )
 }

@@ -64,7 +64,8 @@ multinom_wrapper <- function(formula,
   } else {
     pred <- predict(model, newdata = data[test_indices,])
     actual <- data[test_indices,][[all.vars(formula)[1]]]
-    cm <- caret::confusionMatrix(factor(pred, levels = levels(actual)), factor(actual))
+    pred <- as.factor(pred)
+    cm <- caret::confusionMatrix(pred, factor(actual))
     metric <- cm$overall["Kappa"]
   }
   return(metric)

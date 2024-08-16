@@ -96,6 +96,24 @@ test_that("glm_wrapper outputs a metric score (binary var)", {
 #-------------------------------------------------------------------------------
 # Example of a custom function for calculating log loss with categorical outcome
 
+test_that("multinom_wrapper", {
+  data <- categorical_data(1000)
+
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- multinom_wrapper(formula = Y ~ X + Z1 + Z2,
+                             data = data,
+                             train_indices = train_indices,
+                             test_indices = test_indices)
+
+  expect_true(class(metric) == "numeric")
+})
+
+#-------------------------------------------------------------------------------
+# Example of a custom function for calculating log loss with categorical outcome
+
 test_that("multinom_wrapper outputs a custom log loss metric score", {
   multi_class_log_loss <- function(data, model, test_indices) {
     eps = 0.001
@@ -402,12 +420,16 @@ test_that("test.gen works correctly for continuous data, default method is rando
   data <- non_lin_normal(800)
   result <- test.gen(Y = "Y", X = "X", Z = c("Z1", "Z2"), data = data)
   expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+
 })
 
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger) with poly turned off", {
   data <- normal_data(1000)
   result <- test.gen(Y = "Y", X = "X", Z = c("Z1", "Z2"), data = data, poly = FALSE)
   expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+
 })
 
 #-------------------------------------------------------------------------------
@@ -425,7 +447,46 @@ test_that("test.gen works correctly for continuous data, default method is rando
                                max.depth = 6,
                                mtry = 1)
             expect_true(class(result) == "list")
+            expect_true(class(mean(unlist(result))) == "numeric")
+
           })
+
+#-------------------------------------------------------------------------------
+
+test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
+  data <- binomial_data(1000, 1,1)
+  result <- test.gen(Y = "Y",
+                     X = "X",
+                     Z = c("Z1", "Z2"),
+                     data = data,
+                     nperm = 1000,
+                     data_type = "binary",
+                     permutation = TRUE,
+                     degree = 3,
+                     nrounds = 600)
+
+  expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+
+})
+#-------------------------------------------------------------------------------
+
+test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
+  data <- categorical_data(1000)
+  result <- test.gen(Y = "Y",
+                     X = "X",
+                     Z = c("Z1", "Z2"),
+                     data = data,
+                     nperm = 500,
+                     data_type = "categorical",
+                     permutation = TRUE,
+                     degree = 3,
+                     nrounds = 400)
+
+  expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+
+})
 
 #-------------------------------------------------------------------------------
 
@@ -442,9 +503,70 @@ test_that("test.gen works correctly for continuous data, with Xgboost
                                nrounds = 100,
                                max.depth = 6)
             expect_true(class(result) == "list")
+            expect_true(class(mean(unlist(result))) == "numeric")
+
           })
 
 #-------------------------------------------------------------------------------
+
+test_that("test.gen works correctly for categorical data, with Xgboost
+          various parameter settings", {
+            data <- categorical_data(800)
+            result <- test.gen(Y = "Y",
+                               X = "X",
+                               Z = c("Z1", "Z2"),
+                               data = data,
+                               method = "xgboost",
+                               data_type = "categorical",
+                               permutation = TRUE,
+                               degree = 3,
+                               nrounds = 100,
+                               num_class = 3)
+            expect_true(class(result) == "list")
+            expect_true(class(mean(unlist(result))) == "numeric")
+
+          })
+
+#-------------------------------------------------------------------------------
+
+test_that("test.gen works correctly for continuous data, with Xgboost
+          various parameter settings", {
+            data <- binomial_data(800, 1, 1)
+            result <- test.gen(Y = "Y",
+                               X = "X",
+                               Z = c("Z1", "Z2"),
+                               data = data,
+                               method = "xgboost",
+                               data_type = "binary",
+                               permutation = TRUE,
+                               degree = 3,
+                               nrounds = 120)
+            expect_true(class(result) == "list")
+            expect_true(class(mean(unlist(result))) == "numeric")
+
+          })
+
+#-------------------------------------------------------------------------------
+
+test_that("test.gen works correctly with Xgboost (takes time)", {
+            data <- binomial_data(800, 1, 1)
+            result <- test.gen(Y = "Y",
+                               X = "X",
+                               Z = c("Z1", "Z2"),
+                               data = data,
+                               nperm = 1000,
+                               method = "xgboost",
+                               data_type = "binary",
+                               permutation = TRUE,
+                               degree = 5,
+                               nrounds = 220)
+            expect_true(class(result) == "list")
+            expect_true(class(mean(unlist(result))) == "numeric")
+
+          })
+
+#-------------------------------------------------------------------------------
+
 
 test_that("test.gen works correctly for continuous data, with GLM
           various parameter settings", {
@@ -459,6 +581,8 @@ test_that("test.gen works correctly for continuous data, with GLM
                                permutation = TRUE,
                                degree = 3)
             expect_true(class(result) == "list")
+            expect_true(class(mean(unlist(result))) == "numeric")
+
           })
 
 #-------------------------------------------------------------------------------
@@ -484,7 +608,7 @@ test_that("test.gen works correctly for binary Y, with glm", {
 #-------------------------------------------------------------------------------
 
 test_that("test.gen works correctly for categorical Y, with glm", {
-  data <- binomial_data(800, 1, 1, intercept = 0.5)
+  data <- categorical_data(800)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -495,17 +619,66 @@ test_that("test.gen works correctly for categorical Y, with glm", {
                      data_type = "categorical",
                      permutation = TRUE,
                      degree = 3)
+
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
 
 })
 
 #-------------------------------------------------------------------------------
+library(caret)
+library(adabag)
+caret_wrapper <- function(formula,
+                             data,
+                             train_indices,
+                             test_indices,
+                             ...) {
 
+  model <- caret::train(formula = formula,
+                            data = data[train_indices, ],
+                            ...)
+
+  actual <- data[test_indices,][['Y']]
+  pred <- predict(model, newdata = data[test_indices,])
+  sst <- sum((actual - mean(actual))^2)
+  ssr <- sum((actual - pred)^2)
+  metric <- 1 - (ssr / sst)
+  return(metric)
+  return(metric)
+}
+data <- non_lin_normal(800)
+
+inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
+train_indices  <- inTraining
+test_indices <- setdiff(1:nrow(dat), inTraining)
+train_control <- trainControl(method = "cv", number = 5)  # 5-fold cross-validation
+
+model <- caret::train(formula = Y ~ X + Z1 + Z2,
+                          data = data[train_indices, ],
+                      method = 'adaboost',
+                      trcontrol = train_control)
+
+test_that("test.gen works correctly for with custom made ML function", {
+
+  result <- test.gen(Y = "Y",
+                     X = "X",
+                     Z = c("Z1", "Z2"),
+                     data = data,
+                     nperm = 200,
+                     mlfunc = ADAboost_wrapper)
+
+  expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+
+})
+
+#-------------------------------------------------------------------------------
+################## Troubleshooting perm.test() #################################
 
 
 test_that("perm.test works correctly for continuous data", {
-  result <- perm.test(y ~ x1 | x2 + x3 + x4, data = dat, method = "xgboost", nperm = 50, parametric = FALSE)
+  data <- non_lin_normal(500)
+  result <- perm.test(Y ~ X | Z1 + Z2, data = dat)
   expect_is(result, "CCI")
 })
 
