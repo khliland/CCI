@@ -12,9 +12,10 @@
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #' @export
 print.summary.CCI <- function(x, ...) {
-  cat(paste0("Computational conditional independence test using '", x$method, "'.\n"))
+  cat(paste0("Computational conditional independence test using '", x$method, "'.\n")) #Fix so compatible with custom made functions
   cat("Formula: ", deparse(x$formula), "\n")
   cat("Number of Monte Carlo samples: ", x$nperm, "\n")
+  cat("Performance Metric: ", x$metric, "\n")
   cat("Test Statistic: ", unlist(x$test.statistic), "\n")
   cat("P-value: ", x$p.value, "\n")
   cat("Summary of Null Distribution:\n")

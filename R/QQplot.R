@@ -4,7 +4,7 @@
 #' @param n Number of samplings
 #' @param ... Additional arguments to ggplot2
 #'
-#' @importFrom ggplot2 geom_qq
+#' @import ggplot2 geom_qq dplyr
 #' @return A QQ-plot of the p-values in ggplot2 format.
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{perm.test}}
@@ -40,7 +40,7 @@ QQplot <- function(object, ...) {
     if (!is.na(formula)) {
       formula = gsub("\\s+", " ", formula)
     } else if (is.na(formula)) {
-      ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
+      ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
       formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
     }
@@ -79,7 +79,7 @@ QQplot <- function(object, ...) {
   }))
   colnames(p_values) <- c("pvalues")
 
-  ggobj <- ggplot2::ggplot(p_values, aes(sample = pvalues)) +
+  ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = pvalues)) +
     ggplot2::geom_qq(distribution = stats::qunif, , size = 0.1)  +
     ggplot2::geom_abline(slope = 1, intercept = 0, color = "blue") +
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",

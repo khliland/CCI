@@ -66,7 +66,7 @@ perm.test <- function(formula,
     if (!is.null(formula)) {
       formula = as.formula(formula)
     } else if (is.null(formula)) {
-      ci_statement <- impliedConditionalIndependencies(dag)[dag_n]
+      ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
       formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
@@ -79,18 +79,31 @@ perm.test <- function(formula,
   conditioning <- unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
 
   # Creating the null distribution
-  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, ...)
+  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, family = family, ...)
+  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
   status <- "Complete"
+  metric <- if (!is.null(metricfunc)) {
+                metricfunc
+  } else if (!is.null(mlfunc) && is.null(metricfunc)) {
+                mlfunc
+  } else {
+              if (data_type == "continuous") {
+                "RMSE"
+              } else {
+                "Kappa Score"
+              }
+  }
+
   additional_args <- list(...)
 
   # Gather everything in "obj"
   obj <- list(status = status,
               MLfunc = method,
+              metric = metric,
               data = data,
               formula = formula,
               p = p,

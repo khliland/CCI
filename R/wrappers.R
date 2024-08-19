@@ -10,6 +10,7 @@
 #' @param metricfunc A user specified function which calculates a metric
 #' @param ... Additional arguments passed to glm
 #'
+#' @importFrom stats dplyr
 #' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
 glm_wrapper <- function(formula,
@@ -25,7 +26,7 @@ glm_wrapper <- function(formula,
   if (!is.null(metricfunc)) {
     metric <- metricfunc(data, model, test_indices)
   } else if (data_type %in% "continuous") {
-    pred <- predict.glm(model, newdata = data[test_indices,])
+    pred <- stats::predict.glm(model, newdata = data[test_indices,])
     actual <- data[test_indices,][[all.vars(formula)[1]]]
     metric <- sqrt(mean((pred - actual)^2))
   } else if (data_type %in% "binary") {

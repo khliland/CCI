@@ -1,3 +1,6 @@
+devtools::document()
+devtools::check()
+devtools::build
 # Test script for the CCI package
 devtools::load_all()
 library(CCI)
@@ -698,10 +701,10 @@ test_that("perm.test works with mlfunc", {
   data <- poisson_noise(1000)
   result <- perm.test(Y ~ X + Z1 + Z2,
                       data = data,
-                      nbag = 76,
+                      coob = T,
                       mlfunc = bagging_wrapper)
   expect_is(result, "CCI")
-})
+}) # Throws a warning, not using parameters intended for the custom wrapper function.
 
 test_that("perm.test works correctly", {
   data <- non_lin_normal(500)
