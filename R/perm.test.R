@@ -1,14 +1,29 @@
-#' Permutation test for conditional independence
+#' Permutation Test for Conditional Independence
 #'
-#' @param formula Model formula or DAGitty object
-#' @param data Data frame
-#' @param MLfunc Model fitting function similar to \code{lm} (default)
-#' @param nperm Number of permutations
-#' @param dag_n Which test to perform if using a DAGitty object
-#' @param ... Additional arguments to pass to \code{MLfunc}
+#' This function performs a permutation test for conditional independence using various machine learning models.
 #'
-#' @return An object of class 'CCI' containing a null distribution,
-#' observed value, p-values, the ML model, and the data.
+#' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
+#' @param data A data frame containing the variables specified in the formula.
+#' @param p Proportion of data to use for training the model. Default is 0.825.
+#' @param nperm Number of permutations to perform. Default is 500.
+#' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG). Default is NA.
+#' @param dag_n If a DAGitty object is provided, specifies which conditional independence test to perform. Default is NA.
+#' @param data_type Type of data: "continuous", "binary", or "categorical". Default is "continuous".
+#' @param method The machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".
+#' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
+#' @param parametric Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.
+#' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
+#' @param degree The degree of polynomial terms to include if poly is TRUE. Default is 3.
+#' @param family The family object for glm, specifying the distribution and link function to use. Default is gaussian().
+#' @param objective The objective function for xgboost models, e.g., "reg:squarederror", "binary:logistic", etc. Default is "reg:squarederror".
+#' @param probability Logical. If TRUE, the model will be trained to output probabilities rather than raw predictions. Used for classification tasks. Default is FALSE.
+#' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
+#' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
+#' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
+#' @param seed An optional seed for random number generation to ensure reproducibility. Default is NULL.
+#' @param ... Additional arguments to pass to the machine learning model fitting function.
+#'
+#' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 #' @importFrom stats lm rnorm predict
 #' @importFrom dagitty impliedConditionalIndependencies
 #' @import dplyr
@@ -60,7 +75,7 @@ perm.test <- function(formula,
     stop("Formula and dag object is missing")
   }
 
-  if (!is.na(dag) & class(dag) != 'dagitty') {
+  if (!is.na(dag) & !inherits(dag, "dagitty")) {
     stop("DAG needs to be of class dagitty.")
   }
 

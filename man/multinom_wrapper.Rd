@@ -25,8 +25,6 @@ multinom_wrapper(
 \item{metricfunc}{A user specific metric function which have the arguments data, model and test_indices, returns a numeric value}
 
 \item{...}{Additional arguments passed to multinom}
-
-\item{iteration}{Current iteration index}
 }
 \value{
 Performance metric (Kappa for binary)

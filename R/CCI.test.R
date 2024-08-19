@@ -9,11 +9,20 @@
 #' @param dag_n Which test to perform if using a DAGitty object
 #' @param data_type Type of data: "continuous", "binary", or "categorical"
 #' @param method Method for modeling: "lm", "xgboost", "rf", etc.
+#' @param metricfunc Custom made performance metric function
+#' @param mlfunc Custom made machine learning model for prediction
 #' @param parametric Logical, indicating if parametric p-value should be computed
+#' @param tail Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used. Only use with metricfunc or MLfunc.
 #' @param seed Set seed value for reproduce results
 #' @param ... Additional arguments to pass to \code{perm.test}
 #' @return Invisibly returns the result of \code{perm.test}
 #' @export
+#' @examples
+#' set.seed(123)
+#' # Basic use
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+#' CCI.test(y ~ x1 | x2, data = data, nperm = 1000)
+
 CCI.test <- function(formula = NA,
                      data,
                      plot = TRUE,

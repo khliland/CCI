@@ -10,8 +10,6 @@ QQplot(object, ...)
 \item{object}{Object of class 'CCI'}
 
 \item{...}{Additional arguments to ggplot2}
-
-\item{n}{Number of samplings}
 }
 \value{
 A QQ-plot of the p-values in ggplot2 format.

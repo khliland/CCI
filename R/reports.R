@@ -19,7 +19,6 @@ print.summary.CCI <- function(x, ...) {
   cat("Test Statistic: ", unlist(x$test.statistic), "\n")
   cat("P-value: ", x$p.value, "\n")
   cat("Summary of Null Distribution:\n")
-  print(summary(unlist(x$null.distribution)))
 
   invisible(x)
 }

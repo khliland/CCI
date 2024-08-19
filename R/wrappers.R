@@ -45,7 +45,6 @@ glm_wrapper <- function(formula,
 #' @param data Data frame
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for testing data
-#' @param iteration Current iteration index
 #' @param metricfunc A user specific metric function which have the arguments data, model and test_indices, returns a numeric value
 
 #' @param ... Additional arguments passed to multinom

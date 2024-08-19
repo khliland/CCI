@@ -45,6 +45,12 @@ CCI.test(
 
 \item{seed}{Set seed value for reproduce results}
 
+\item{metricfunc}{Custom made performance metric function}
+
+\item{mlfunc}{Custom made machine learning model for prediction}
+
+\item{tail}{Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used. Only use with metricfunc or MLfunc.}
+
 \item{...}{Additional arguments to pass to \code{perm.test}}
 }
 \value{
@@ -52,4 +58,10 @@ Invisibly returns the result of \code{perm.test}
 }
 \description{
 Wrapper function for performing the CCI test
+}
+\examples{
+set.seed(123)
+# Basic use
+data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+CCI.test(y ~ x1 | x2, data = data, nperm = 1000)
 }

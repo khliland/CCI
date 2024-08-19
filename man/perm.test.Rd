@@ -2,7 +2,7 @@
 % Please edit documentation in R/perm.test.R
 \name{perm.test}
 \alias{perm.test}
-\title{Permutation test for conditional independence}
+\title{Permutation Test for Conditional Independence}
 \usage{
 perm.test(
   formula,
@@ -28,24 +28,51 @@ perm.test(
 )
 }
 \arguments{
-\item{formula}{Model formula or DAGitty object}
+\item{formula}{Model formula or DAGitty object specifying the relationship between dependent and independent variables.}
 
-\item{data}{Data frame}
+\item{data}{A data frame containing the variables specified in the formula.}
 
-\item{nperm}{Number of permutations}
+\item{p}{Proportion of data to use for training the model. Default is 0.825.}
 
-\item{dag_n}{Which test to perform if using a DAGitty object}
+\item{nperm}{Number of permutations to perform. Default is 500.}
 
-\item{...}{Additional arguments to pass to \code{MLfunc}}
+\item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG). Default is NA.}
 
-\item{MLfunc}{Model fitting function similar to \code{lm} (default)}
+\item{dag_n}{If a DAGitty object is provided, specifies which conditional independence test to perform. Default is NA.}
+
+\item{data_type}{Type of data: "continuous", "binary", or "categorical". Default is "continuous".}
+
+\item{method}{The machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".}
+
+\item{nrounds}{Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
+
+\item{parametric}{Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.}
+
+\item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
+
+\item{degree}{The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+
+\item{family}{The family object for glm, specifying the distribution and link function to use. Default is gaussian().}
+
+\item{objective}{The objective function for xgboost models, e.g., "reg:squarederror", "binary:logistic", etc. Default is "reg:squarederror".}
+
+\item{probability}{Logical. If TRUE, the model will be trained to output probabilities rather than raw predictions. Used for classification tasks. Default is FALSE.}
+
+\item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
+
+\item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
+
+\item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
+
+\item{seed}{An optional seed for random number generation to ensure reproducibility. Default is NULL.}
+
+\item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }
 \value{
-An object of class 'CCI' containing a null distribution,
-observed value, p-values, the ML model, and the data.
+An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 }
 \description{
-Permutation test for conditional independence
+This function performs a permutation test for conditional independence using various machine learning models.
 }
 \examples{
 set.seed(123)

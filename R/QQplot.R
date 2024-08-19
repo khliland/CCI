@@ -1,7 +1,6 @@
 #' QQ-plot for multiple testing in CCI
 #'
 #' @param object Object of class 'CCI'
-#' @param n Number of samplings
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2 dplyr
@@ -19,7 +18,7 @@ QQplot <- function(object, ...) {
   if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
-
+  utils::globalVariables(c("pvalues"))
   # Extracting parameters from the CCI object
   null_dist <- object$null.distribution
   nperm <- object$nperm
