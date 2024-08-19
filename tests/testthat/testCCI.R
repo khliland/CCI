@@ -784,3 +784,213 @@ test_that("CCI.test works rejecting a wrong null with xgboost", {
   expect_is(result, "CCI")
 })
 
+
+test_that("CCI.test works rejecting a wrong null with xgboost", {
+  set.seed(9)
+  data <- non_lin_normal(1000)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 500,
+                     method = 'xgboost',
+                     data_type = "continuous",
+                     parametric = TRUE
+  )
+  expect_is(result, "CCI")
+})
+
+test_that("CCI.test works categorical data", {
+  set.seed(91)
+  data <- simulateExpLogData(1000)
+  result <- CCI.test(formula = Y ~ X | Z1 +  Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 500,
+                     data_type = 'categorical',
+                     parametric = TRUE
+  )
+  expect_is(result, "CCI")
+})
+
+
+test_that("CCI.test works categorical data, wrong null", {
+  set.seed(911)
+  data <- simulateExpLogData(1000)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 400,
+                     data_type = 'categorical',
+                     parametric = TRUE
+  )
+  expect_is(result, "CCI")
+})
+
+test_that("CCI.test works categorical data, wrong null", {
+  set.seed(911)
+  data <- simulateExpLogData(1000)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 400,
+                     data_type = 'categorical',
+                     parametric = F
+  )
+  expect_is(result, "CCI")
+})
+
+test_that("CCI.test works with custom performance metric", {
+  set.seed(1911)
+  data <- sinusoidal(1000)
+  rSquared <- function(data, model, test_indices) {
+    actual <- data[test_indices,][['Y']]
+    pred <- predict(model, data = data[test_indices,])$predictions
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+  }
+  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+                     p = 0.7,
+                     data = data,
+                     nperm = 400,
+                     parametric = T,
+                     metricfunc = rSquared,
+                     tail = 'right'
+  )
+
+  expect_is(result, "CCI")
+})
+
+test_that("CCI.test works with custom performance metric, wrong null", {
+  set.seed(1939)
+  data <- sinusoidal(200)
+  rSquared <- function(data, model, test_indices) {
+    actual <- data[test_indices,][['Y']]
+    pred <- predict(model, data = data[test_indices,])$predictions
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+  }
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 400,
+                     parametric = T,
+                     metricfunc = rSquared,
+                     tail = 'left'
+  )
+
+  expect_is(result, "CCI")
+})
+
+
+test_that("CCI.test works with dagitty", {
+  set.seed(1990)
+  data <- sinusoidal(200)
+  dag <- dagitty::dagitty('dag {
+  X
+  Y
+  Z1
+  Z2
+  Z1 -> X
+  Z1 -> Y
+  Z2 -> X
+  Z2 -> Y
+}')
+
+  result <- CCI.test(formula = NULL,
+                     p = 0.7,
+                     data = data,
+                     dag = dag,
+                     dag_n = 1,
+                     nperm = 600,
+                     parametric = T
+  )
+
+  expect_is(result, "CCI")
+})
+
+test_that("CCI.test works with dagitty", {
+  set.seed(2)
+  data <- sinusoidal(200)
+  dag <- dagitty::dagitty('dag {
+  X
+  Y
+  Z1
+  Z2
+  Z1 -> Y
+  Z2 -> X
+  Z2 -> Y
+}')
+
+  result <- CCI.test(formula = NULL,
+                     p = 0.7,
+                     data = data,
+                     dag = dag,
+                     dag_n = 1,
+                     nperm = 600,
+                     parametric = T,
+                     seed = 9
+  )
+
+  expect_is(result, "CCI")
+})
+
+
+test_that("CCI.test works with dagitty", {
+  set.seed(3)
+  data <- sinusoidal(200)
+  bagging_wrapper <- function(formula,
+                              data,
+                              train_indices,
+                              test_indices,
+                              ...) {
+    training <- data[train_indices, ]
+    testing <- data[test_indices, ]
+
+    model <- ipred::bagging(form = formula,
+                            data = training,
+                            ...)
+
+    actual <- testing[['Y']]
+    pred <- predict(model, newdata = testing)
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+  }
+
+
+  result <- CCI.test(formula = Y ~ X | Z1 + Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 600,
+                     parametric = T,
+                     seed = 9,
+                     mlfunc = bagging_wrapper
+  )
+
+  expect_is(result, "CCI")
+})
+
+#-------------------------------------------------------------------------------
+##################### QQplot() ###############################
+#-------------------------------------------------------------------------------
+
+
+test_that("CCI.test works with dagitty", {
+  data <- sinusoidal(200)
+  result <- CCI.test(formula = Y ~ X | Z1 + Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 600,
+                     parametric = T
+  )
+
+
+  QQplot(result)
+
+})
+

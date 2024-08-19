@@ -47,6 +47,17 @@ CCI.test <- function(formula = NA,
                      tail = NA,
                      ...) {
 
+  metric <- if (!is.null(metricfunc)) {
+    deparse(substitute(metricfunc))
+  } else if (!is.null(mlfunc)) {
+    deparse(substitute(metricfunc))
+  } else {
+    if (data_type %in% "continuous") {
+      "RMSE"
+    } else {
+      "Kappa Score"
+    }
+  }
   result <- perm.test(formula = formula,
                       data = data,
                       p = p,
@@ -58,8 +69,10 @@ CCI.test <- function(formula = NA,
                       parametric = parametric,
                       seed = seed,
                       tail = tail,
+                      metricfunc = metricfunc,
+                      mlfunc = mlfunc,
                       ...)
-
+  result$metric <- metric
 
   print.summary.CCI(result)
 

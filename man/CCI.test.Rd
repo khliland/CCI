@@ -58,6 +58,7 @@ Invisibly returns the result of \code{perm.test}, which is an object of class 'C
 }
 \description{
 The \code{CCI.test} function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
+The 'CCI.test' function serves as a wrapper around the 'perm.test' function
 }
 \examples{
 set.seed(123)
