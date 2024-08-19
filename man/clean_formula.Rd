@@ -2,20 +2,22 @@
 % Please edit documentation in R/utils.R
 \name{clean_formula}
 \alias{clean_formula}
-\title{#' Clean formula string
-#'
-#' @param formula Formula
-#'
-#' @return Cleaned formula in the right format
-#' @export}
+\title{Clean and Reformat Formula String}
 \usage{
 clean_formula(formula)
 }
+\arguments{
+\item{formula}{Formula. The model formula that specifies the relationship between the dependent and independent variables, and potentially the conditioning variables. The formula is expected to follow the format \code{Y ~ X + Z1 + Z2} or \code{Y ~ X | Z1 + Z2}.}
+}
+\value{
+A reformatted formula in the correct format for conditional independence testing. The returned formula will either retain the original format or be transformed to include conditioning variables.
+}
 \description{
-#' Clean formula string
-#'
-#' @param formula Formula
-#'
-#' @return Cleaned formula in the right format
-#' @export
+This function processes and reformats a formula string to ensure it is in the correct format for conditional independence testing.
+The function checks if the formula uses the '+' operator for additive models and transforms it into a format that includes a conditioning variable separated by '|'.
+}
+\examples{
+clean_formula(y ~ x | z + v)
+clean_formula(y ~ x + z + v)
+clean_formula(y ~ x)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/CCI.test.R
 \name{CCI.test}
 \alias{CCI.test}
-\title{Wrapper function for performing the CCI test}
+\title{Wrapper Function for Performing the CCI Test}
 \usage{
 CCI.test(
   formula = NA,
@@ -23,45 +23,48 @@ CCI.test(
 )
 }
 \arguments{
-\item{formula}{Model formula or DAGitty object}
+\item{formula}{Model formula or a DAGitty object specifying the relationship between dependent and independent variables.}
 
-\item{data}{Data frame}
+\item{data}{A data frame containing the variables specified in the formula.}
 
-\item{plot}{Logical, indicating if a plot of null distribution with test statistic should be generated (default: TRUE)}
+\item{plot}{Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.}
 
-\item{p}{Proportion of data used for training}
+\item{p}{Numeric. Proportion of data used for training the model. Default is 0.825.}
 
-\item{nperm}{Number of permutations}
+\item{nperm}{Integer. The number of permutations to perform. Default is 500.}
 
-\item{dag}{DAGitty object for conditional independence testing}
+\item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.}
 
-\item{dag_n}{Which test to perform if using a DAGitty object}
+\item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
-\item{data_type}{Type of data: "continuous", "binary", or "categorical"}
+\item{data_type}{Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".}
 
-\item{method}{Method for modeling: "lm", "xgboost", "rf", etc.}
+\item{method}{Character. Specifies the machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".}
 
-\item{parametric}{Logical, indicating if parametric p-value should be computed}
+\item{parametric}{Logical, indicating whether to compute a parametric p-value in addition to the empirical p-value. Default is FALSE.}
 
-\item{seed}{Set seed value for reproduce results}
+\item{seed}{Optional integer. Specifies a seed for random number generation to ensure reproducibility. Default is NULL.}
 
-\item{metricfunc}{Custom made performance metric function}
+\item{metricfunc}{Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
 
-\item{mlfunc}{Custom made machine learning model for prediction}
+\item{mlfunc}{Optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
-\item{tail}{Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used. Only use with metricfunc or MLfunc.}
+\item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
 
-\item{...}{Additional arguments to pass to \code{perm.test}}
+\item{...}{Additional arguments to pass to the \code{perm.test} function.}
 }
 \value{
-Invisibly returns the result of \code{perm.test}
+Invisibly returns the result of \code{perm.test}, which is an object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 }
 \description{
-Wrapper function for performing the CCI test
+The \code{CCI.test} function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
 }
 \examples{
 set.seed(123)
 # Basic use
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-CCI.test(y ~ x1 | x2, data = data, nperm = 1000)
+result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000)
+}
+\seealso{
+\code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
 }

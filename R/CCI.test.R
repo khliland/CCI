@@ -1,6 +1,7 @@
 #' Wrapper Function for Performing the CCI Test
 #'
 #' The `CCI.test` function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
+#' The 'CCI.test' function serves as a wrapper around the 'perm.test' function
 #'
 #' @param formula Model formula or a DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.

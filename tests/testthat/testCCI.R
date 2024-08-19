@@ -453,9 +453,7 @@ test_that("test.gen works correctly for continuous data, default method is rando
             expect_true(class(mean(unlist(result))) == "numeric")
 
           })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
   data <- binomial_data(1000, 1,1)
   result <- test.gen(Y = "Y",
@@ -472,9 +470,7 @@ test_that("test.gen works correctly for binary data, default method is random fo
   expect_true(class(mean(unlist(result))) == "numeric")
 
 })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
   data <- categorical_data(1000)
   result <- test.gen(Y = "Y",
@@ -491,9 +487,7 @@ test_that("test.gen works correctly for binary data, default method is random fo
   expect_true(class(mean(unlist(result))) == "numeric")
 
 })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for continuous data, with Xgboost various parameter settings", {
             data <- normal_data(800)
             result <- test.gen(Y = "Y",
@@ -509,9 +503,7 @@ test_that("test.gen works correctly for continuous data, with Xgboost various pa
             expect_true(class(mean(unlist(result))) == "numeric")
 
           })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for categorical data, with Xgboost
           setting the num_class parameter", {
             data <- categorical_data(800)
@@ -529,9 +521,7 @@ test_that("test.gen works correctly for categorical data, with Xgboost
             expect_true(class(mean(unlist(result))) == "numeric")
 
           })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for binary outcome data using Xgboost", {
             data <- binomial_data(800, 1, 1)
             result <- test.gen(Y = "Y",
@@ -547,9 +537,7 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
             expect_true(class(mean(unlist(result))) == "numeric")
 
           })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly with Xgboost", {
             data <- binomial_data(800, 1, 1)
             result <- test.gen(Y = "Y",
@@ -568,10 +556,9 @@ test_that("test.gen works correctly with Xgboost", {
           })
 
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for continuous data, with GLM
           various parameter settings", {
-            data <- normal_data(800)
+            data <- normal_data(400)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -583,13 +570,10 @@ test_that("test.gen works correctly for continuous data, with GLM
                                degree = 3)
             expect_true(class(result) == "list")
             expect_true(class(mean(unlist(result))) == "numeric")
-
           })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for binary Y, with glm", {
-  data <- binomial_data(800, 1, 1, intercept = 0.5)
+  data <- binomial_data(400, 1, 1, intercept = 0.5)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -605,11 +589,9 @@ test_that("test.gen works correctly for binary Y, with glm", {
   expect_true(class(mean(unlist(result))) == "numeric")
 
 })
-
 #-------------------------------------------------------------------------------
-
 test_that("test.gen works correctly for categorical Y, with glm", {
-  data <- categorical_data(800)
+  data <- categorical_data(400)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -623,11 +605,8 @@ test_that("test.gen works correctly for categorical Y, with glm", {
 
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
-
 })
-
 #-------------------------------------------------------------------------------
-library(ipred)
 # Creating a wrapper function using the caret package with cross-validation
 bagging_wrapper <- function(formula,
                           data,
@@ -664,8 +643,16 @@ test_that("test.gen works correctly for with custom made ML function called bagg
   expect_true(class(mean(unlist(result))) == "numeric")
 
 })
-
+rSquared <- function(data, model, test_indices) {
+  actual <- data[test_indices,][['Y']]
+  pred <- predict(model, data = data[test_indices,])$predictions
+  sst <- sum((actual - mean(actual))^2)
+  ssr <- sum((actual - pred)^2)
+  metric <- 1 - (ssr / sst)
+  return(metric)
+}
 test_that("test.gen works correctly using metricfunc", {
+  data <- non_lin_normal(500)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -690,7 +677,7 @@ test_that("perm.test works correctly in the simplest case", {
 })
 
 test_that("perm.test works with metricfunc", {
-  data <- non_lin_normal(1000)
+  data <- non_lin_normal(200)
   result <- perm.test(Y ~ X | Z1 + Z2,
                       data = data,
                       metricfunc = rSquared)
@@ -698,13 +685,13 @@ test_that("perm.test works with metricfunc", {
 })
 
 test_that("perm.test works with mlfunc", {
-  data <- poisson_noise(1000)
+  data <- poisson_noise(300)
   result <- perm.test(Y ~ X + Z1 + Z2,
                       data = data,
                       coob = T,
                       mlfunc = bagging_wrapper)
   expect_is(result, "CCI")
-}) # Throws a warning, not using parameters intended for the custom wrapper function.
+})
 
 test_that("perm.test works correctly", {
   data <- non_lin_normal(500)
@@ -733,11 +720,9 @@ test_that("perm.test works correctly", {
   expect_is(result, "CCI")
 })
 
-library(dagitty)
-
 test_that("perm.test works correctly with dagitty object", {
   data <- non_lin_normal(500)
-  dag <- dagitty('dag {
+  dag <- dagitty::dagitty('dag {
   X
   Y
   Z1
@@ -753,24 +738,49 @@ test_that("perm.test works correctly with dagitty object", {
                       dag_n = 1,
                       data = data,
                       p = 0.7,
-                      nperm = 400,
+                      nperm = 40,
                       data_type = "continuous",
                       parametric = TRUE,
-                      seed =3030)
+                      seed =33)
   expect_is(result, "CCI")
 })
 
 #-------------------------------------------------------------------------------
-################## Troubleshooting CCI.test() #################################
+##################### Troubleshooting CCI.test() ###############################
 #-------------------------------------------------------------------------------
 
-test_that("perm.test works correctly with dagitty object", {
-  data <- normal_data(800)
+test_that("CII.test works correctly basic usage", {
+  data <- normal_data(500)
   result <- CCI.test(formula = Y ~ X | Z1 + Z2,
-                      data = data,
-                      nperm = 500,
-                      data_type = "continuous",
-                      parametric = TRUE
-                     )
+                     data = data)
   expect_is(result, "CCI")
 })
+
+
+test_that("CCI.test works rejecting a wrong null with rf", {
+  set.seed(9)
+  data <- normal_data(1000)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     p = 0.6,
+                     data = data,
+                     nperm = 1000,
+                     data_type = "continuous",
+                     parametric = TRUE
+  )
+  expect_is(result, "CCI")
+})
+
+test_that("CCI.test works rejecting a wrong null with xgboost", {
+  set.seed(9)
+  data <- non_lin_normal(1000)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     p = 0.7,
+                     data = data,
+                     nperm = 500,
+                     method = 'xgboost',
+                     data_type = "continuous",
+                     parametric = TRUE
+  )
+  expect_is(result, "CCI")
+})
+

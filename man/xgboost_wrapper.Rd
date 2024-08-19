@@ -34,8 +34,6 @@ xgboost_wrapper(
 \item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
 
 \item{...}{Additional arguments passed to xgb.train}
-
-\item{iteration}{Current iteration index}
 }
 \value{
 Performance metric

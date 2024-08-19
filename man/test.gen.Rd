@@ -2,7 +2,7 @@
 % Please edit documentation in R/test.gen.R
 \name{test.gen}
 \alias{test.gen}
-\title{Generate the test statistic or null distribution using permutation}
+\title{Generate the Test Statistic or Null Distribution Using Permutation}
 \usage{
 test.gen(
   Y,
@@ -41,9 +41,9 @@ test.gen(
 
 \item{method}{Character. The modeling method to be used. Options include "lm" for linear models, "xgboost" for gradient boosting, or "rf" for random forests.}
 
-\item{nperm}{Integer. The number of generated samples or permutations.}
+\item{nperm}{Integer. The number of generated samples or permutations. Default is 100.}
 
-\item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing.}
+\item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.85.}
 
 \item{N}{Integer. The total number of observations in the data. Default is the number of rows in the data frame.}
 
@@ -51,21 +51,21 @@ test.gen(
 
 \item{degree}{Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.}
 
-\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost and ranger.}
+\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.}
 
 \item{family}{Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).}
 
 \item{objective}{Character. The objective function for xgboost. Examples include "reg:squarederror" for regression, "binary:logistic" for binary classification.}
 
-\item{num_class}{Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}).}
+\item{num_class}{Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.}
 
 \item{probability}{Logical. Whether to perform classification (return probabilities) in \code{ranger_wrapper}. Default is FALSE.}
 
 \item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
 
-\item{metricfunc}{Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, \code{test_matrix}, and return a single value performance metric.}
+\item{metricfunc}{Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.}
 
-\item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric.}
+\item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
 \item{seed}{Integer. A random seed for reproducibility. Default is NULL (no seed set).}
 
@@ -75,10 +75,11 @@ test.gen(
 A list containing the test distribution.
 }
 \description{
-Generate the test statistic or null distribution using permutation
+This function generates the test statistic or a null distribution through permutation for conditional independence testing.
+It supports various machine learning methods, including linear models, random forests, and gradient boosting, and allows for custom metric functions and model fitting functions.
 }
 \examples{
 set.seed(123)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
-test.test(Y = "y", X = "x1", Z = c("x2", "x3", "x4") , data = data)
+result <- test.gen(Y = "y", X = "x1", Z = c("x2", "x3", "x4"), data = data)
 }

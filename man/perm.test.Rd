@@ -32,39 +32,39 @@ perm.test(
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
-\item{p}{Proportion of data to use for training the model. Default is 0.825.}
+\item{p}{Numeric. Proportion of data to use for training the model. Default is 0.825.}
 
-\item{nperm}{Number of permutations to perform. Default is 500.}
+\item{nperm}{Integer. Number of permutations to perform. Default is 500.}
 
 \item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG). Default is NA.}
 
 \item{dag_n}{If a DAGitty object is provided, specifies which conditional independence test to perform. Default is NA.}
 
-\item{data_type}{Type of data: "continuous", "binary", or "categorical". Default is "continuous".}
+\item{data_type}{Character. Type of data: "continuous", "binary", or "categorical". Default is "continuous".}
 
-\item{method}{The machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".}
+\item{method}{Character. The machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".}
 
-\item{nrounds}{Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
+\item{nrounds}{Integer. Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
 
 \item{parametric}{Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.}
 
 \item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
 
-\item{degree}{The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+\item{degree}{Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.}
 
-\item{family}{The family object for glm, specifying the distribution and link function to use. Default is gaussian().}
+\item{family}{Family object. The family object for generalized linear models, specifying the distribution and link function to use. Default is \code{gaussian()}.}
 
-\item{objective}{The objective function for xgboost models, e.g., "reg:squarederror", "binary:logistic", etc. Default is "reg:squarederror".}
+\item{objective}{Character. The objective function for xgboost models, e.g., "reg:squarederror", "binary:logistic", etc. Default is "reg:squarederror".}
 
 \item{probability}{Logical. If TRUE, the model will be trained to output probabilities rather than raw predictions. Used for classification tasks. Default is FALSE.}
 
-\item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
+\item{tail}{Character. Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
 
-\item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
+\item{metricfunc}{Function. An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
 
-\item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
+\item{mlfunc}{Function. An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
-\item{seed}{An optional seed for random number generation to ensure reproducibility. Default is NULL.}
+\item{seed}{Integer. An optional seed for random number generation to ensure reproducibility. Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }
@@ -72,7 +72,7 @@ perm.test(
 An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 }
 \description{
-This function performs a permutation test for conditional independence using various machine learning models.
+This function performs a permutation test for conditional independence between variables specified in a formula or a DAG (Directed Acyclic Graph). It supports various machine learning models for fitting and evaluating the conditional independence relationships.
 }
 \examples{
 set.seed(123)

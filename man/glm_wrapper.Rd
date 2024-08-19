@@ -31,8 +31,6 @@ glm_wrapper(
 \item{metricfunc}{A user specified function which calculates a metric}
 
 \item{...}{Additional arguments passed to glm}
-
-\item{iteration}{Current iteration index}
 }
 \value{
 Performance metric (defaults are RMSE for continuous, Kappa for binary)

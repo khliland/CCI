@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{get_pvalues}
 \alias{get_pvalues}
-\title{P-value calculation based on null distribution and test statistic}
+\title{P-value Calculation Based on Null Distribution and Test Statistic}
 \usage{
 get_pvalues(
   dist,
@@ -12,17 +12,24 @@ get_pvalues(
 )
 }
 \arguments{
-\item{dist}{A vector representing the null-distribution}
+\item{dist}{Numeric vector. Represents the null distribution of the test statistic.}
 
-\item{test_statistic}{The test statistic}
+\item{test_statistic}{Numeric. The observed test statistic for which the p-value is to be calculated.}
 
-\item{parametric}{Logical, whether the perform to calculate parametric p-values}
+\item{parametric}{Logical. Indicates whether to calculate parametric p-values using a normal distribution. If FALSE, empirical p-values are calculated. Default is FALSE.}
 
-\item{tail}{Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used}
+\item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values. Must be either "left" or "right". Default is "left".}
 }
 \value{
-P-value
+Numeric. The calculated p-value.
 }
 \description{
-P-value calculation based on null distribution and test statistic
+This function calculates p-values based on the comparison of a test statistic against a null distribution. It can perform either empirical or parametric p-value calculations and supports both left-tailed and right-tailed tests.
+}
+\examples{
+set.seed(123)
+null_dist <- rnorm(1000)
+observed_stat <- 1.5
+p_value <- get_pvalues(null_dist, observed_stat, parametric = FALSE, tail = "right")
+print(p_value)
 }

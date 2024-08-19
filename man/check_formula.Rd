@@ -2,13 +2,19 @@
 % Please edit documentation in R/utils.R
 \name{check_formula}
 \alias{check_formula}
-\title{Check the logic of the statement}
+\title{Check the formula statement}
 \usage{
 check_formula(formula, data)
 }
 \arguments{
-\item{formula_str}{Formula string}
+\item{formula}{Formula. The model formula that specifies the relationship between the dependent and independent variables.}
+
+\item{data}{Data frame. The data frame in which to check for the presence of variables specified in the formula.}
+}
+\value{
+NULL. The function is used for validation purposes and stops execution if any variables are missing.
 }
 \description{
-Check the logic of the statement
+This function verifies that all variables specified in the formula are present in the provided data frame.
+If any variables are missing, the function will stop and return an error message listing the missing variables.
 }
