@@ -4,7 +4,6 @@
 #' @param data Data frame
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for testing data
-#' @param iteration Current iteration index
 #' @param family Family for GLM
 #' @param data_type Type of data (continuous or binary)
 #' @param metricfunc A user specified function which calculates a metric
@@ -77,7 +76,6 @@ multinom_wrapper <- function(formula,
 #' @param data Data frame
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for training data
-#' @param iteration Current iteration index
 #' @param nrounds Number of boosting rounds
 #' @param objective Objective function for XGBoost
 #' @param num_class Number of categorical classes

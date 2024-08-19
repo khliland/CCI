@@ -1,4 +1,7 @@
-#' Generate the test statistic or null distribution using permutation
+#' Generate the Test Statistic or Null Distribution Using Permutation
+#'
+#' This function generates the test statistic or a null distribution through permutation for conditional independence testing.
+#' It supports various machine learning methods, including linear models, random forests, and gradient boosting, and allows for custom metric functions and model fitting functions.
 #'
 #' @param Y Character. The name of the dependent (response) variable in the data.
 #' @param X Character. The name of the independent (predictor) variable to be permuted.
@@ -6,19 +9,19 @@
 #' @param data Data frame. The data containing the variables used in the analysis.
 #' @param data_type Character. The type of data: can be "continuous", "binary", or "multinomial".
 #' @param method Character. The modeling method to be used. Options include "lm" for linear models, "xgboost" for gradient boosting, or "rf" for random forests.
-#' @param nperm Integer. The number of generated samples or permutations.
-#' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing.
+#' @param nperm Integer. The number of generated samples or permutations. Default is 100.
+#' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.85.
 #' @param N Integer. The total number of observations in the data. Default is the number of rows in the data frame.
 #' @param poly Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.
-#' @param nrounds Integer. The number of rounds (trees) for methods like xgboost and ranger.
+#' @param nrounds Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.
 #' @param family Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).
 #' @param objective Character. The objective function for xgboost. Examples include "reg:squarederror" for regression, "binary:logistic" for binary classification.
-#' @param num_class Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}).
+#' @param num_class Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.
 #' @param probability Logical. Whether to perform classification (return probabilities) in \code{ranger_wrapper}. Default is FALSE.
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
-#' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, \code{test_matrix}, and return a single value performance metric.
-#' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric.
+#' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.
+#' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
 #' @param seed Integer. A random seed for reproducibility. Default is NULL (no seed set).
 #' @param ... Additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}, or to a custom-built wrapper function.
 #'
@@ -35,7 +38,7 @@
 #' @examples
 #' set.seed(123)
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
-#' test.test(Y = "y", X = "x1", Z = c("x2", "x3", "x4") , data = data)
+#' result <- test.gen(Y = "y", X = "x1", Z = c("x2", "x3", "x4"), data = data)
 
 test.gen <- function(Y,
                      X,

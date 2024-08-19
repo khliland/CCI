@@ -1,6 +1,7 @@
 #' QQ-plot for multiple testing in CCI
 #'
 #' @param object Object of class 'CCI'
+#' @param title Object of class 'CCI'
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2 dplyr
@@ -71,7 +72,6 @@ QQplot <- function(object, ...) {
 
 
   test_stats <- unlist(test_result$distribution)
-
 
   p_values <- data.frame(sapply(test_stats, function(stat) {
     get_pvalues(unlist(null_dist), stat, parametric = parametric, tail = tail)
