@@ -10,7 +10,7 @@
 #' @param metricfunc A user specified function which calculates a metric
 #' @param ... Additional arguments passed to glm
 #'
-#' @importFrom stats dplyr
+#' @import stats dplyr
 #' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
 glm_wrapper <- function(formula,

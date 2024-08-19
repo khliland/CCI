@@ -4,7 +4,7 @@
 #' @param n Number of samplings
 #' @param ... Additional arguments to ggplot2
 #'
-#' @import ggplot2 geom_qq dplyr
+#' @import ggplot2 dplyr
 #' @return A QQ-plot of the p-values in ggplot2 format.
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{perm.test}}

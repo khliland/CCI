@@ -10,6 +10,8 @@
 #' @return An object of class 'CCI' containing a null distribution,
 #' observed value, p-values, the ML model, and the data.
 #' @importFrom stats lm rnorm predict
+#' @importFrom dagitty impliedConditionalIndependencies
+#' @import dplyr
 #' @export
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}

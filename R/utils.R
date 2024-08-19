@@ -2,6 +2,7 @@
 #'
 #' @param formula_str Formula string
 #'
+#' @import dplyr
 #' @return NULL
 #' @export
 check_formula <- function(formula, data) {
@@ -48,6 +49,7 @@ clean_formula <- function(formula) {
 #' @param parametric Logical, whether the perform to calculate parametric p-values
 #' @param tail Indicator, whether to calculate left or right tailed p-values, depends on the performance metric being used
 #'
+#' @importFrom stats pnorm
 #' @return P-value
 #' @export
 
@@ -68,9 +70,9 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
   } else {
     z_value <- (test_statistic - null_mean) / null_sd
     if (tail == "left") {
-      pnorm(z_value)
+      stats::pnorm(z_value)
     } else {
-      (1 - pnorm(z_value))
+      (1 - stats::pnorm(z_value))
     }
   }
 

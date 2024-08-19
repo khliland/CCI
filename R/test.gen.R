@@ -20,10 +20,10 @@
 #' @param ... additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}. Or to a custom build wrapper function.
 #' @importFrom stats glm predict update as.formula
 #' @importFrom caret createDataPartition confusionMatrix
-#' @importFrom dplyr mutate across all_of sym
 #' @importFrom nnet multinom
 #' @importFrom xgboost xgb.train xgb.DMatrix
 #' @importFrom ranger ranger
+#' @import dplyr
 #' @return A list containing the test distribution
 #' @export
 test.gen <- function(Y,
