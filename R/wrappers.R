@@ -23,6 +23,7 @@ glm_wrapper <- function(formula,
   model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
 
   if (!is.null(metricfunc)) {
+    data_type <- "custom"
     metric <- metricfunc(data, model, test_indices)
   } else if (data_type %in% "continuous") {
     pred <- stats::predict.glm(model, newdata = data[test_indices,])
@@ -59,6 +60,7 @@ multinom_wrapper <- function(formula,
   model <- nnet::multinom(formula = Y ~ X + Z1 + Z2, data = data, subset = train_indices, trace = FALSE, ...)
 
   if (!is.null(metricfunc)) {
+    data_type <- "custom"
     metric <- metricfunc(data, model, test_indices)
   } else {
     pred <- predict(model, newdata = data[test_indices,])
@@ -77,7 +79,7 @@ multinom_wrapper <- function(formula,
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for training data
 #' @param nrounds Number of boosting rounds
-#' @param objective Objective function for XGBoost
+#' @param data_type Type of data (continuous, binary or categorical)
 #' @param num_class Number of categorical classes
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param ... Additional arguments passed to xgb.train
@@ -89,11 +91,23 @@ xgboost_wrapper <- function(formula,
                             data,
                             train_indices,
                             test_indices,
+                            data_type,
                             nrounds,
-                            objective,
                             num_class = NULL,
                             metricfunc = NULL,
                             ...) {
+  args <- list(...)
+  if (!("objective" %in% names(args))) {
+    if (data_type == "continuous") {
+      objective <- "reg:squarederror"
+    } else if (data_type %in% "binary") {
+      objective <- "binary:logistic"
+    } else if (data_type %in% "categorical") {
+      objective <- "multi:softprob"
+    }
+  } else {
+    objective <- args$objective
+  }
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
   training <- data[train_indices,]
@@ -119,7 +133,7 @@ xgboost_wrapper <- function(formula,
     test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
   }
 
-  params <- list(objective = objective, ...)
+  params <- list(...)
 
 
   if (!is.null(num_class) && objective == "multi:softprob") {
@@ -133,6 +147,7 @@ xgboost_wrapper <- function(formula,
 
   pred <- predict(model, newdata = test_matrix)
   if (!is.null(metricfunc)) {
+    data_type <- "custom"
     metric <- metricfunc(data, model, test_indices, test_matrix)
   } else if (objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     actual <- testing[[dependent]]
@@ -154,34 +169,38 @@ xgboost_wrapper <- function(formula,
 
 #' Wrapper function for Ranger model training and evaluation
 #'
-#' @param formula Model formula
-#' @param data Data frame
-#' @param train_indices Indices for training data
-#' @param test_indices Indices for training data
-#' @param probability Grow a probability forest for binary or categorical outcomes
-#' @param num.trees Number of boosting rounds
-#' @param metricfunc A user specific metric function which have the arguments data, model and test_indices, returns a numeric value
-#' @param ... Additional arguments passed to ranger
+#' @param formula Model formula specifying the dependent and independent variables.
+#' @param data Data frame containing the dataset to be used for training and testing the model.
+#' @param train_indices A vector of indices specifying the rows in `data` to be used as the training set.
+#' @param test_indices A vector of indices specifying the rows in `data` to be used as the test set.
+#' @param data_type Character string indicating the type of data. Can be "continuous" for regression, "binary" for binary classification, or "categorical" for multiclass classification.
+#' @param num.trees Integer specifying the number of trees to grow in the random forest. Default is 500.
+#' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
+#' @param ... Additional arguments passed to the `ranger` function.
 #'
-#' @return Performance metric
+#' @return A numeric value representing the performance metric of the model on the test set.
 #' @export
+
 ranger_wrapper <- function(formula,
                            data,
                            train_indices,
                            test_indices,
-                           probability = FALSE,
+                           data_type,
                            num.trees = 500,
                            metricfunc = NULL,
                            ...) {
-
-  model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = probability, ...)
+  if (data_type %in% c("binary", "categorical")) {
+    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = TRUE, ...)
+  } else if (data_type %in% "continuous") {
+    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = FALSE, ...)
+  }
 
   predictions <- predict(model, data = data[test_indices, ])$predictions
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
     metric <- metricfunc(data, model, test_indices)
-  } else if (probability) {
+  } else if (data_type %in% c("binary", "categorical")) {
     if (nlevels(factor(actual)) > 2) {
       pred_class <- apply(predictions, 1, which.max)
       pred_class <- factor(pred_class, levels = 1:nlevels(factor(actual)), labels = levels(factor(actual)))
@@ -192,7 +211,7 @@ ranger_wrapper <- function(formula,
       cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
       metric <- cm$overall["Kappa"]
       }
-    } else {
+    } else if (data_type == "continuous") {
     metric <- sqrt(mean((predictions - actual)^2))
   }
 

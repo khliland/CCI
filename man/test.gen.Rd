@@ -18,9 +18,7 @@ test.gen(
   degree = 3,
   nrounds = 120,
   family,
-  objective = "reg:squarederror",
   num_class = NULL,
-  probability = FALSE,
   permutation = FALSE,
   metricfunc = NULL,
   mlfunc = NULL,
@@ -37,7 +35,7 @@ test.gen(
 
 \item{data}{Data frame. The data containing the variables used in the analysis.}
 
-\item{data_type}{Character. The type of data: can be "continuous", "binary", or "multinomial".}
+\item{data_type}{Character. The type of data of the Y parameter: can be "continuous", "binary", or "multinomial".}
 
 \item{method}{Character. The modeling method to be used. Options include "lm" for linear models, "xgboost" for gradient boosting, or "rf" for random forests.}
 
@@ -55,11 +53,7 @@ test.gen(
 
 \item{family}{Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).}
 
-\item{objective}{Character. The objective function for xgboost. Examples include "reg:squarederror" for regression, "binary:logistic" for binary classification.}
-
 \item{num_class}{Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.}
-
-\item{probability}{Logical. Whether to perform classification (return probabilities) in \code{ranger_wrapper}. Default is FALSE.}
 
 \item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
 
@@ -80,6 +74,10 @@ It supports various machine learning methods, including linear models, random fo
 }
 \examples{
 set.seed(123)
-data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+data <- data.frame(x1 = rnorm(100),
+x2 = rnorm(100),
+x3 = rnorm(100),
+x4 = rnorm(100),
+y = rnorm(100))
 result <- test.gen(Y = "y", X = "x1", Z = c("x2", "x3", "x4"), data = data)
 }

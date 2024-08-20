@@ -13,8 +13,6 @@
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param family The family object for glm, specifying the distribution and link function to use. Default is gaussian().
-#' @param objective The objective function for xgboost models, e.g., "reg:squarederror", "binary:logistic", etc. Default is "reg:squarederror".
-#' @param probability Logical. If TRUE, the model will be trained to output probabilities rather than raw predictions. Used for classification tasks. Default is FALSE.
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
@@ -31,7 +29,11 @@
 #'
 #' @examples
 #' set.seed(123)
-#' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+#' dat <- data.frame(x1 = rnorm(100),
+#' x2 = rnorm(100),
+#' x3 = rnorm(100),
+#' x4 = rnorm(100),
+#' y = rnorm(100))
 #' perm.test(y ~ x1 | x2 + x3 + x4, data = dat)
 
 perm.test <- function(formula,
@@ -47,19 +49,22 @@ perm.test <- function(formula,
                       poly = TRUE,
                       degree = 3,
                       family = gaussian(),
-                      objective = "reg:squarederror",
-                      probability = FALSE,
                       tail = NA,
                       metricfunc = NULL,
                       mlfunc = NULL,
                       seed = NULL,
                       ...) {
 
+
+  if ((!is.null(metricfunc) | !is.null(mlfunc)) && is.na(tail)) {
+    stop("tail parameter must be either 'left' or 'right'")
+  }
+
   if (is.na(tail)) {
     if (data_type %in% c("binary", "categorical")) {
-      tail <- "left"
-    } else if (data_type == "continuous") {
       tail <- "right"
+    } else if (data_type == "continuous") {
+      tail <- "left"
     }
   }
 
@@ -82,12 +87,12 @@ perm.test <- function(formula,
       formula = as.formula(formula)
     } else if (is.null(formula)) {
       ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
-      names(ci_statement)[names(ci_statement) == dag_n] <- "CI" # Rename list element
+      names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
       formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
   }
   formula <- clean_formula(formula)
-  check_formula(formula, data) # Check that all variables are found in the data
+  check_formula(formula, data)
 
   dependent1 <- formula[[2]]
   dependent2 <- formula[[3]][[2]]

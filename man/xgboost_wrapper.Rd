@@ -9,8 +9,8 @@ xgboost_wrapper(
   data,
   train_indices,
   test_indices,
+  data_type,
   nrounds,
-  objective,
   num_class = NULL,
   metricfunc = NULL,
   ...
@@ -25,9 +25,9 @@ xgboost_wrapper(
 
 \item{test_indices}{Indices for training data}
 
-\item{nrounds}{Number of boosting rounds}
+\item{data_type}{Type of data (continuous, binary or categorical)}
 
-\item{objective}{Objective function for XGBoost}
+\item{nrounds}{Number of boosting rounds}
 
 \item{num_class}{Number of categorical classes}
 

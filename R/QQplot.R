@@ -1,8 +1,6 @@
 #' QQ-plot for multiple testing in CCI
 #'
 #' @param object Object of class 'CCI'
-#' @param title Object of class 'CCI'
-#' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2 dplyr
 #' @return A QQ-plot of the p-values in ggplot2 format.
@@ -12,15 +10,15 @@
 #'
 #' @examples
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-#' cci <- perm.test("y ~ x1 | x2", data = dat)
+#' cci <- CCI.test("y ~ x1 | x2", data = dat)
 #' QQplot(cci)
 
-QQplot <- function(object, ...) {
+QQplot <- function(object) {
   if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
-  utils::globalVariables(c("pvalues"))
-  # Extracting parameters from the CCI object
+
+  data <- object$data
   null_dist <- object$null.distribution
   nperm <- object$nperm
   nrounds <- object$nrounds
@@ -47,14 +45,13 @@ QQplot <- function(object, ...) {
   }
 
   formula <- clean_formula(formula)
-  check_formula(formula, data) # Check that all variables are found in the data
+  check_formula(formula, data)
 
   dependent1 <- formula[[2]]
   dependent2 <- formula[[3]][[2]]
   conditioning <- unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
 
-  test_result <- do.call(test.gen, c(
-    list(
+  test_result <- test.gen(
       Y = dependent1,
       X = dependent2,
       Z = conditioning,
@@ -64,21 +61,15 @@ QQplot <- function(object, ...) {
       method = method,
       nperm = nperm,
       nrounds = nrounds,
-      p = p,
-      ...
-    ),
-    additional_args
-  ))
-
+      p = p)
 
   test_stats <- unlist(test_result$distribution)
-
   p_values <- data.frame(sapply(test_stats, function(stat) {
     get_pvalues(unlist(null_dist), stat, parametric = parametric, tail = tail)
   }))
   colnames(p_values) <- c("pvalues")
 
-  ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = pvalues)) +
+  ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = "pvalues")) +
     ggplot2::geom_qq(distribution = stats::qunif, , size = 0.1)  +
     ggplot2::geom_abline(slope = 1, intercept = 0, color = "blue") +
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",

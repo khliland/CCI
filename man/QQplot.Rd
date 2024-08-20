@@ -4,14 +4,10 @@
 \alias{QQplot}
 \title{QQ-plot for multiple testing in CCI}
 \usage{
-QQplot(object, ...)
+QQplot(object)
 }
 \arguments{
 \item{object}{Object of class 'CCI'}
-
-\item{...}{Additional arguments to ggplot2}
-
-\item{title}{Object of class 'CCI'}
 }
 \value{
 A QQ-plot of the p-values in ggplot2 format.
@@ -21,7 +17,7 @@ QQ-plot for multiple testing in CCI
 }
 \examples{
 dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-cci <- perm.test("y ~ x1 | x2", data = dat)
+cci <- CCI.test("y ~ x1 | x2", data = dat)
 QQplot(cci)
 }
 \seealso{

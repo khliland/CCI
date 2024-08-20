@@ -88,14 +88,14 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
   pvalue <- if (parametric == FALSE) {
     if (tail == "right") {
       (sum(dist >= test_statistic) + 1) / (length(dist) + 1)
-    } else {
+    } else if (tail == "left") {
       (sum(dist <= test_statistic) + 1) / (length(dist) + 1)
     }
   } else {
     z_value <- (test_statistic - null_mean) / null_sd
-    if (tail == "left") {
+    if (tail == "right") {
       (1 - stats::pnorm(z_value))
-    } else {
+    } else if (tail == "left") {
       (stats::pnorm(z_value))
     }
   }

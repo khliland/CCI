@@ -167,7 +167,7 @@ multinominal_data <- function(N, zeta = 1.5) {
   return(df)
 }
 
-binomial_data <- function(n, coef_Z1, coef_Z2, intercept = 0, seed = NULL) {
+binomial_data <- function(n, seed = NULL) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -176,7 +176,7 @@ binomial_data <- function(n, coef_Z1, coef_Z2, intercept = 0, seed = NULL) {
   Z2 <- rnorm(n)
 
   X <- rnorm(n, Z1 + Z2, 1)
-  log_odds <- intercept + coef_Z1 * Z1 + coef_Z2 * Z2
+  log_odds <- Z1 + Z2
   prob <- 1 / (1 + exp(-log_odds))
   Y <- rbinom(n, size = 1, prob = prob)
 

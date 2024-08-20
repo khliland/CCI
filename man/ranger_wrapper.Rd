@@ -9,31 +9,31 @@ ranger_wrapper(
   data,
   train_indices,
   test_indices,
-  probability = FALSE,
+  data_type,
   num.trees = 500,
   metricfunc = NULL,
   ...
 )
 }
 \arguments{
-\item{formula}{Model formula}
+\item{formula}{Model formula specifying the dependent and independent variables.}
 
-\item{data}{Data frame}
+\item{data}{Data frame containing the dataset to be used for training and testing the model.}
 
-\item{train_indices}{Indices for training data}
+\item{train_indices}{A vector of indices specifying the rows in \code{data} to be used as the training set.}
 
-\item{test_indices}{Indices for training data}
+\item{test_indices}{A vector of indices specifying the rows in \code{data} to be used as the test set.}
 
-\item{probability}{Grow a probability forest for binary or categorical outcomes}
+\item{data_type}{Character string indicating the type of data. Can be "continuous" for regression, "binary" for binary classification, or "categorical" for multiclass classification.}
 
-\item{num.trees}{Number of boosting rounds}
+\item{num.trees}{Integer specifying the number of trees to grow in the random forest. Default is 500.}
 
-\item{metricfunc}{A user specific metric function which have the arguments data, model and test_indices, returns a numeric value}
+\item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
 
-\item{...}{Additional arguments passed to ranger}
+\item{...}{Additional arguments passed to the \code{ranger} function.}
 }
 \value{
-Performance metric
+A numeric value representing the performance metric of the model on the test set.
 }
 \description{
 Wrapper function for Ranger model training and evaluation

@@ -7,7 +7,7 @@
 #' @param X Character. The name of the independent (predictor) variable to be permuted.
 #' @param Z Character vector. The names of the conditioning variables to be included in the model.
 #' @param data Data frame. The data containing the variables used in the analysis.
-#' @param data_type Character. The type of data: can be "continuous", "binary", or "multinomial".
+#' @param data_type Character. The type of data of the Y parameter: can be "continuous", "binary", or "multinomial".
 #' @param method Character. The modeling method to be used. Options include "lm" for linear models, "xgboost" for gradient boosting, or "rf" for random forests.
 #' @param nperm Integer. The number of generated samples or permutations. Default is 100.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.85.
@@ -16,9 +16,7 @@
 #' @param degree Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.
 #' @param nrounds Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.
 #' @param family Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).
-#' @param objective Character. The objective function for xgboost. Examples include "reg:squarederror" for regression, "binary:logistic" for binary classification.
 #' @param num_class Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.
-#' @param probability Logical. Whether to perform classification (return probabilities) in \code{ranger_wrapper}. Default is FALSE.
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
 #' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
@@ -37,7 +35,11 @@
 #' @export
 #' @examples
 #' set.seed(123)
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+#' data <- data.frame(x1 = rnorm(100),
+#' x2 = rnorm(100),
+#' x3 = rnorm(100),
+#' x4 = rnorm(100),
+#' y = rnorm(100))
 #' result <- test.gen(Y = "y", X = "x1", Z = c("x2", "x3", "x4"), data = data)
 
 test.gen <- function(Y,
@@ -53,14 +55,14 @@ test.gen <- function(Y,
                      degree = 3,
                      nrounds = 120,
                      family,
-                     objective = "reg:squarederror",
                      num_class = NULL,
-                     probability = FALSE,
                      permutation = FALSE,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      seed = NULL,
                      ...) {
+
+
   if (!is.null(seed)) {
     set.seed(seed)
   }
@@ -97,7 +99,7 @@ test.gen <- function(Y,
 
   # If statement of all the ML methods one can use to do computational test
   for (iteration in 1:nperm) {
-    if (data_type %in% "continuous") {
+    if (data_type %in% c("continuous", "custom")) {
       inTraining <- sample(1:nrow(data), size = floor(p * N), replace = FALSE)
       train_indices  <- inTraining
       test_indices <- setdiff(1:nrow(data), inTraining)
@@ -113,6 +115,7 @@ test.gen <- function(Y,
     }
 
     if (!is.null(mlfunc)) {
+      data_type <- "custom"
       null[iteration] <- mlfunc(formula, data = resampled_data, train_indices, test_indices, ...)
     } else if (method %in% "lm" & data_type %in% c("continuous", "binary"))  { # Parametric linear model
       null[iteration] <- glm_wrapper(formula,
@@ -142,8 +145,8 @@ test.gen <- function(Y,
                                          resampled_data,
                                          train_indices,
                                          test_indices,
+                                         data_type,
                                          nrounds,
-                                         objective,
                                          num_class,
                                          ...)
     }
@@ -152,8 +155,8 @@ test.gen <- function(Y,
                                         resampled_data,
                                         train_indices,
                                         test_indices,
+                                        data_type,
                                         num.trees = nrounds,
-                                        probability,
                                         ...)
     } else {
       stop("Method chosen is not supported by the test.gen() function")

@@ -4,19 +4,12 @@
 \alias{plot.CCI}
 \title{Plot for CCI testing}
 \usage{
-\method{plot}{CCI}(
-  x,
-  y,
-  title = "Null Distribution with Test Statistic",
-  xtitle = "Null Distribution",
-  ytitle = "Density",
-  ...
-)
+\method{plot}{CCI}(object, ...)
 }
 \arguments{
-\item{...}{Additional arguments to ggplot2}
-
 \item{object}{Object of class 'CCI'}
+
+\item{...}{Additional arguments to ggplot2}
 }
 \value{
 A plot of the null distribution and the test statistic in ggplot2 format.

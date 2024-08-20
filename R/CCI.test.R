@@ -25,10 +25,42 @@
 #' @seealso \code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #'
 #' @examples
+#' @examples
 #' set.seed(123)
-#' # Basic use
+#'
+#' # Example 1: Basic use with a continuous outcome
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 #' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000)
+#'
+#' # Example 2: Using a binary outcome with logistic regression (method = "lm")
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rbinom(100, 1, 0.5))
+#' result <- CCI.test(y ~ x1 | x2, data = data, method = "lm", nperm = 500, data_type = "binary", family = binomial())
+#'
+#' # Example 3: Using xgboost with categorical data
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = sample(1:3, 100, replace = TRUE))
+#' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost", data_type = "categorical", nperm = 200, num_class = 3)
+#'
+#' # Example 4: Using a custom machine learning function
+#' custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {
+#'   model <- lm(formula, data = data[train_indices, ])
+#'   predictions <- predict(model, newdata = data[test_indices, ])
+#'   actual <- data[test_indices, ][[all.vars(formula)[1]]]
+#'   metric <- sqrt(mean((predictions - actual)^2)) # RMSE
+#'   return(metric)
+#' }
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+#' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000, mlfunc = custom_ml_func)
+#'
+#' # Example 5: Using a custom performance metric function
+#' custom_metric <- function(data, model, test_indices) {
+#'   predictions <- predict(model, newdata = data[test_indices, ])
+#'   actual <- data[test_indices, ][[all.vars(formula)[1]]]
+#'   sst <- sum((actual - mean(actual))^2)
+#'   ssr <- sum((actual - predictions)^2)
+#'   rsq <- 1 - (ssr / sst)
+#'   return(rsq) # R-squared
+#' }
+#' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000, metricfunc = custom_metric, method = "lm")
 
 
 CCI.test <- function(formula = NA,
@@ -50,7 +82,7 @@ CCI.test <- function(formula = NA,
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))
   } else if (!is.null(mlfunc)) {
-    deparse(substitute(metricfunc))
+    "custom"
   } else {
     if (data_type %in% "continuous") {
       "RMSE"
@@ -58,6 +90,13 @@ CCI.test <- function(formula = NA,
       "Kappa Score"
     }
   }
+
+  method <- if (!is.null(mlfunc)) {
+    deparse(substitute(mlfunc))
+  } else {
+    method
+  }
+
   result <- perm.test(formula = formula,
                       data = data,
                       p = p,
@@ -73,7 +112,6 @@ CCI.test <- function(formula = NA,
                       mlfunc = mlfunc,
                       ...)
   result$metric <- metric
-
   print.summary.CCI(result)
 
   if (plot) {

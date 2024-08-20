@@ -18,8 +18,6 @@ perm.test(
   poly = TRUE,
   degree = 3,
   family = gaussian(),
-  objective = "reg:squarederror",
-  probability = FALSE,
   tail = NA,
   metricfunc = NULL,
   mlfunc = NULL,
@@ -54,10 +52,6 @@ perm.test(
 
 \item{family}{The family object for glm, specifying the distribution and link function to use. Default is gaussian().}
 
-\item{objective}{The objective function for xgboost models, e.g., "reg:squarederror", "binary:logistic", etc. Default is "reg:squarederror".}
-
-\item{probability}{Logical. If TRUE, the model will be trained to output probabilities rather than raw predictions. Used for classification tasks. Default is FALSE.}
-
 \item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
 
 \item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
@@ -76,7 +70,11 @@ Permutation Test for Conditional Independence
 }
 \examples{
 set.seed(123)
-dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), x4 = rnorm(100), y = rnorm(100))
+dat <- data.frame(x1 = rnorm(100),
+x2 = rnorm(100),
+x3 = rnorm(100),
+x4 = rnorm(100),
+y = rnorm(100))
 perm.test(y ~ x1 | x2 + x3 + x4, data = dat)
 }
 \seealso{
