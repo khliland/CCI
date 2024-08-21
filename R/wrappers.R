@@ -134,7 +134,7 @@ xgboost_wrapper <- function(formula,
     test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
   }
 
-  params <- list(...)
+  params <- list(objective = objective, ...)
 
 
   if (!is.null(num_class) && objective == "multi:softprob") {

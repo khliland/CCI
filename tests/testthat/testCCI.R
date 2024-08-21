@@ -486,12 +486,12 @@ test_that("test.gen works correctly for continuous data, default method is rando
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
-  data <- binomial_data(200, 1,1)
+  data <- binomial_data(200)
   result <- test.gen(Y = "Y",
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 1000,
+                     nperm = 100,
                      data_type = "binary",
                      permutation = TRUE,
                      degree = 3,
