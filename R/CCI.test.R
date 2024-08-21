@@ -132,7 +132,6 @@ CCI.test <- function(formula = NA,
   print.summary.CCI(result)
 
   if (plot) {
-  plot(result)
   cat("Plot generated.\n")
   } else {
     cat("No plot generated.\n")
