@@ -8,16 +8,18 @@ Key features include the ability to generate test statistics and null distributi
 
 You can install the development version of `CCI` from GitHub with:
 
+```r
+
 install.packages("devtools") 
 devtools::install_github("https://github.com/khliland/CCI")
 library(CCI)
-
+```
 
 ### 4. Basic Usage
 
 ## Example
 First we define a simple data generating function where y and x are functions of z1 and z2 and random noise. 
-
+```r
 gen_data <- function(N){
   z1 <- rnorm(N,0,1)
   z2 <- rnorm(N,0,1)
@@ -26,4 +28,5 @@ gen_data <- function(N){
   df <- data.frame(z1, z2, x, y)
   return(df)
 }
+```
 Here's a basic example of how to use the `CCI` package.
