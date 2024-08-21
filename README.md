@@ -18,7 +18,7 @@ library(CCI)
 ### 4. Basic Usage
 
 ## Example
-First we define a simple data generating function where y and x are functions of z1 and z2 and random noise. 
+First we define a simple data generating function where y and x are functions of z1 and z2 and random noise.  
 ```r
 gen_data <- function(N){
   z1 <- rnorm(N,0,1)
@@ -29,4 +29,10 @@ gen_data <- function(N){
   return(df)
 }
 ```
-Here's a basic example of how to use the `CCI` package.
+The data generating structure in `gen_data` implies that 'x' and 'y' are independent conditioned on 'z1' and 'z2'. Here's a basic example of how one can test this with the `CCI` package.
+
+```r
+dat <- gen_data(200)
+
+CCI.test()
+```
