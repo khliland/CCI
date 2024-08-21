@@ -59,13 +59,10 @@ test.gen <- function(Y,
                      permutation = FALSE,
                      metricfunc = NULL,
                      mlfunc = NULL,
-                     seed = NULL,
                      ...) {
 
 
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
+
   if (permutation && nperm < 10) {
     stop("nperm can't be less than 10")
   }
