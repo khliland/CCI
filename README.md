@@ -10,6 +10,8 @@ You can install the development version of `CCI` from GitHub with:
 
 install.packages("devtools") 
 devtools::install_github("https://github.com/khliland/CCI")
+library(CCI)
+
 
 ### 4. Basic Usage
 

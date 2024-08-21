@@ -1,4 +1,4 @@
-#' Wrapper Function for Performing the CCI Test
+#' Function for Performing the CCI Test
 #'
 #' The `CCI.test` function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
 #' The 'CCI.test' function serves as a wrapper around the 'perm.test' function
@@ -6,12 +6,12 @@
 #' @param formula Model formula or a DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param plot Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.
-#' @param p Numeric. Proportion of data used for training the model. Default is 0.825.
+#' @param p Numeric. Proportion of data used for training the model. Default is 0.8.
 #' @param nperm Integer. The number of permutations to perform. Default is 500.
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
 #' @param data_type Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".
-#' @param method Character. Specifies the machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".
+#' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".
 #' @param metricfunc Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
