@@ -129,7 +129,7 @@ CCI.test <- function(formula = NA,
                       mlfunc = mlfunc,
                       ...)
   result$metric <- metric
-  print.summary.CCI(result)
+  print.summary.CCI(invisible(result))
 
   if (plot) {
   cat("Plot generated.\n")
