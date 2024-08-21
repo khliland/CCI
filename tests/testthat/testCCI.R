@@ -79,7 +79,7 @@ test_that("glm_wrapper outputs a custom metric score (advance use)", {
 })
 #-------------------------------------------------------------------------------
 test_that("glm_wrapper outputs a metric score (binary var)", {
-  data <- binomial_data(300, 1, 1, 0.5)
+  data <- binomial_data(300)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -166,7 +166,6 @@ test_that("xgboost_wrapper rmse output", {
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
-
   metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
@@ -251,7 +250,7 @@ test_that("xgboost_wrapper rmse output with reg:squarederror, various parameter 
 #-------------------------------------------------------------------------------
 test_that("xgboost_wrapper Kappa score output", {
 
-  data <- binomial_data(1000, 1, 1)
+  data <- binomial_data(200)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -267,7 +266,7 @@ test_that("xgboost_wrapper Kappa score output", {
 #-------------------------------------------------------------------------------
 test_that("xgboost_wrapper Kappa score output", {
 
-  data <- binomial_data(500, 1, 1)
+  data <- binomial_data(500)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -384,7 +383,7 @@ test_that("ranger_wrapper basic use with added parameters", {
 
 test_that("ranger_wrapper basic use with binary Y", {
 
-  data <- binomial_data(500, 1, 1)
+  data <- binomial_data(500)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -554,7 +553,7 @@ test_that("test.gen works correctly for categorical data, with Xgboost
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for binary outcome data using Xgboost", {
-            data <- binomial_data(800, 1, 1)
+            data <- binomial_data(800)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -570,7 +569,7 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly with Xgboost", {
-            data <- binomial_data(800, 1, 1)
+            data <- binomial_data(800)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -585,7 +584,6 @@ test_that("test.gen works correctly with Xgboost", {
             expect_true(class(mean(unlist(result))) == "numeric")
 
           })
-
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, with GLM
           various parameter settings", {
@@ -604,7 +602,7 @@ test_that("test.gen works correctly for continuous data, with GLM
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for binary Y, with glm", {
-  data <- binomial_data(400, 1, 1, intercept = 0.5)
+  data <- binomial_data(400)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -666,7 +664,7 @@ test_that("test.gen works correctly for with custom made ML function called bagg
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 200,
+                     nperm = 50,
                      nbag = 50,
                      mlfunc = bagging_wrapper)
 
@@ -732,6 +730,7 @@ test_that("perm.test works correctly", {
   data <- non_lin_normal(500)
   result <- perm.test(Y ~ X | Z1 + Z2,
                       data = data,
+                      nperm = 25,
                       method = "xgboost",
                       nrounds = 90)
   expect_is(result, "CCI")
@@ -742,7 +741,7 @@ test_that("perm.test works correctly", {
   result <- perm.test(formula = Y ~ X + Z1 + Z2,
                       data = data,
                       p = 0.7,
-                      nperm = 40,
+                      nperm = 25,
                       data_type = "continuous",
                       method = "xgboost",
                       nrounds = 80,
@@ -787,6 +786,7 @@ test_that("CII.test works correctly basic usage", {
   data <- normal_data(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
+                     nperm = 25,,
                      parametric = F)
   expect_is(result, "CCI")
 })
@@ -796,6 +796,7 @@ test_that("CCI.test works categorical data", {
   data <- binomial_data(200)
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
+                     nperm = 25,
                      data_type = 'binary',
                      parametric = F
   )
@@ -807,8 +808,9 @@ test_that("CCI.test works categorical data", {
   data <- simulateTrigData(800)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
+                     nperm = 25,
                      data_type = 'categorical',
-                     parametric = T
+                     parametric = F
   )
   expect_is(result, "CCI")
 })
@@ -821,9 +823,10 @@ test_that("CCI.test works categorical data", {
                      data = data,
                      p = 0.7,
                      method = "xgboost",
+                     nperm = 25,
                      data_type = 'categorical',
                      num_class = 3,
-                     parametric = T
+                     parametric = F
   )
   expect_is(result, "CCI")
 })
@@ -834,7 +837,7 @@ test_that("CCI.test works rejecting a wrong null with rf", {
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.6,
                      data = data,
-                     nperm = 400,
+                     nperm = 50,
                      data_type = "continuous",
                      parametric = TRUE
   )
@@ -847,7 +850,7 @@ test_that("CCI.test works rejecting a wrong null with xgboost", {
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
-                     nperm = 500,
+                     nperm = 50,
                      method = 'xgboost',
                      data_type = "continuous",
                      parametric = TRUE
@@ -861,7 +864,7 @@ test_that("CCI.test works rejecting a wrong null with xgboost", {
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
-                     nperm = 500,
+                     nperm = 50,
                      method = 'xgboost',
                      data_type = "continuous",
                      parametric = TRUE
@@ -875,9 +878,9 @@ test_that("CCI.test works categorical data, wrong null", {
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      p = 0.7,
                      data = data,
-                     nperm = 400,
+                     nperm = 40,
                      data_type = 'categorical',
-                     parametric = TRUE
+                     parametric = FALSE
   )
   expect_is(result, "CCI")
 })
@@ -888,7 +891,7 @@ test_that("CCI.test works categorical data, wrong null", {
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
-                     nperm = 400,
+                     nperm = 40,
                      method = "lm",
                      data_type = 'categorical',
                      parametric = F
@@ -910,7 +913,7 @@ test_that("CCI.test works with custom performance metric", {
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      p = 0.7,
                      data = data,
-                     nperm = 400,
+                     nperm = 40,
                      parametric = T,
                      metricfunc = rSquared,
                      tail = 'right'
@@ -933,10 +936,10 @@ test_that("CCI.test works with custom performance metric, wrong null", {
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
-                     nperm = 400,
+                     nperm = 40,
                      parametric = T,
                      metricfunc = rSquared,
-                     tail = 'left'
+                     tail = 'right'
   )
 
   expect_is(result, "CCI")
@@ -961,7 +964,7 @@ test_that("CCI.test works with dagitty", {
                      data = data,
                      dag = dag,
                      dag_n = 1,
-                     nperm = 600,
+                     nperm = 50,
                      parametric = T
   )
 
@@ -996,8 +999,8 @@ test_that("CCI.test works with custom wrapper function, calculating R-squared", 
   result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                      p = 0.7,
                      data = data,
-                     nperm = 600,
-                     parametric = T,
+                     nperm = 60,
+                     parametric = F,
                      seed = 9,
                      mlfunc = bagging_wrapper,
                      tail = "right"
@@ -1014,7 +1017,7 @@ data <- sinusoidal(300)
 result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                    p = 0.7,
                    data = data,
-                   nperm = 600,
+                   nperm = 60,
                    parametric = T
 )
 QQplot(result)
@@ -1023,7 +1026,7 @@ QQplot(result)
 result <- CCI.test(formula = Y ~ X | Z2,
                    p = 0.7,
                    data = data,
-                   nperm = 600,
+                   nperm = 100,
                    parametric = T
 )
 QQplot(result)

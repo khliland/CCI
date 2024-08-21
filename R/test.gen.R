@@ -124,6 +124,7 @@ test.gen <- function(Y,
                                      test_indices,
                                      family,
                                      data_type,
+                                     metricfunc = metricfunc,
                                      ...)
 
     } else if (method %in% "lm" & data_type %in% "categorical") { # Parametric model (logistic) with categorical outcome
@@ -131,6 +132,7 @@ test.gen <- function(Y,
                                            resampled_data,
                                            train_indices,
                                            test_indices,
+                                           metricfunc = metricfunc,
                                            ...)
     }
     else if (method %in% "xgboost") {
@@ -148,6 +150,7 @@ test.gen <- function(Y,
                                          data_type,
                                          nrounds,
                                          num_class,
+                                         metricfunc = metricfunc,
                                          ...)
     }
     else if (method %in% "rf") { # Random Forest with continuous outcome
@@ -157,6 +160,7 @@ test.gen <- function(Y,
                                         test_indices,
                                         data_type,
                                         num.trees = nrounds,
+                                        metricfunc = metricfunc,
                                         ...)
     } else {
       stop("Method chosen is not supported by the test.gen() function")

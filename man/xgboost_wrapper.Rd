@@ -13,6 +13,7 @@ xgboost_wrapper(
   nrounds,
   num_class = NULL,
   metricfunc = NULL,
+  nthread = 1,
   ...
 )
 }

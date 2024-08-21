@@ -82,6 +82,7 @@ multinom_wrapper <- function(formula,
 #' @param data_type Type of data (continuous, binary or categorical)
 #' @param num_class Number of categorical classes
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
+#' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
 #' @param ... Additional arguments passed to xgb.train
 #'
 #' @return Performance metric
@@ -100,14 +101,14 @@ xgboost_wrapper <- function(formula,
   args <- list(...)
   if (!("objective" %in% names(args))) {
     if (data_type == "continuous") {
-      objective <- "reg:squarederror"
+      args$objective <- "reg:squarederror"
     } else if (data_type %in% "binary") {
-      objective <- "binary:logistic"
+      args$objective <- "binary:logistic"
     } else if (data_type %in% "categorical") {
-      objective <- "multi:softprob"
+      args$objective <- "multi:softprob"
     }
   } else {
-    objective <- args$objective
+    args$objective <- args$objective
   }
   independent <- all.vars(formula)[-1]
   dependent <- update(formula, . ~ .)[[2]]
@@ -134,16 +135,14 @@ xgboost_wrapper <- function(formula,
     test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
   }
 
-  params <- list(objective = objective, ...)
 
-
-  if (!is.null(num_class) && objective == "multi:softprob") {
-    params$num_class <- num_class
+  if (!is.null(num_class) && args$objective == "multi:softprob") {
+    args$num_class <- num_class
   }
 
   model <- xgboost::xgb.train(data = train_matrix,
                               nrounds = nrounds,
-                              params = params,
+                              params = args,
                               nthread = nthread,
                               verbose = 0)
 
@@ -151,14 +150,14 @@ xgboost_wrapper <- function(formula,
   if (!is.null(metricfunc)) {
     data_type <- "custom"
     metric <- metricfunc(data, model, test_indices, test_matrix)
-  } else if (objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
+  } else if (args$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
-  } else if (objective %in% "binary:logistic") {
+  } else if (args$objective %in% "binary:logistic") {
     pred_class <- ifelse(pred > 0.5, 1, 0)
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
     metric <- conf_matrix$overall[2]
-  } else if (objective %in% "multi:softprob") {
+  } else if (args$objective %in% "multi:softprob") {
     levels <- levels(factor(train_label))
     pred <- matrix(pred, ncol=num_class, byrow=TRUE)
     pred_class <- max.col(pred) - 1

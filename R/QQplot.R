@@ -69,7 +69,7 @@ QQplot <- function(object) {
   }))
   colnames(p_values) <- c("pvalues")
 
-  ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = "pvalues")) +
+  ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = pvalues)) +
     ggplot2::geom_qq(distribution = stats::qunif, , size = 0.1)  +
     ggplot2::geom_abline(slope = 1, intercept = 0, color = "blue") +
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
