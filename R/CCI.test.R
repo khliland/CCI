@@ -94,8 +94,11 @@ CCI.test <- function(formula = NA,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      tail = NA,
+                     seed = NULL,
                      ...) {
-
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))
   } else if (!is.null(mlfunc)) {

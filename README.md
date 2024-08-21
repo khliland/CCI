@@ -32,7 +32,33 @@ gen_data <- function(N){
 The data generating structure in `gen_data` implies that 'x' and 'y' are independent conditioned on 'z1' and 'z2'. Here's a basic example of how one can test this with the `CCI` package.
 
 ```r
-dat <- gen_data(200)
+set.seed(123)
+dat <- gen_data(400)
 
-CCI.test()
+CCI.test(formula = y ~ x | z1 + z2, data = dat, seed = 1880)
+CCI.test(formula = y ~ x | z1, data = dat, seed = 1660, parametric = T)
 ```
+In the second example, we have set the parametric argument equal to TRUE. The default method for testing is random forest, which is fast. However we can change the method with the argument method, like so: 
+
+```r
+set.seed(1984)
+dat <- gen_data(400)
+
+CCI.test(formula = y ~ x | z1 + z2, data = dat, method = 'lm', family = gaussian(), seed = 321, parametric = T)
+```
+
+If we want to use the more robust but slower xgboost:
+
+```r
+dat <- gen_data(400)
+
+CCI.test(formula = y ~ x | z1 + z2, data = dat, method = 'xgboost', seed = 321, parametric = T, seed = 1983)
+```
+
+
+
+
+
+
+
+
