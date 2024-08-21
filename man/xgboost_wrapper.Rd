@@ -34,6 +34,8 @@ xgboost_wrapper(
 
 \item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
 
+\item{nthread}{Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.}
+
 \item{...}{Additional arguments passed to xgb.train}
 }
 \value{
