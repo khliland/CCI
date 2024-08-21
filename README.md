@@ -8,7 +8,7 @@ Key features include the ability to generate test statistics and null distributi
 
 You can install the development version of `CCI` from GitHub with:
 
-# install.packages("devtools") # Uncomment 
+install.packages("devtools") 
 devtools::install_github("username/PackageName")
 
 ### 4. Basic Usage

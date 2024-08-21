@@ -37,7 +37,7 @@
 #' result <- CCI.test(y ~ x1 | x2, data = data, method = "lm", nperm = 500, data_type = "binary", family = binomial())
 #'
 #' # Example 3: Using xgboost with categorical data
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = sample(1:3, 100, replace = TRUE))
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = sample(1:3, 100, replace = TRUE) - 1)
 #' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost", data_type = "categorical", nperm = 200, num_class = 3)
 #'
 #' # Example 4: Using a custom machine learning function
@@ -61,7 +61,6 @@
 #'   return(rsq) # R-squared
 #' }
 #' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000, metricfunc = custom_metric, method = "lm")
-
 
 CCI.test <- function(formula = NA,
                      data,

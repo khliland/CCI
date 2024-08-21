@@ -95,6 +95,7 @@ xgboost_wrapper <- function(formula,
                             nrounds,
                             num_class = NULL,
                             metricfunc = NULL,
+                            nthread = 1,
                             ...) {
   args <- list(...)
   if (!("objective" %in% names(args))) {
@@ -143,6 +144,7 @@ xgboost_wrapper <- function(formula,
   model <- xgboost::xgb.train(data = train_matrix,
                               nrounds = nrounds,
                               params = params,
+                              nthread = nthread,
                               verbose = 0)
 
   pred <- predict(model, newdata = test_matrix)
@@ -157,9 +159,10 @@ xgboost_wrapper <- function(formula,
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
     metric <- conf_matrix$overall[2]
   } else if (objective %in% "multi:softprob") {
+    levels <- levels(factor(train_label))
     pred <- matrix(pred, ncol=num_class, byrow=TRUE)
     pred_class <- max.col(pred) - 1
-    conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
+    conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels), factor(test_label, levels = levels)), silent = TRUE)
     metric <- conf_matrix$overall[2]
   } else {
     stop("Objective function for XGBoost is not supported by perm.test()")

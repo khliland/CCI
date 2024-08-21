@@ -537,7 +537,7 @@ test_that("test.gen works correctly for continuous data, with Xgboost various pa
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for categorical data, with Xgboost
           setting the num_class parameter", {
-            data <- categorical_data(800)
+            data <- categorical_data(400)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -816,9 +816,13 @@ test_that("CCI.test works categorical data", {
 test_that("CCI.test works categorical data", {
   set.seed(9090909)
   data <- simulateTrigData(500)
+  data$Y <- data$Y - 1
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
+                     p = 0.7,
+                     method = "xgboost",
                      data_type = 'categorical',
+                     num_class = 3,
                      parametric = T
   )
   expect_is(result, "CCI")
