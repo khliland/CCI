@@ -20,9 +20,10 @@
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
-#' @importFrom stats lm rnorm predict
+#' @importFrom stats lm rnorm predict as.formula
 #' @importFrom dagitty impliedConditionalIndependencies
-#' @import dplyr
+#' @importFrom dplyr mutate
+#' @importFrom utils flush.console
 #' @export
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}

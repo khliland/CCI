@@ -30,7 +30,7 @@
 #' @importFrom ranger ranger
 #' @importFrom data.table :=
 #' @importFrom utils flush.console
-#' @import dplyr
+#' @importFrom dplyr mutate across all_of
 #' @export
 #' @examples
 #' set.seed(123)
@@ -173,7 +173,6 @@ test.gen <- function(Y,
     }
 
   }
-
 
   null_object <- list(distribution  = null)
   return(null_object)

@@ -39,6 +39,9 @@ plot.CCI <- function(object,  ...) {
          x = "Value",
          y = "Freq.") +
     ggplot2::theme_minimal()
+
+  plot <- plot + ...
+
   print(plot)
   return(plot)
 }

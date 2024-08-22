@@ -6,12 +6,15 @@
 #' @param test_indices Indices for testing data
 #' @param family Family for GLM
 #' @param data_type Type of data (continuous or binary)
-#' @param metricfunc A user specified function which calculates a metric
+#' @param metricfunc A user-specified function which calculates a metric
 #' @param ... Additional arguments passed to glm
 #'
-#' @import stats dplyr
+#' @importFrom stats glm predict mean
+#' @importFrom caret confusionMatrix
+#' @importFrom utils all.vars
 #' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
+
 glm_wrapper <- function(formula,
                         data,
                         train_indices,
@@ -45,11 +48,14 @@ glm_wrapper <- function(formula,
 #' @param data Data frame
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for testing data
-#' @param metricfunc A user specific metric function which have the arguments data, model and test_indices, returns a numeric value
-
-#' @param ... Additional arguments passed to multinom
+#' @param metricfunc A user-specified metric function which has the arguments data, model, and test_indices, and returns a numeric value
+#' @param ... Additional arguments passed to \code{nnet::multinom}
 #'
-#' @return Performance metric (Kappa for binary)
+#' @importFrom nnet multinom
+#' @importFrom stats predict
+#' @importFrom caret confusionMatrix
+#' @importFrom utils all.vars
+#' @return Performance metric (Kappa for classification tasks)
 #' @export
 multinom_wrapper <- function(formula,
                              data,
@@ -85,6 +91,10 @@ multinom_wrapper <- function(formula,
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
 #' @param ... Additional arguments passed to xgb.train
 #'
+#' @importFrom xgboost xgb.DMatrix xgb.train
+#' @importFrom stats model.matrix predict
+#' @importFrom caret confusionMatrix
+#' @importFrom utils all.vars
 #' @return Performance metric
 #' @export
 
@@ -179,6 +189,11 @@ xgboost_wrapper <- function(formula,
 #' @param num.trees Integer specifying the number of trees to grow in the random forest. Default is 500.
 #' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
 #' @param ... Additional arguments passed to the `ranger` function.
+#'
+#' @importFrom ranger ranger
+#' @importFrom stats predict
+#' @importFrom caret confusionMatrix
+#' @importFrom utils all.vars
 #'
 #' @return A numeric value representing the performance metric of the model on the test set.
 #' @export

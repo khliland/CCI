@@ -6,7 +6,6 @@
 #' @param formula Formula. The model formula that specifies the relationship between the dependent and independent variables.
 #' @param data Data frame. The data frame in which to check for the presence of variables specified in the formula.
 #'
-#' @import dplyr
 #' @return NULL. The function is used for validation purposes and stops execution if any variables are missing.
 #' @export
 

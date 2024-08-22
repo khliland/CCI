@@ -2,7 +2,8 @@
 #'
 #' @param object Object of class 'CCI'
 #'
-#' @import ggplot2 dplyr
+#' @importFrom ggplot2 ggplot aes geom_qq geom_abline labs theme_minimal theme element_text
+#' @importFrom stats qunif
 #' @return A QQ-plot of the p-values in ggplot2 format.
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{perm.test}}
@@ -13,7 +14,7 @@
 #' cci <- CCI.test("y ~ x1 | x2", data = dat)
 #' QQplot(cci)
 
-QQplot <- function(object) {
+QQplot <- function(object, ...) {
   if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -76,6 +77,8 @@ QQplot <- function(object) {
          title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
     ggplot2::theme_minimal() +
     ggplot2::theme(text = element_text(size = 17), legend.position = 'none')
+
+  ggobj <- ggobj + ...
 
   return(ggobj)
 }
