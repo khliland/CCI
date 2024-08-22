@@ -20,6 +20,7 @@
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
 #' @importFrom stats lm predict
+#' @importFrom dplyr %>%
 #'
 #' @return Invisibly returns the result of \code{perm.test}, which is an object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 #' @export
