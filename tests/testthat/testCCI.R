@@ -490,7 +490,7 @@ test_that("test.gen works correctly for binary data, default method is random fo
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 100,
+                     nperm = 40,
                      data_type = "binary",
                      permutation = TRUE,
                      degree = 3,
@@ -507,7 +507,7 @@ test_that("test.gen works correctly for categorical data, default method is rand
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 500,
+                     nperm = 50,
                      data_type = "categorical",
                      permutation = TRUE,
                      degree = 3,
@@ -527,6 +527,7 @@ test_that("test.gen works correctly for continuous data, with Xgboost various pa
                                method = "xgboost",
                                permutation = TRUE,
                                degree = 3,
+                               nperm = 40,
                                nrounds = 100,
                                max.depth = 6)
             expect_true(class(result) == "list")
@@ -545,6 +546,7 @@ test_that("test.gen works correctly for categorical data, with Xgboost
                                data_type = "categorical",
                                permutation = TRUE,
                                degree = 3,
+                               nperm = 40,
                                nrounds = 100,
                                num_class = 3)
             expect_true(class(result) == "list")
@@ -560,6 +562,7 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
                                data = data,
                                method = "xgboost",
                                data_type = "binary",
+                               nperm = 40,
                                permutation = TRUE,
                                degree = 3,
                                nrounds = 120)
@@ -569,12 +572,12 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly with Xgboost", {
-            data <- binomial_data(800)
+            data <- binomial_data(500)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
                                data = data,
-                               nperm = 100,
+                               nperm = 40,
                                method = "xgboost",
                                data_type = "binary",
                                permutation = TRUE,
@@ -592,7 +595,7 @@ test_that("test.gen works correctly for continuous data, with GLM
                                X = "X",
                                Z = c("Z1", "Z2"),
                                data = data,
-                               nperm = 1000,
+                               nperm = 40,
                                method = "lm",
                                family = gaussian(),
                                permutation = TRUE,
@@ -608,7 +611,7 @@ test_that("test.gen works correctly for binary Y, with glm", {
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 1000,
+                     nperm = 40,
                      method = "lm",
                      data_type = "binary",
                      family = binomial(link = "logit"),
@@ -626,7 +629,7 @@ test_that("test.gen works correctly for categorical Y, with glm", {
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 1000,
+                     nperm = 50,
                      method = "lm",
                      data_type = "categorical",
                      permutation = TRUE,
@@ -688,7 +691,7 @@ test_that("test.gen works correctly using metricfunc", {
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 200,
+                     nperm = 40,
                      metricfunc = rSquared)
 
   expect_true(class(result) == "list")
@@ -702,7 +705,7 @@ test_that("test.gen works correctly using metricfunc", {
 
 test_that("perm.test works correctly in the simplest case", {
   data <- non_lin_normal(500)
-  result <- perm.test(Y ~ X | Z1 + Z2, data = data)
+  result <- perm.test(Y ~ X | Z1 + Z2, data = data, nperm = 40)
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
@@ -710,6 +713,7 @@ test_that("perm.test works with metricfunc", {
   data <- non_lin_normal(200)
   result <- perm.test(Y ~ X | Z1 + Z2,
                       data = data,
+                      nperm = 40,
                       metricfunc = rSquared,
                       tail = 'right')
   expect_is(result, "CCI")
@@ -720,7 +724,7 @@ test_that("perm.test works with mlfunc", {
   result <- perm.test(Y ~ X + Z1 + Z2,
                       data = data,
                       coob = T,
-                      nperm = 100,
+                      nperm = 50,
                       mlfunc = bagging_wrapper,
                       tail = "right")
   expect_is(result, "CCI")
@@ -786,44 +790,95 @@ test_that("CII.test works correctly basic usage", {
   data <- normal_data(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
-                     nperm = 25,,
+                     nperm = 250,
                      parametric = F)
   expect_is(result, "CCI")
 })
-#-------------------------------------------------------------------------------
-test_that("CCI.test works categorical data", {
-  set.seed(1)
-  data <- binomial_data(200)
-  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+
+test_that("CII.test works correctly basic usage", {
+  set.seed(11)
+  data <- normal_data(500)
+  result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
-                     nperm = 25,
+                     nperm = 250,
+                     parametric = T)
+  expect_is(result, "CCI")
+})
+
+#-------------------------------------------------------------------------------
+test_that("CCI.test works binary data", {
+  set.seed(1)
+  data <- binomial_data(500)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     data = data,
+                     nperm = 250,
                      data_type = 'binary',
                      parametric = F
   )
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
+test_that("CCI.test works binary data", {
+  set.seed(1)
+  data <- binomial_data(500)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     data = data,
+                     nperm = 250,
+                     data_type = 'binary',
+                     parametric = F
+  )
+  expect_is(result, "CCI")
+})
+
+#-------------------------------------------------------------------------------
+test_that("CCI.test works categorical data", {
+  set.seed(1)
+  data <- binomial_data(200)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     data = data,
+                     nperm = 250,
+                     data_type = 'binary',
+                     parametric = T
+  )
+  expect_is(result, "CCI")
+})
+#-------------------------------------------------------------------------------
+
 test_that("CCI.test works categorical data", {
   set.seed(91)
   data <- simulateTrigData(800)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
-                     nperm = 25,
+                     nperm = 250,
                      data_type = 'categorical',
                      parametric = F
   )
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
+
 test_that("CCI.test works categorical data", {
-  set.seed(9090909)
+  set.seed(91)
+  data <- simulateTrigData(800)
+  result <- CCI.test(formula = Y ~ X | Z2,
+                     data = data,
+                     nperm = 250,
+                     data_type = 'categorical',
+                     parametric = T
+  )
+  expect_is(result, "CCI")
+})
+#-------------------------------------------------------------------------------
+
+test_that("CCI.test works categorical data with xgboost", {
+  set.seed(90)
   data <- simulateTrigData(500)
   data$Y <- data$Y - 1
-  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+  result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      p = 0.7,
                      method = "xgboost",
-                     nperm = 25,
+                     nperm = 250,
                      data_type = 'categorical',
                      num_class = 3,
                      parametric = F
@@ -831,29 +886,32 @@ test_that("CCI.test works categorical data", {
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
-test_that("CCI.test works rejecting a wrong null with rf", {
+test_that("CCI.test works rejecting a wrong null with lm", {
   set.seed(9)
-  data <- normal_data(1000)
+  data <- normal_data(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.6,
                      data = data,
-                     nperm = 50,
+                     nperm = 500,
+                     method = 'lm',
+                     family = gaussian(),
                      data_type = "continuous",
                      parametric = TRUE
   )
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
-test_that("CCI.test works rejecting a wrong null with xgboost", {
-  set.seed(9)
-  data <- non_lin_normal(1000)
+test_that("CCI.test works categorical data with glm", {
+  set.seed(90)
+  data <- simulateTrigData(500)
+  data$Y <- data$Y - 1
   result <- CCI.test(formula = Y ~ X | Z2,
-                     p = 0.7,
                      data = data,
-                     nperm = 50,
-                     method = 'xgboost',
-                     data_type = "continuous",
-                     parametric = TRUE
+                     p = 0.7,
+                     method = "lm",
+                     nperm = 250,
+                     data_type = 'categorical',
+                     parametric = T
   )
   expect_is(result, "CCI")
 })

@@ -166,39 +166,16 @@ multinominal_data <- function(N, zeta = 1.5) {
 
   return(df)
 }
+binomial_data <- function(N) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
 
-binomial_data <- function(n, seed = NULL) {
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-
-  Z1 <- rnorm(n)
-  Z2 <- rnorm(n)
-
-  X <- rnorm(n, Z1 + Z2, 1)
-  log_odds <- Z1 + Z2
+  X <- rnorm(N, 10*Z1 + Z2, 1)
+  log_odds <- 100*Z1 + Z2
   prob <- 1 / (1 + exp(-log_odds))
-  Y <- rbinom(n, size = 1, prob = prob)
+  Y <- rbinom(N, size = 1, prob = prob)
 
     data <- data.frame(Y = Y, X = X, Z1 = Z1, Z2 = Z2)
-
-  return(data)
-}
-
-categorical_data <- function(N) {
-
-  Z1 <- rnorm(N, mean = 0, sd = 1)
-  Z2 <- rnorm(N, mean = 0, sd = 1)
-  X <- rnorm(N, Z1 + Z2, sd = 1)
-
-  logits <- cbind(1  - 0.5 * Z1,
-                  -1  + 0.5 * Z2,
-                  1 - 0.5 * Z1 + 0.5 * Z2)
-
-  exp_logits <- exp(logits)
-  probs <- exp_logits / rowSums(exp_logits)
-  Y <- apply(probs, 1, function(p) sample(1:3, 1, prob = p)) - 1
-  data <- data.frame(Y, X, Z1, Z2)
 
   return(data)
 }

@@ -78,7 +78,5 @@ QQplot <- function(object, ...) {
     ggplot2::theme_minimal() +
     ggplot2::theme(text = element_text(size = 17), legend.position = 'none')
 
-  ggobj <- ggobj + ...
-
   return(ggobj)
 }

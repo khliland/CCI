@@ -40,7 +40,12 @@ plot.CCI <- function(object,  ...) {
          y = "Freq.") +
     ggplot2::theme_minimal()
 
-  plot <- plot + ...
+  if (!missing(...)) {
+    additional_layers <- list(...)
+    for (layer in additional_layers) {
+      plot <- plot + layer
+    }
+  }
 
   print(plot)
   return(plot)
