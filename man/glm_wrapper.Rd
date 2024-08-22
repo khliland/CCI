@@ -28,7 +28,7 @@ glm_wrapper(
 
 \item{data_type}{Type of data (continuous or binary)}
 
-\item{metricfunc}{A user specified function which calculates a metric}
+\item{metricfunc}{A user-specified function which calculates a metric}
 
 \item{...}{Additional arguments passed to glm}
 }

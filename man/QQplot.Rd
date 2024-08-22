@@ -4,7 +4,7 @@
 \alias{QQplot}
 \title{QQ-plot for multiple testing in CCI}
 \usage{
-QQplot(object)
+QQplot(object, ...)
 }
 \arguments{
 \item{object}{Object of class 'CCI'}

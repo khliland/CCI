@@ -61,8 +61,6 @@ test.gen(
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}, or to a custom-built wrapper function.}
-
-\item{seed}{Integer. A random seed for reproducibility. Default is NULL (no seed set).}
 }
 \value{
 A list containing the test distribution.

@@ -9,9 +9,8 @@
 #' @param metricfunc A user-specified function which calculates a metric
 #' @param ... Additional arguments passed to glm
 #'
-#' @importFrom stats glm predict mean
+#' @importFrom stats glm predict
 #' @importFrom caret confusionMatrix
-#' @importFrom utils all.vars
 #' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
 
@@ -54,7 +53,6 @@ glm_wrapper <- function(formula,
 #' @importFrom nnet multinom
 #' @importFrom stats predict
 #' @importFrom caret confusionMatrix
-#' @importFrom utils all.vars
 #' @return Performance metric (Kappa for classification tasks)
 #' @export
 multinom_wrapper <- function(formula,
@@ -94,7 +92,6 @@ multinom_wrapper <- function(formula,
 #' @importFrom xgboost xgb.DMatrix xgb.train
 #' @importFrom stats model.matrix predict
 #' @importFrom caret confusionMatrix
-#' @importFrom utils all.vars
 #' @return Performance metric
 #' @export
 
@@ -193,7 +190,6 @@ xgboost_wrapper <- function(formula,
 #' @importFrom ranger ranger
 #' @importFrom stats predict
 #' @importFrom caret confusionMatrix
-#' @importFrom utils all.vars
 #'
 #' @return A numeric value representing the performance metric of the model on the test set.
 #' @export

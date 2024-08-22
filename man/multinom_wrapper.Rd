@@ -22,12 +22,12 @@ multinom_wrapper(
 
 \item{test_indices}{Indices for testing data}
 
-\item{metricfunc}{A user specific metric function which have the arguments data, model and test_indices, returns a numeric value}
+\item{metricfunc}{A user-specified metric function which has the arguments data, model, and test_indices, and returns a numeric value}
 
-\item{...}{Additional arguments passed to multinom}
+\item{...}{Additional arguments passed to \code{nnet::multinom}}
 }
 \value{
-Performance metric (Kappa for binary)
+Performance metric (Kappa for classification tasks)
 }
 \description{
 Wrapper function for multinomial regression model training and evaluation
