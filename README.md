@@ -16,9 +16,9 @@ library(CCI)
 
 ### 1. Basic Usage
 
-The data-generating structure in normal_data implies that 'x' and 'y' are independent when conditioned on 'z1' and 'z2'. Below is a basic example demonstrating how to test this hypothesis using the CCI package.
+Below is a basic example demonstrating how to test this hypothesis using the CCI package.
 
-First, we test the conditional independence statement 'y ~ x | z1 + z2', where we expect a high p-value, indicating that 'x' and 'y' are indeed independent given 'z1' and 'z2'. Next, we test the statement 'y ~ x | z1', where we expect a much lower p-value, indicating that 'x' and 'y' are not independent when conditioned only on 'z1'. In the second test, the parametric argument is set to TRUE, assuming that the null distribution is approximately Gaussian. 
+The data-generating structure in the examples below implies that 'x' and 'y' are independent when conditioned on both 'z1' and 'z2'. Conditioning on either 'Z1' or 'Z2' should result in a low p-value. The basic test also plots the null distribution with and the calculate test statistic. When the parametric argument is set to TRUE, one assumes that the null distribution is approximately Gaussian. 
 ```r
 set.seed(1985)
 dat <- normal_data(400)
