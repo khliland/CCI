@@ -11,7 +11,7 @@ gen_data <- function(N){
   return(df)
 }
 #-------------------------------------------------------------------------------
-set.seed(123)
+set.seed(1985)
 dat <- gen_data(400)
 
 CCI.test(formula = y ~ x | z1 + z2, data = dat, seed = 1880)
@@ -28,6 +28,7 @@ CCI.test(formula = y ~ x | z1 + z2,
          seed = 321,
          parametric = T)
 #-------------------------------------------------------------------------------
+set.seed(1983)
 
 CCI.test(formula = y ~ x | z1 + z2, data = dat, method = 'xgboost', seed = 321, parametric = T, seed = 1983)
 
