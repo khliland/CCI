@@ -2,7 +2,7 @@
 % Please edit documentation in R/CCI.test.R
 \name{CCI.test}
 \alias{CCI.test}
-\title{Wrapper Function for Performing the CCI Test}
+\title{Function for Performing the CCI Test}
 \usage{
 CCI.test(
   formula = NA,
@@ -29,7 +29,7 @@ CCI.test(
 
 \item{plot}{Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.}
 
-\item{p}{Numeric. Proportion of data used for training the model. Default is 0.825.}
+\item{p}{Numeric. Proportion of data used for training the model. Default is 0.8.}
 
 \item{nperm}{Integer. The number of permutations to perform. Default is 500.}
 
@@ -39,7 +39,7 @@ CCI.test(
 
 \item{data_type}{Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".}
 
-\item{method}{Character. Specifies the machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".}
+\item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".}
 
 \item{parametric}{Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.}
 

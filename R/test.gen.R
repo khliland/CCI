@@ -20,7 +20,6 @@
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
 #' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
-#' @param seed Integer. A random seed for reproducibility. Default is NULL (no seed set).
 #' @param ... Additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}, or to a custom-built wrapper function.
 #'
 #' @return A list containing the test distribution.

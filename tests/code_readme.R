@@ -1,5 +1,5 @@
 # install.packages("devtools") # Uncomment if necessary
-devtools::install_github("https://github.com/khliland/CCI", force =T)
+devtools::install_github("https://github.com/khliland/CCI")
 library(CCI)
 #-------------------------------------------------------------------------------
 gen_data <- function(N){
