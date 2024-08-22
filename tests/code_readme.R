@@ -2,35 +2,47 @@ install.packages("devtools") # Uncomment if necessary
 devtools::install_github("https://github.com/khliland/CCI", force =TRUE)
 library(CCI)
 #-------------------------------------------------------------------------------
-gen_data <- function(N){
-  z1 <- rnorm(N,0,1)
-  z2 <- rnorm(N,0,1)
-  x <- rnorm(N, z1 + z2, 1)
-  y <- rnorm(N, z1 + z2, 1)
-  df <- data.frame(z1, z2, x, y)
-  return(df)
-}
+set.seed(1985)
+dat <- normal_data(400)
+
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat)
+CCI.test(formula = Y ~ X | Z1, data = dat, parametric = T)
+
 #-------------------------------------------------------------------------------
 set.seed(1985)
-dat <- gen_data(400)
+dat <- binary_data(500)
 
-CCI.test(formula = y ~ x | z1 + z2, data = dat, seed = 1880)
-CCI.test(formula = y ~ x | z1, data = dat, seed = 1660, parametric = T, seed = 1983)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary")
+CCI.test(formula = Y ~ X | Z1, data = dat, data_type = "binary")
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary")
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "xgboost")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary", method = "lm", family = binomial(link = "logit"))
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "lm", family = binomial(link = "logit"))
 
 #-------------------------------------------------------------------------------
-set.seed(1984)
-dat <- gen_data(400)
 
-CCI.test(formula = y ~ x | z1 + z2,
+#-------------------------------------------------------------------------------
+set.seed(2020)
+dat <- simulateExpLogData(500)
+
+CCI.test(formula = Y ~ X | Z1, data = dat, data_type = 'categorical')
+#-------------------------------------------------------------------------------
+
+set.seed(1984)
+dat <- normal_data(400)
+
+CCI.test(formula = Y ~ X | Z1 + Z2,
          data = dat,
          method = 'lm',
          family = gaussian(),
-         seed = 321,
          parametric = T)
 #-------------------------------------------------------------------------------
+
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, method = 'xgboost', parametric = T)
+#-------------------------------------------------------------------------------
 set.seed(1983)
+dat <- sinusoidal(20000)
 
-CCI.test(formula = y ~ x | z1 + z2, data = dat, method = 'xgboost', seed = 321, parametric = T, seed = 1983)
-
-
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, method = 'xgboost', parametric = T, p = 0.1)
+#-------------------------------------------------------------------------------
 citation()

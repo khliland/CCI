@@ -166,18 +166,20 @@ multinominal_data <- function(N, zeta = 1.5) {
 
   return(df)
 }
-binomial_data <- function(N) {
+
+binary_data <- function(N, threshold = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
 
-  X <- rnorm(N, 10*Z1 + Z2, 1)
-  log_odds <- 100*Z1 + Z2
-  prob <- 1 / (1 + exp(-log_odds))
-  Y <- rbinom(N, size = 1, prob = prob)
+  threshold <- threshold
 
-    data <- data.frame(Y = Y, X = X, Z1 = Z1, Z2 = Z2)
+  X <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
 
-  return(data)
+  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
+
+  df <- data.frame(Z1,Z2,X,Y)
+
+  return(df)
 }
 
 ########## Continuous Multivariate Functions ###########

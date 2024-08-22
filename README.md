@@ -1,9 +1,8 @@
 # CCI
-The CCI (Computational Conditional Independence) package is an R package designed to perform conditional independence tests using machine learning methods combined with Monte Carlo cross validation. It enables users to test whether two variables are conditionally independent given a set of conditioning variables. The package supports a range of machine learning algorithms, including linear models (lm), random forests, and gradient boosting (xgboost). 
+The CCI (Computational Conditional Independence) package is an R package designed to perform computational conditional independence. The testing applies machine learning methods combined with Monte Carlo cross validation. It enables users to test whether two variables are conditionally independent given a set of conditioning variables. The package supports a range of machine learning algorithms, including linear models (lm), random forests, and gradient boosting (xgboost). 
 
-Key features include the ability to generate test statistics and null distributions through permutation testing, compute p-values, and visualize the results. The package is flexible, allowing users to customize their analysis with custom machine learning functions and performance metrics. It is particularly useful in causal inference and structural equation modeling, where understanding conditional independence is crucial.
+Key features include the ability to generate test statistics and null distributions through permutation testing, compute p-values, and visualize the results. The package is flexible, allowing users to customize their analysis with custom machine learning functions and performance metrics. Testing conditional independence is particularly useful in causal inference modelling. 
 
- 
 ## Installation
 
 You can install the development version of `CCI` from GitHub with:
@@ -15,46 +14,75 @@ devtools::install_github("https://github.com/khliland/CCI")
 library(CCI)
 ```
 
-### 4. Basic Usage
+### 1. Basic Usage
 
-## Example
-First we define a simple data generating function where y and x are functions of z1 and z2 and random noise.  
+The data-generating structure in normal_data implies that 'x' and 'y' are independent when conditioned on 'z1' and 'z2'. Below is a basic example demonstrating how to test this hypothesis using the CCI package.
+
+First, we test the conditional independence statement 'y ~ x | z1 + z2', where we expect a high p-value, indicating that 'x' and 'y' are indeed independent given 'z1' and 'z2'. Next, we test the statement 'y ~ x | z1', where we expect a much lower p-value, indicating that 'x' and 'y' are not independent when conditioned only on 'z1'. In the second test, the parametric argument is set to TRUE, assuming that the null distribution is approximately Gaussian. 
 ```r
-gen_data <- function(N){
-  z1 <- rnorm(N,0,1)
-  z2 <- rnorm(N,0,1)
-  x <- rnorm(N, z1 + z2 + z1*z2, 1)
-  y <- rnorm(N, z1 + z2 + z1*z2, 1)
-  df <- data.frame(z1, z2, x, y)
-  return(df)
-}
+set.seed(1985)
+dat <- normal_data(400)
+
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat)
+CCI.test(formula = Y ~ X | Z1, data = dat, parametric = T)
 ```
-The data generating structure in `gen_data` implies that 'x' and 'y' are independent conditioned on 'z1' and 'z2'. Here's a basic example of how one can test this with the `CCI` package.
+
+
+Depending on the type of 'y' variable on the left side of the condition bar in expression 'y ~ x | z1 + z2' one can account for this in testing by setting the type to either continous (default) binary or categorical, with the 'data_type' parameter, here are some examples with a binary 'y'.
 
 ```r
 set.seed(1985)
-dat <- gen_data(400)
+dat <- binary_data(500)
 
-CCI.test(formula = y ~ x | z1 + z2, data = dat, seed = 1880)
-CCI.test(formula = y ~ x | z1, data = dat, seed = 1660, parametric = T)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary")
+CCI.test(formula = Y ~ X | Z1, data = dat, data_type = "binary")
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary")
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "xgboost")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary", method = "lm", family = binomial(link = "logit"))
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "lm", family = binomial(link = "logit"))
+
 ```
-In the second example, we have set the parametric argument equal to TRUE. The default method for testing is random forest, which is fast. However we can change the method with the argument method, like so: 
+Here are some examples with the categorical data type:
+```r
+set.seed(2020)
+dat <- CategorizeInteractiondData(400)
+
+CCI.test(formula = y ~ x | z1 + z2, data = dat, data_type = 'categorical', parametric = T)
+```
+
+### 2. Extended Usage
+
+By default, the testing method used is random forest (rf), which provides a balance between speed and accuracy. However, you can switch to a linear parametric model for faster, though potentially less precise, results. Note that when using the 'lm' method, you must also define the family parameter as required by glm(). Here’s how to do it:
 
 ```r
 set.seed(1984)
-dat <- gen_data(400)
+dat <- normal_data(400)
 
-CCI.test(formula = y ~ x | z1 + z2, data = dat, method = 'lm', family = gaussian(), parametric = T)
+CCI.test(formula = Y ~ X | Z1 + Z2,
+         data = dat,
+         method = 'lm',
+         family = gaussian(),
+         parametric = T)
 ```
-
-If we want to use the more robust but slower xgboost:
+If you prefer a more robust approach, you can use the xgboost method. This method is particularly useful in complex cases and larger datasets, however, xgboost is much slower. Here’s how you can apply it:
 
 ```r
 set.seed(1983)
-dat <- gen_data(400)
+dat <- normal_data(400)
 
-CCI.test(formula = y ~ x | z1 + z2, data = dat, method = 'xgboost', seed = 321, parametric = T)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, method = 'xgboost', parametric = T)
 ```
+You can customize the behavior of the xgboost algorithm by passing additional arguments, such as the eta and nrounds parameters. When handling large data sets it can be particularly useful to set the p argument reltaivly low. For example, we can only use 10 % of the data during training, by setting p = 0.1 as shown below:
+```r
+set.seed(1983)
+dat <- sinusoidal(20000)
+
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, method = 'xgboost', parametric = T, p = 0.1)
+```
+### 3. QQ plots
+
+### X. A note on formula usage
+
 
 
 
