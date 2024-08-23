@@ -14,7 +14,7 @@
 #' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
 
-glm_wrapper <- function(formula,
+wrapper_glm <- function(formula,
                         data,
                         train_indices,
                         test_indices,
@@ -56,7 +56,7 @@ glm_wrapper <- function(formula,
 #' @importFrom caret confusionMatrix
 #' @return Performance metric (Kappa for classification tasks)
 #' @export
-multinom_wrapper <- function(formula,
+wrapper_multinom <- function(formula,
                              data,
                              train_indices,
                              test_indices,
@@ -96,7 +96,7 @@ multinom_wrapper <- function(formula,
 #' @return Performance metric
 #' @export
 
-xgboost_wrapper <- function(formula,
+wrapper_xgboost <- function(formula,
                             data,
                             train_indices,
                             test_indices,
@@ -195,7 +195,7 @@ xgboost_wrapper <- function(formula,
 #' @return A numeric value representing the performance metric of the model on the test set.
 #' @export
 
-ranger_wrapper <- function(formula,
+wrapper_ranger <- function(formula,
                            data,
                            train_indices,
                            test_indices,

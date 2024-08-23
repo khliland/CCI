@@ -112,7 +112,7 @@ test.gen <- function(Y,
       data_type <- "custom"
       null[iteration] <- mlfunc(formula, data = resampled_data, train_indices, test_indices, ...)
     } else if (method %in% "lm" & data_type %in% c("continuous", "binary"))  { # Parametric linear model
-      null[iteration] <- glm_wrapper(formula,
+      null[iteration] <- wrapper_glm(formula,
                                      resampled_data,
                                      train_indices,
                                      test_indices,
@@ -122,7 +122,7 @@ test.gen <- function(Y,
                                      ...)
 
     } else if (method %in% "lm" & data_type %in% "categorical") { # Parametric model (logistic) with categorical outcome
-      null[iteration] <-  multinom_wrapper(formula,
+      null[iteration] <-  wrapper_multinom(formula,
                                            resampled_data,
                                            train_indices,
                                            test_indices,
@@ -137,7 +137,7 @@ test.gen <- function(Y,
       } else {
         objective <- "reg:squarederror"
       }
-      null[iteration] <- xgboost_wrapper(formula,
+      null[iteration] <- wrapper_xgboost(formula,
                                          resampled_data,
                                          train_indices,
                                          test_indices,
@@ -148,7 +148,7 @@ test.gen <- function(Y,
                                          ...)
     }
     else if (method %in% "rf") { # Random Forest with continuous outcome
-      null[iteration] <- ranger_wrapper(formula,
+      null[iteration] <- wrapper_ranger(formula,
                                         resampled_data,
                                         train_indices,
                                         test_indices,
