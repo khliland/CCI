@@ -1,7 +1,7 @@
 # CCI
-The CCI (Computational Conditional Independence) package is an R package designed to perform computational conditional independence. The testing applies machine learning methods combined with Monte Carlo cross validation. It enables users to test whether two variables are conditionally independent given a set of conditioning variables. The package supports a range of machine learning algorithms, including linear models (lm), random forests, and gradient boosting (xgboost). 
+The CCI (Computational Conditional Independence) package is an R package designed to perform computational conditional independence. The testing applies machine learning, permutation in combination with Monte Carlo cross validation to estimate a null distribution of a performance metric and a corresponding test statistic. It enables users to test whether two variables are conditionally independent given a set of conditioning variables. The package supports a range of machine learning algorithms, including linear models (lm), random forests, and gradient boosting (xgboost). 
 
-Key features include the ability to generate test statistics and null distributions through permutation testing, compute p-values, and visualize the results. The package is flexible, allowing users to customize their analysis with custom machine learning functions and performance metrics. Testing conditional independence is particularly useful in causal inference modelling. 
+Key features include the ability to generate null distributions and test statistics (or test distributions) of any size through permutation testing, compute p-values, and visualize the results. The package is flexible, allowing users to customize their analysis with custom machine learning functions and performance metrics. Testing conditional independence is particularly useful in causal inference modelling. 
 
 ## Installation
 
@@ -69,13 +69,10 @@ Depending on the data type of the Y variable on the left side of the condition b
 set.seed(1985)
 dat <- BinaryData(500)
 
-set.seed(1985)
-dat <- BinaryData(500)
-
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary")
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary", method = "xgboost")
 ```
-In the second example, we set method = "xgboost", which applies extreme gradient boosting as the machine learning algorithm for testing. The CCI package provides three built-in methods: the linear model "lm", random forest "rf" (default), and extreme gradient boosting ("xgboost"). Random forest is the default because it provides a balance between speed and accuracy. However, "xgboost" is more robust, and is recommended. You can also define your own custom machine learning algorithm. 
+In the second example, we set method = "xgboost", which applies extreme gradient boosting as the machine learning algorithm for testing. The CCI package provides three built-in methods: the linear model ("lm"), random forest ("rf") (default), and extreme gradient boosting ("xgboost"). Random forest is the default because it provides a balance between speed and accuracy. However, "xgboost" is more robust, and is recommended. You can also define your own custom machine learning algorithm, more on that later. 
 
 Testing conditional independence with categorical data types is difficult. The CCI-package can handle such cases,  but requires quit large data sets, again, we recommend to use xgboost. Unfortunately, it is also a little slow.
 
