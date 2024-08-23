@@ -3,10 +3,10 @@
 The CCI (Computational Conditional Independence) package in R is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. This method is especially useful in causal inference modeling.
 
 ### Key Features:
-- Supports multiple machine learning algorithms: linear models (`lm`), random forests, and gradient boosting (`xgboost`).
 - Generates null distributions and test statistics using permutation testing.
-- Computes p-values and provides visualization tools for result interpretation.
-- Allows for custom machine learning functions and performance metrics, offering flexibility in analysis.
+- Computes p-values and provides visualization of distributions.
+- Supports the machine learning algorithms: linear models (`lm`), random forests, and gradient boosting (`xgboost`).
+- Allows for custom machine learning functions and performance metrics.
 
 ## Installation
 
@@ -86,7 +86,7 @@ CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary")
 CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "xgboost")
 ```
 
-In the second example, we use `xgboost` as the machine learning algorithm. The CCI package offers three built-in methods: `lm` (linear model), `rf` (random forest, the default), and `xgboost` (extreme gradient boosting). While random forest is the default due to its balance of speed and accuracy, `xgboost` is more robust and recommended for binary and categorical data types. Custom machine learning algorithms can also be defined by the user. 
+In the second example, we use `xgboost` as the machine learning algorithm. The CCI package offers three built-in methods: `lm` (linear model), `rf` (random forest, the default), and `xgboost` (extreme gradient boosting). While random forest is the default due to its balance of speed and accuracy, `xgboost` is more robust and recommended especially for binary and categorical data types. Custom machine learning algorithms can also be defined by the user. 
 
 Testing conditional independence with categorical data types is difficult. The CCI-package can handle such cases,  but requires quit large data sets, again, we recommend to use xgboost. Unfortunately, it is also a little slow.
 
