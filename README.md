@@ -1,37 +1,48 @@
-# CCI
-The CCI (Computational Conditional Independence) package is an R package designed to perform computational conditional independence. The testing applies machine learning, permutation in combination with Monte Carlo cross validation to estimate a null distribution of a performance metric and a corresponding test statistic. It enables users to test whether two variables are conditionally independent given a set of conditioning variables. The package supports a range of machine learning algorithms, including linear models (lm), random forests, and gradient boosting (xgboost). 
+Here's a more concise and clear version:
 
-Key features include the ability to generate null distributions and test statistics (or test distributions) of any size through permutation testing, compute p-values, and visualize the results. The package is flexible, allowing users to customize their analysis with custom machine learning functions and performance metrics. Testing conditional independence is particularly useful in causal inference modelling. 
+# CCI Package
+
+The CCI (Computational Conditional Independence) package in R is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. This method is especially useful in causal inference modeling.
+
+### Key Features:
+- Supports multiple machine learning algorithms: linear models (`lm`), random forests, and gradient boosting (`xgboost`).
+- Generates null distributions and test statistics using permutation testing.
+- Computes p-values and provides visualization tools for result interpretation.
+- Allows for custom machine learning functions and performance metrics, offering flexibility in analysis.
 
 ## Installation
 
-You can install the development version of `CCI` from GitHub with:
+Install the development version of `CCI` from GitHub:
 
 ```r
-
-install.packages("devtools") 
-devtools::install_github("https://github.com/khliland/CCI")
+install.packages("devtools")
+devtools::install_github("khliland/CCI")
 library(CCI)
 ```
 
-### 1. Basic Usage
+## 1. Basic Usage
 
-First we define functions to simulate some data.
+### Simulating Data
+
+First, define functions to generate different types of data:
+
 ```r
 NormalData <- function(N){
-  Z1 <- rnorm(N,0,1)
-  Z2 <- rnorm(N,0,1)
+  Z1 <- rnorm(N, 0, 1)
+  Z2 <- rnorm(N, 0, 1)
   X <- rnorm(N, Z1 + Z2, 1)
   Y <- rnorm(N, Z1 + Z2, 1)
   return(data.frame(Z1, Z2, X, Y))
 }
+
 BinaryData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
-  X <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < 0, 1, 0)
-  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < 0, 1, 0)
+  X <- ifelse(rnorm(N, Z1 + Z2 + Z1 * Z2, 1) < 0, 1, 0)
+  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1 * Z2, 1) < 0, 1, 0)
   return(data.frame(Z1, Z2, X, Y))
 }
+
 TrigData <- function(N) {
   Z1 <- runif(N, -pi, pi)
   Z2 <- rnorm(N)
@@ -51,28 +62,33 @@ TrigData <- function(N) {
 }
 ```
 
-The data-generating structure of all the examples in this readme is that 'X' and 'Y' are independent when conditioned on both 'Z1' and 'Z2'. 'X' and 'Y' are not independent when conditioning on either 'Z1' or 'Z2'.   Below is a basic example demonstrating how to test this hypothesis using the CCI package.
+### Testing Conditional Independence
+
+The generated data structure assumes that 'X' and 'Y' are independent when conditioned on both 'Z1' and 'Z2', but not when conditioned on either one alone. Below is an example of how to test this hypothesis using the CCI package.
 
 ```r
 set.seed(1985)
 dat <- NormalData(400)
 
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat)
-CCI.test(formula = Y ~ X | Z1, data = dat, parametric = T)
+CCI.test(formula = Y ~ X | Z1, data = dat, parametric = TRUE)
 ```
-The basic test also plots the null distribution with and the calculate test statistic. When the parametric argument is set to TRUE, one assumes that the null distribution is approximately Gaussian.
 
-Depending on the data type of the Y variable on the left side of the condition bar in the expression Y ~ X | Z1 + Z2, you can change the data_type parameter to either "continuous" (default), "binary", or "categorical". Below is an example when Y (and X) is binary:
+These tests will plot the null distribution along with the calculated test statistic. When the `parametric` argument is set to `TRUE`, the method assumes that the null distribution is approximately Gaussian.
+
+### Handling Different Data Types
+
+Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, you can adjust the `data_type` parameter to `"continuous"` (default), `"binary"`, or `"categorical"`. Here is an example with binary data:
 
 ```r
-
 set.seed(1985)
 dat <- BinaryData(500)
 
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary")
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary", method = "xgboost")
+CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "xgboost")
 ```
-In the second example, we set method = "xgboost", which applies extreme gradient boosting as the machine learning algorithm for testing. The CCI package provides three built-in methods: the linear model ("lm"), random forest ("rf") (default), and extreme gradient boosting ("xgboost"). Random forest is the default because it provides a balance between speed and accuracy. However, "xgboost" is more robust, and is recommended. You can also define your own custom machine learning algorithm, more on that later. 
+
+In the second example, we use `xgboost` as the machine learning algorithm. The CCI package offers three built-in methods: `lm` (linear model), `rf` (random forest, the default), and `xgboost` (extreme gradient boosting). While random forest is the default due to its balance of speed and accuracy, `xgboost` is more robust and recommended for binary and categorical data types. Custom machine learning algorithms can also be defined by the user. 
 
 Testing conditional independence with categorical data types is difficult. The CCI-package can handle such cases,  but requires quit large data sets, again, we recommend to use xgboost. Unfortunately, it is also a little slow.
 
