@@ -1,5 +1,3 @@
-Here's a more concise and clear version:
-
 # CCI Package
 
 The CCI (Computational Conditional Independence) package in R is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. This method is especially useful in causal inference modeling.
