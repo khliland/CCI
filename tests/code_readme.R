@@ -68,3 +68,40 @@ test <- CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', 
 QQplot(test)
 
 #-------------------------------------------------------------------------------
+
+
+library(dagitty)
+
+NonLinNormal <- function(N){
+  Z1 = rnorm(N,0,1)
+  Z2 = rnorm(N,0,1)
+  X = exp(Z1*Z2) + rnorm(N,0,1)
+  Y <- Z1*Z2 + rnorm(N,0,1)
+  df <- data.frame(Z1,Z2,X,Y)
+  return(df)
+}
+
+data <- NonLinNormal(500)
+
+dag <- dagitty('dag {
+  X
+  Y
+  Z1
+  Z2
+  Z1 -> X
+  Z1 -> Y
+  Z2 -> X
+  Z2 -> Y
+}')
+
+result <- CCI.test(formula = NULL,
+                   p = 0.7,
+                   data = data,
+                   dag = dag,
+                   dag_n = 1,
+                   nperm = 100,
+                   parametric = T
+)
+
+
+

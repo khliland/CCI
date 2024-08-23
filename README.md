@@ -58,6 +58,16 @@ TrigData <- function(N) {
   }
   return(data.frame(Z1, Z2, X, Y))
 }
+
+NonLinNormal <- function(N){
+  Z1 = rnorm(N,0,1)
+  Z2 = rnorm(N,0,1)
+  X = exp(Z1*Z2) + rnorm(N,0,1)
+  Y <- Z1*Z2 + rnorm(N,0,1)
+  df <- data.frame(Z1,Z2,X,Y)
+  return(df)
+}
+ 
 ```
 
 ### Testing Conditional Independence
@@ -99,7 +109,7 @@ CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = 'categorical', metho
 CCI.test(formula = Y ~ X | Z1, data = dat, data_type = 'categorical', method = "xgboost", num_class = 3)
 ```
 
-By default, the testing method used is random forest (rf), which  is fast. However, you can switch to a linear parametric model which is even faster, though potentially less precise. However, if we can assume that the regression 'Y ~ X + Z1 + Z2' is well estimated by a parametric model, 'lm' is a good choice. When using the 'lm' method, you must also define the family argument as required by glm(). Since 'lm' is much faster, we generate 2000 Monte Carlo samples for the null distribution. Here’s how to do it:
+rf is fast, however, you can switch to a linear parametric model which is even faster, though potentially less precise. If we can assume that the regression 'Y ~ X + Z1 + Z2' is well estimated by a parametric model, 'lm' is a good choice. When using the 'lm' method, you must also define the family argument as required by glm(). Since 'lm' is much faster, we generate 2000 Monte Carlo samples for the null distribution. Here’s how to do it:
 
 ```r
 set.seed(1984)
@@ -109,7 +119,7 @@ CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, nperm = 2000, method = 'lm', fam
 CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
 
 ```
-In the last case we fail to reject to null although it should be rejected. It might be the case that we have insufficient power. An extra level of analysis in CCI is to creat QQplots over p-values, to see if they approximately follows a uniform distribution, here is how to do it. 
+In the last case we fail to reject to null although it should be rejected. It might be the case that we have insufficient power. An extra level of analysis in CCI is to create QQplots over p-values, to see if they approximately follows a uniform distribution, here is how to do it. 
 
 ```r
 set.seed(1984)
@@ -125,10 +135,18 @@ test <- CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', 
 QQplot(test)
 ```
 
+
 ### 2. Arguments in CCI.test()
 
-The absolute bare minimum arguments which need to be provided are 'formula' and 'data', or 'dag' and 'data'. The formula must be of class formula and of the form 'Y ~ X + V + Z + ... etc' or 'Y ~ X | V + Z + ... etc' for testing the condition 'Y _||_ X | V, Z, ...'. 
-plot
+The absolute bare minimum arguments which need to be provided are `formula` and `data`, or `dag` and `data`. The formula must be of class formula and of the form Y ~ X + V + Z + ... etc or Y ~ X | V + Z + ... etc for testing the condition Y _||_ X | V, Z, ... .
+
+The argument `dag` can take a `dagitty` class object of a directed acyclic graph (DAG). Most dagitty DAG's has several testable conditional independence statements, which one we want to test in our DAG is determined by the `dag_n` argument (default = 1). Here is an example of how to do it. 
+
+```r
+set.seed(1984)
+dat <- NormalData(200)
+
+```
 
 The argument 'p' is the proportion of data used for training the model and default is 0.8. When handling large data sets it can be particularly useful to set the p argument relatively low. In the example below, we only use 10 % of the data during training, by setting p = 0.1 as shown below. This speeds up the testing, and makes in increase precision.
 ```r
