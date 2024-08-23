@@ -40,7 +40,7 @@ test_that("get_pvalues outputs p-values", {
 # The machine learning wrapper functions takes formula, data and indices for training and test data.
 # estimates the ML model with training data, and evaluates on testing data. The different ML-wrapper takes
 # different parameters depending on the ML model used. The default ML in the test is ranger (random forest).
-test_that("glm_wrapper outputs a metric score (basic use)", {
+test_that("wrapper_glm outputs a metric score (basic use)", {
   dat <- data.frame(
     x1 = rnorm(100),
     x2 = rnorm(100),
@@ -50,11 +50,11 @@ test_that("glm_wrapper outputs a metric score (basic use)", {
   )
   train_indices <- c(1:80)
   test_indices <- c(81:100)
-  metric <- glm_wrapper(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous", family = gaussian(link = "identity"))
+  metric <- wrapper_glm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous", family = gaussian(link = "identity"))
   expect_true(class(metric) == "numeric")
 })
 #-------------------------------------------------------------------------------
-test_that("glm_wrapper outputs a custom metric score (advance use)", {
+test_that("wrapper_glm outputs a custom metric score (advance use)", {
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
     pred <- predict.glm(model, newdata = data[test_indices,])
@@ -68,7 +68,7 @@ test_that("glm_wrapper outputs a custom metric score (advance use)", {
   inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(dat), inTraining)
-  metric <- glm_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_glm(formula = Y ~ X + Z1 + Z2,
                         data = dat,
                         train_indices = train_indices,
                         test_indices = test_indices,
@@ -78,12 +78,12 @@ test_that("glm_wrapper outputs a custom metric score (advance use)", {
   expect_true(class(metric) == "numeric")
 })
 #-------------------------------------------------------------------------------
-test_that("glm_wrapper outputs a metric score (binary var)", {
+test_that("wrapper_glm outputs a metric score (binary var)", {
   data <- BinaryData(300)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
-  metric <- glm_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_glm(formula = Y ~ X + Z1 + Z2,
                         data = data,
                         train_indices = train_indices,
                         test_indices = test_indices,
@@ -94,14 +94,14 @@ test_that("glm_wrapper outputs a metric score (binary var)", {
 #-------------------------------------------------------------------------------
 # Example of a custom function for calculating log loss with categorical outcome
 #-------------------------------------------------------------------------------
-test_that("multinom_wrapper", {
-  data <- categorical_data(1000)
+test_that("wrapper_multinom", {
+  data <- InteractiondData(1000)
 
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- multinom_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_multinom(formula = Y ~ X + Z1 + Z2,
                              data = data,
                              train_indices = train_indices,
                              test_indices = test_indices)
@@ -113,7 +113,7 @@ test_that("multinom_wrapper", {
 # Example of a custom function for calculating log loss with categorical outcome
 #-------------------------------------------------------------------------------
 
-test_that("multinom_wrapper outputs a custom log loss metric score", {
+test_that("wrapper_multinom outputs a custom log loss metric score", {
   multi_class_log_loss <- function(data, model, test_indices) {
     eps = 0.001
     pred <- predict(model, newdata = data[test_indices,], type = "probs")
@@ -125,7 +125,7 @@ test_that("multinom_wrapper outputs a custom log loss metric score", {
     return(log_loss)
   }
 
-  data <- multinominal_data(1000)
+  data <- Multinominal(1000)
   data$X <- as.factor(data$X)
   data$Y <- as.factor(data$Y)
 
@@ -133,7 +133,7 @@ test_that("multinom_wrapper outputs a custom log loss metric score", {
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- multinom_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_multinom(formula = Y ~ X + Z1 + Z2,
                         data = data,
                         train_indices = train_indices,
                         test_indices = test_indices,
@@ -143,14 +143,14 @@ test_that("multinom_wrapper outputs a custom log loss metric score", {
 })
 
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper rmse output", {
+test_that("wrapper_xgboost rmse output", {
 
-  data <- uniform_noise(1000)
+  data <- UniformNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -160,13 +160,13 @@ test_that("xgboost_wrapper rmse output", {
   expect_true(class(metric) == "numeric")
 })
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper rmse output", {
+test_that("wrapper_xgboost rmse output", {
 
-  data <- uniform_noise(500)
+  data <- UniformNoise(500)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -177,15 +177,15 @@ test_that("xgboost_wrapper rmse output", {
 })
 
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper rmse output using a different objective", {
+test_that("wrapper_xgboost rmse output using a different objective", {
 
-  data <- uniform_noise(1000)
+  data <- UniformNoise(1000)
   data$Y <- abs(data$Y)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -196,14 +196,14 @@ test_that("xgboost_wrapper rmse output using a different objective", {
 })
 
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper rmse output with reg:pseudohubererror and various parameter settings", {
+test_that("wrapper_xgboost rmse output with reg:pseudohubererror and various parameter settings", {
 
-  data <- uniform_noise(1000)
+  data <- UniformNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -218,7 +218,7 @@ test_that("xgboost_wrapper rmse output with reg:pseudohubererror and various par
 
 #-------------------------------------------------------------------------------
 
-test_that("xgboost_wrapper rmse output with reg:squarederror, various parameter settings and custom performance metric (R-squared)", {
+test_that("wrapper_xgboost rmse output with reg:squarederror, various parameter settings and custom performance metric (R-squared)", {
   rSquared <- function(data, model, test_indices, test_matrix) {
     actual <- data[test_indices,][['Y']]
     pred <- predict(model, newdata = test_matrix)
@@ -228,12 +228,12 @@ test_that("xgboost_wrapper rmse output with reg:squarederror, various parameter 
     return(metric)
   }
 
-  data <- uniform_noise(1000)
+  data <- UniformNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -248,14 +248,14 @@ test_that("xgboost_wrapper rmse output with reg:squarederror, various parameter 
 })
 
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper Kappa score output", {
+test_that("wrapper_xgboost Kappa score output", {
 
-  data <- binomial_data(200)
+  data <- BinaryData(200)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -264,14 +264,14 @@ test_that("xgboost_wrapper Kappa score output", {
   expect_true(class(metric) == "numeric")
 })
 #-------------------------------------------------------------------------------
-test_that("xgboost_wrapper Kappa score output", {
+test_that("wrapper_xgboost Kappa score output", {
 
-  data <- binomial_data(500)
+  data <- BinaryData(500)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -281,7 +281,7 @@ test_that("xgboost_wrapper Kappa score output", {
 })
 #-------------------------------------------------------------------------------
 
-test_that("xgboost_wrapper log loss score output", {
+test_that("wrapper_xgboost log loss score output", {
   multi_class_log_loss <- function(data, model, test_indices, test_matrix) {
     eps = 0.001
     pred <- predict(model, newdata = test_matrix)
@@ -295,7 +295,7 @@ test_that("xgboost_wrapper log loss score output", {
     return(log_loss)
   }
 
-  data <- multinominal_data(1000)
+  data <- Multinominal(1000)
   data$Y <- as.numeric(as.factor(data$Y))-1
   data$X <- as.numeric(as.factor(data$X))-1
 
@@ -303,7 +303,7 @@ test_that("xgboost_wrapper log loss score output", {
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -320,14 +320,14 @@ test_that("xgboost_wrapper log loss score output", {
 
 #-------------------------------------------------------------------------------
 
-test_that("xgboost_wrapper Kappa score output", {
+test_that("wrapper_xgboost Kappa score output", {
 
-  data <- simulateComplexCategorization(1000)
+  data <- ComplexCategorization(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- xgboost_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
@@ -342,14 +342,14 @@ test_that("xgboost_wrapper Kappa score output", {
 
 #-------------------------------------------------------------------------------
 
-test_that("ranger_wrapper basic use ", {
+test_that("wrapper_ranger basic use ", {
 
-  data <- exponential_noise(1000)
+  data <- ExponentialNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- ranger_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
                            data = data,
                            train_indices = train_indices,
                            test_indices = test_indices,
@@ -360,14 +360,14 @@ test_that("ranger_wrapper basic use ", {
 
 #-------------------------------------------------------------------------------
 
-test_that("ranger_wrapper basic use with added parameters", {
+test_that("wrapper_ranger basic use with added parameters", {
 
-  data <- exponential_noise(1000)
+  data <- ExponentialNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- ranger_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
                            data = data,
                            num.trees = 600,
                            max.depth = 4,
@@ -381,14 +381,14 @@ test_that("ranger_wrapper basic use with added parameters", {
 
 #-------------------------------------------------------------------------------
 
-test_that("ranger_wrapper basic use with binary Y", {
+test_that("wrapper_ranger basic use with binary Y", {
 
-  data <- binomial_data(500)
+  data <- BinaryData(500)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- ranger_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
                            data = data,
                            num.trees = 600,
                            train_indices = train_indices,
@@ -400,14 +400,14 @@ test_that("ranger_wrapper basic use with binary Y", {
 
 #-------------------------------------------------------------------------------
 
-test_that("ranger_wrapper basic use with categorical Y", {
+test_that("wrapper_ranger basic use with categorical Y", {
 
-  data <- simulateComplexCategorization(500)
+  data <- ComplexCategorization(500)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- ranger_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
                            data = data,
                            num.trees = 600,
                            max.depth = 4,
@@ -422,7 +422,7 @@ test_that("ranger_wrapper basic use with categorical Y", {
 
 #-------------------------------------------------------------------------------
 
-test_that("ranger_wrapper basic use with custom metric function ", {
+test_that("wrapper_ranger basic use with custom metric function ", {
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
     pred <- predict(model, data = data[test_indices,])$predictions
@@ -431,12 +431,12 @@ test_that("ranger_wrapper basic use with custom metric function ", {
     metric <- 1 - (ssr / sst)
     return(metric)
   }
-  data <- exponential_noise(1000)
+  data <- ExponentialNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
 
-  metric <- ranger_wrapper(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
                            data = data,
                            train_indices = train_indices,
                            test_indices = test_indices,
@@ -452,7 +452,7 @@ test_that("ranger_wrapper basic use with custom metric function ", {
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger)", {
   set.seed(1)
-  data <- non_lin_normal(200)
+  data <- NonLinNormal(200)
   result <- test.gen(Y = "Y", X = "X", Z = c("Z1", "Z2"), data = data)
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
@@ -475,6 +475,7 @@ test_that("test.gen works correctly for continuous data, default method is rando
                                Z = c("Z1", "Z2"),
                                data = data,
                                permutation = TRUE,
+                               nperm = 50,
                                degree = 5,
                                nrounds = 600,
                                max.depth = 6,
@@ -485,7 +486,7 @@ test_that("test.gen works correctly for continuous data, default method is rando
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for binary data, default method is random forest (Ranger)", {
-  data <- binomial_data(200)
+  data <- BinaryData(200)
   result <- test.gen(Y = "Y",
                      X = "X",
                      Z = c("Z1", "Z2"),
@@ -502,7 +503,7 @@ test_that("test.gen works correctly for binary data, default method is random fo
 })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for categorical data, default method is random forest (Ranger)", {
-  data <- categorical_data(200)
+  data <- InteractiondData(200)
   result <- test.gen(Y = "Y",
                      X = "X",
                      Z = c("Z1", "Z2"),
@@ -537,7 +538,7 @@ test_that("test.gen works correctly for continuous data, with Xgboost various pa
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for categorical data, with Xgboost
           setting the num_class parameter", {
-            data <- categorical_data(400)
+            data <- InteractiondData(400)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -548,14 +549,14 @@ test_that("test.gen works correctly for categorical data, with Xgboost
                                degree = 3,
                                nperm = 40,
                                nrounds = 100,
-                               num_class = 3)
+                               num_class = 4)
             expect_true(class(result) == "list")
             expect_true(class(mean(unlist(result))) == "numeric")
 
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for binary outcome data using Xgboost", {
-            data <- binomial_data(800)
+            data <- BinaryData(800)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -572,7 +573,7 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly with Xgboost", {
-            data <- binomial_data(500)
+            data <- BinaryData(500)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -605,7 +606,7 @@ test_that("test.gen works correctly for continuous data, with GLM
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for binary Y, with glm", {
-  data <- binomial_data(400)
+  data <- BinaryData(400)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -623,7 +624,7 @@ test_that("test.gen works correctly for binary Y, with glm", {
 })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for categorical Y, with glm", {
-  data <- categorical_data(400)
+  data <- InteractiondData(400)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -685,7 +686,7 @@ rSquared <- function(data, model, test_indices) {
   return(metric)
 }
 test_that("test.gen works correctly using metricfunc", {
-  data <- non_lin_normal(500)
+  data <- NonLinNormal(500)
 
   result <- test.gen(Y = "Y",
                      X = "X",
@@ -704,13 +705,13 @@ test_that("test.gen works correctly using metricfunc", {
 #-------------------------------------------------------------------------------
 
 test_that("perm.test works correctly in the simplest case", {
-  data <- non_lin_normal(500)
+  data <- NonLinNormal(500)
   result <- perm.test(Y ~ X | Z1 + Z2, data = data, nperm = 40)
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
 test_that("perm.test works with metricfunc", {
-  data <- non_lin_normal(200)
+  data <- NonLinNormal(200)
   result <- perm.test(Y ~ X | Z1 + Z2,
                       data = data,
                       nperm = 40,
@@ -720,7 +721,7 @@ test_that("perm.test works with metricfunc", {
 })
 #-------------------------------------------------------------------------------
 test_that("perm.test works with mlfunc", {
-  data <- poisson_noise(300)
+  data <- PoissonNoise(300)
   result <- perm.test(Y ~ X + Z1 + Z2,
                       data = data,
                       coob = T,
@@ -731,7 +732,7 @@ test_that("perm.test works with mlfunc", {
 })
 #-------------------------------------------------------------------------------
 test_that("perm.test works correctly", {
-  data <- non_lin_normal(500)
+  data <- NonLinNormal(500)
   result <- perm.test(Y ~ X | Z1 + Z2,
                       data = data,
                       nperm = 25,
@@ -741,7 +742,7 @@ test_that("perm.test works correctly", {
 })
 #-------------------------------------------------------------------------------
 test_that("perm.test works correctly", {
-  data <- non_lin_normal(500)
+  data <- NonLinNormal(500)
   result <- perm.test(formula = Y ~ X + Z1 + Z2,
                       data = data,
                       p = 0.7,
@@ -757,7 +758,7 @@ test_that("perm.test works correctly", {
 })
 #-------------------------------------------------------------------------------
 test_that("perm.test works correctly with dagitty object", {
-  data <- non_lin_normal(500)
+  data <- NonLinNormal(500)
   dag <- dagitty::dagitty('dag {
   X
   Y
@@ -808,7 +809,7 @@ test_that("CII.test works correctly basic usage", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works binary data", {
   set.seed(1)
-  data <- binomial_data(500)
+  data <- BinaryData(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      nperm = 250,
@@ -820,7 +821,7 @@ test_that("CCI.test works binary data", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works binary data", {
   set.seed(1)
-  data <- binomial_data(500)
+  data <- BinaryData(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      nperm = 250,
@@ -833,7 +834,7 @@ test_that("CCI.test works binary data", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data", {
   set.seed(1)
-  data <- binomial_data(200)
+  data <- BinaryData(200)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      nperm = 250,
@@ -846,7 +847,7 @@ test_that("CCI.test works categorical data", {
 
 test_that("CCI.test works categorical data", {
   set.seed(91)
-  data <- simulateTrigData(800)
+  data <- TrigData(800)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      nperm = 250,
@@ -859,7 +860,7 @@ test_that("CCI.test works categorical data", {
 
 test_that("CCI.test works categorical data", {
   set.seed(91)
-  data <- simulateTrigData(800)
+  data <- TrigData(800)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      nperm = 250,
@@ -872,7 +873,7 @@ test_that("CCI.test works categorical data", {
 
 test_that("CCI.test works categorical data with xgboost", {
   set.seed(90)
-  data <- simulateTrigData(500)
+  data <- TrigData(500)
   data$Y <- data$Y - 1
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
@@ -903,7 +904,7 @@ test_that("CCI.test works rejecting a wrong null with lm", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data with glm", {
   set.seed(90)
-  data <- simulateTrigData(500)
+  data <- TrigData(500)
   data$Y <- data$Y - 1
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
@@ -918,7 +919,7 @@ test_that("CCI.test works categorical data with glm", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works rejecting a wrong null with xgboost", {
   set.seed(9)
-  data <- non_lin_normal(500)
+  data <- NonLinNormal(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
@@ -932,7 +933,7 @@ test_that("CCI.test works rejecting a wrong null with xgboost", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data, wrong null", {
   set.seed(911)
-  data <- simulateExpLogData(500)
+  data <- ExpLogData(500)
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      p = 0.7,
                      data = data,
@@ -945,7 +946,7 @@ test_that("CCI.test works categorical data, wrong null", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data, wrong null", {
   set.seed(911)
-  data <- simulateExpLogData(1000)
+  data <- ExpLogData(1000)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
@@ -959,7 +960,7 @@ test_that("CCI.test works categorical data, wrong null", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works with custom performance metric", {
   set.seed(1911)
-  data <- sinusoidal(500)
+  data <- SinusoidalData(500)
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
     pred <- predict(model, data = data[test_indices,])$predictions
@@ -982,7 +983,7 @@ test_that("CCI.test works with custom performance metric", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works with custom performance metric, wrong null", {
   set.seed(1939)
-  data <- sinusoidal(200)
+  data <- SinusoidalData(200)
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
     pred <- predict(model, data = data[test_indices,])$predictions
@@ -1005,7 +1006,7 @@ test_that("CCI.test works with custom performance metric, wrong null", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works with dagitty", {
   set.seed(1990)
-  data <- sinusoidal(200)
+  data <- SinusoidalData(200)
   dag <- dagitty::dagitty('dag {
   X
   Y
@@ -1032,7 +1033,7 @@ test_that("CCI.test works with dagitty", {
 
 test_that("CCI.test works with custom wrapper function, calculating R-squared", {
   set.seed(3)
-  data <- sinusoidal(400)
+  data <- SinusoidalData(400)
   bagging_wrapper <- function(formula,
                               data,
                               train_indices,
@@ -1071,7 +1072,7 @@ test_that("CCI.test works with custom wrapper function, calculating R-squared", 
 ##################### QQplot() ###############################
 #-------------------------------------------------------------------------------
 
-data <- sinusoidal(300)
+data <- SinusoidalData(300)
 result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                    p = 0.7,
                    data = data,
