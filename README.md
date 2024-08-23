@@ -16,10 +16,6 @@ library(CCI)
 
 ### 1. Basic Usage
 
-Below is a basic example demonstrating how to test this hypothesis using the CCI package.
-
-The data-generating structure in the examples below implies that 'x' and 'y' are independent when conditioned on both 'z1' and 'z2'. Conditioning on either 'Z1' or 'Z2' should result in a low p-value. The basic test also plots the null distribution with and the calculate test statistic. When the parametric argument is set to TRUE, one assumes that the null distribution is approximately Gaussian. 
-
 First we define functions to simulate some data.
 ```r
 NormalData <- function(N){
@@ -54,6 +50,9 @@ TrigData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 ```
+
+The data-generating structure of all the examples in this readme is that 'X' and 'Y' are independent when conditioned on both 'Z1' and 'Z2'. 'X' and 'Y' are not independent when conditioning on either 'Z1' or 'Z2'.   Below is a basic example demonstrating how to test this hypothesis using the CCI package.
+
 ```r
 set.seed(1985)
 dat <- NormalData(400)
@@ -61,7 +60,9 @@ dat <- NormalData(400)
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat)
 CCI.test(formula = Y ~ X | Z1, data = dat, parametric = T)
 ```
-Depending on the type of the Y variable on the left side of the condition bar in the expression Y ~ X | Z1 + Z2, you can account for this in testing by setting the data_type parameter to either "continuous" (default), "binary", or "categorical". Below is an example when Y (and X) is binary:
+The basic test also plots the null distribution with and the calculate test statistic. When the parametric argument is set to TRUE, one assumes that the null distribution is approximately Gaussian.
+
+Depending on the data type of the Y variable on the left side of the condition bar in the expression Y ~ X | Z1 + Z2, you can change the data_type parameter to either "continuous" (default), "binary", or "categorical". Below is an example when Y (and X) is binary:
 
 ```r
 
@@ -113,9 +114,10 @@ test <- CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', 
 QQplot(test)
 ```
 
-### 2. Extended Usage
+### 2. Arguments in CCI.test()
 
-You can customize the behavior of the machine learning algorithm by passing additional arguments, 
+The absolute bare minimum arguments which need to be provided are 'formula' and 'data', or 'dag' and 'data'. The formula must be of class formula and of the form 'Y ~ X + V + Z + ... etc' or 'Y ~ X | V + Z + ... etc' for testing the condition 'Y _||_ X | V, Z, ...'. 
+plot
 
 The argument 'p' is the proportion of data used for training the model and default is 0.8. When handling large data sets it can be particularly useful to set the p argument relatively low. In the example below, we only use 10 % of the data during training, by setting p = 0.1 as shown below. This speeds up the testing, and makes in increase precision.
 ```r
