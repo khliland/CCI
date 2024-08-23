@@ -1,5 +1,5 @@
 
-CategorizeInteractiondData <- function(N) {
+InteractiondData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -32,7 +32,7 @@ CategorizeInteractiondData <- function(N) {
   return(data_frame)
 }
 
-simulateExpLogData <- function(N) {
+ExpLogData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -50,7 +50,7 @@ simulateExpLogData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
-simulateTrigData <- function(N) {
+TrigData <- function(N) {
   Z1 <- runif(N, -pi, pi)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -69,7 +69,7 @@ simulateTrigData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
-simulatePolyData <- function(N) {
+PolyData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -88,7 +88,7 @@ simulatePolyData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
-simulateNonLinearData <- function(N) {
+NonLinearData <- function(N) {
   Z1 <- runif(N, -1, 1)
   Z2 <- runif(N, -1, 1)
   X <- numeric(N)
@@ -122,7 +122,7 @@ simulateNonLinearData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
-simulateComplexCategorization <- function(N) {
+ComplexCategorization <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -140,7 +140,7 @@ simulateComplexCategorization <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
-multinominal_data <- function(N, zeta = 1.5) {
+Multinominal <- function(N, zeta = 1.5) {
   Z1 <- rnorm(N)
 
   Z2 <- rnorm(N)
@@ -167,7 +167,7 @@ multinominal_data <- function(N, zeta = 1.5) {
   return(df)
 }
 
-binary_data <- function(N, threshold = 0) {
+BinaryData <- function(N, threshold = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
 
@@ -184,7 +184,7 @@ binary_data <- function(N, threshold = 0) {
 
 ########## Continuous Multivariate Functions ###########
 
-normal_data <- function(N){
+NormalData <- function(N){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
   X <- rnorm(N, Z1 + Z2, 1)
@@ -193,7 +193,7 @@ normal_data <- function(N){
   return(df)
 }
 
-non_lin_normal <- function(N){
+NonLinNormal <- function(N){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = exp(Z1*Z2) + rnorm(N,0,1)
@@ -202,7 +202,7 @@ non_lin_normal <- function(N){
   return(df)
 }
 
-uniform_noise <- function(N) {
+UniformNoise <- function(N) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   X = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
@@ -211,7 +211,7 @@ uniform_noise <- function(N) {
   return(df)
 }
 
-exponential_noise <- function(N, rate_param = 1) {
+ExponentialNoise <- function(N, rate_param = 1) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   rate_param = rate_param
@@ -221,7 +221,7 @@ exponential_noise <- function(N, rate_param = 1) {
   return(df)
 }
 
-poisson_noise <- function(N){
+PoissonNoise <- function(N){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = Z2*Z1 + (rpois(N, lambda = 1)-1)
@@ -230,7 +230,7 @@ poisson_noise <- function(N){
   return(df)
 }
 
-sinusoidal <- function(N, a = 1){
+SinusoidalData <- function(N, a = 1){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   Z <- Z1 + Z2

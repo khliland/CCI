@@ -95,14 +95,10 @@ perm.test <- function(formula,
   formula <- clean_formula(formula)
   check_formula(formula, data)
 
-  dependent1 <- formula[[2]]
-  dependent2 <- formula[[3]][[2]]
-  conditioning <- unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
-
   # Creating the null distribution
-  dist <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  dist <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(Y = dependent1, X = dependent2, Z = conditioning, data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  test_statistic <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
@@ -131,6 +127,8 @@ perm.test <- function(formula,
               p = p,
               dag = dag,
               dag_n = dag_n,
+              poly = poly,
+              degree = degree,
               nperm = nperm,
               nrounds = nrounds,
               train_test_ratio = p,

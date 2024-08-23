@@ -60,8 +60,6 @@ test.gen <- function(Y,
                      mlfunc = NULL,
                      ...) {
 
-
-
   if (permutation && nperm < 10) {
     stop("nperm can't be less than 10")
   }

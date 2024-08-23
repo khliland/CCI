@@ -64,7 +64,7 @@ test_that("glm_wrapper outputs a custom metric score (advance use)", {
     return(metric)
   }
 
-  dat <- normal_data(200)
+  dat <- NormalData(200)
   inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(dat), inTraining)
@@ -79,7 +79,7 @@ test_that("glm_wrapper outputs a custom metric score (advance use)", {
 })
 #-------------------------------------------------------------------------------
 test_that("glm_wrapper outputs a metric score (binary var)", {
-  data <- binomial_data(300)
+  data <- BinaryData(300)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -460,7 +460,7 @@ test_that("test.gen works correctly for continuous data, default method is rando
 })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger) with poly turned off", {
-  data <- normal_data(200)
+  data <- NormalData(200)
   result <- test.gen(Y = "Y", X = "X", Z = c("Z1", "Z2"), data = data, poly = FALSE)
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
@@ -469,7 +469,7 @@ test_that("test.gen works correctly for continuous data, default method is rando
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger)
           various parameter settings", {
-            data <- normal_data(300)
+            data <- NormalData(300)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -519,7 +519,7 @@ test_that("test.gen works correctly for categorical data, default method is rand
 })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, with Xgboost various parameter settings", {
-            data <- normal_data(800)
+            data <- NormalData(800)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -590,7 +590,7 @@ test_that("test.gen works correctly with Xgboost", {
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, with GLM
           various parameter settings", {
-            data <- normal_data(400)
+            data <- NormalData(400)
             result <- test.gen(Y = "Y",
                                X = "X",
                                Z = c("Z1", "Z2"),
@@ -662,7 +662,7 @@ bagging_wrapper <- function(formula,
 
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for with custom made ML function called bagging_wrapper", {
-  data <- normal_data(500)
+  data <- NormalData(500)
   result <- test.gen(Y = "Y",
                      X = "X",
                      Z = c("Z1", "Z2"),
@@ -787,7 +787,7 @@ test_that("perm.test works correctly with dagitty object", {
 
 test_that("CII.test works correctly basic usage", {
   set.seed(8)
-  data <- normal_data(500)
+  data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
                      nperm = 250,
@@ -797,7 +797,7 @@ test_that("CII.test works correctly basic usage", {
 
 test_that("CII.test works correctly basic usage", {
   set.seed(11)
-  data <- normal_data(500)
+  data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
                      nperm = 250,
@@ -888,7 +888,7 @@ test_that("CCI.test works categorical data with xgboost", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works rejecting a wrong null with lm", {
   set.seed(9)
-  data <- normal_data(500)
+  data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.6,
                      data = data,

@@ -1,4 +1,4 @@
-#' Function for Performing the CCI Test
+#' Computational test for conditional independence based on ML and Monte Carlo Cross Validation
 #'
 #' The `CCI.test` function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
 #' The 'CCI.test' function serves as a wrapper around the 'perm.test' function
@@ -70,7 +70,7 @@
 #' df <- data.frame(Z1, Z2, X, Y)
 #' return(df)
 #' }
-
+#'
 #' data <- data_generator(500)
 #' custom_metric <- function(data, model, test_indices) {
 #'  predictions <- predict(model, data = data[test_indices, ])$predictions
@@ -98,6 +98,9 @@ CCI.test <- function(formula = NA,
                      mlfunc = NULL,
                      tail = NA,
                      ...) {
+  if (is.character(formula)) {
+    stop("The formula should not be a string. Please provide a formula object.")
+  }
 
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))

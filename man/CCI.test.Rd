@@ -2,7 +2,7 @@
 % Please edit documentation in R/CCI.test.R
 \name{CCI.test}
 \alias{CCI.test}
-\title{Function for Performing the CCI Test}
+\title{Computational test for conditional independence based on ML and Monte Carlo Cross Validation}
 \usage{
 CCI.test(
   formula = NA,
@@ -103,6 +103,7 @@ Y <- rnorm(N, Z1 + Z2, 1)
 df <- data.frame(Z1, Z2, X, Y)
 return(df)
 }
+
 data <- data_generator(500)
 custom_metric <- function(data, model, test_indices) {
  predictions <- predict(model, data = data[test_indices, ])$predictions

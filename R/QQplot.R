@@ -11,7 +11,7 @@
 #'
 #' @examples
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-#' cci <- CCI.test("y ~ x1 | x2", data = dat)
+#' cci <- CCI.test(y ~ x1 | x2, data = dat)
 #' QQplot(cci)
 
 QQplot <- function(object, ...) {
@@ -27,13 +27,22 @@ QQplot <- function(object, ...) {
   formula <- object$formula
   dag <- object$dag
   dag_n <- object$dag_n
-  data <- object$data
   N <- nrow(data)
   data_type <- object$data_type
   tail <- object$tail
   parametric <- object$parametric
   p <- object$p
+  family_object <- object$family
+  family <- object$family$family
+  link <- object$family$link
+  degree <- object$degree
+  poly <- object$poly
   additional_args <- object$additional_args
+
+  # Ensure p and N are numeric
+  if (!is.numeric(p) || !is.numeric(N)) {
+    stop("p and N must be numeric values.")
+  }
 
   if (!is.na(dag)) {
     if (!is.na(formula)) {
@@ -48,21 +57,22 @@ QQplot <- function(object, ...) {
   formula <- clean_formula(formula)
   check_formula(formula, data)
 
-  dependent1 <- formula[[2]]
-  dependent2 <- formula[[3]][[2]]
-  conditioning <- unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
-
-  test_result <- test.gen(
-      Y = dependent1,
-      X = dependent2,
-      Z = conditioning,
-      data = data,
-      permutation = FALSE,
-      data_type = data_type,
-      method = method,
-      nperm = nperm,
-      nrounds = nrounds,
-      p = p)
+  test_result <- test.gen(Y = formula[[2]],
+                          X = formula[[3]][[2]],
+                          Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")),
+                          data = data,
+                          permutation = FALSE,
+                          data_type = data_type,
+                          method = method,
+                          nperm = nperm,
+                          nrounds = nrounds,
+                          N = nrow(data),
+                          p = p,
+                          degree = degree,
+                          poly = poly,
+                          family = family_object,
+                          additional_args,
+                          ...)
 
   test_stats <- unlist(test_result$distribution)
   p_values <- data.frame(sapply(test_stats, function(stat) {
@@ -71,7 +81,7 @@ QQplot <- function(object, ...) {
   colnames(p_values) <- c("pvalues")
 
   ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = pvalues)) +
-    ggplot2::geom_qq(distribution = stats::qunif, , size = 0.1)  +
+    ggplot2::geom_qq(distribution = stats::qunif, size = 0.1)  +
     ggplot2::geom_abline(slope = 1, intercept = 0, color = "blue") +
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
          title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
