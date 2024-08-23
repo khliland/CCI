@@ -24,7 +24,7 @@ glm_wrapper <- function(formula,
                         ...) {
   model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
 
-  if (!is.null(metricfunc)) {
+    if (!is.null(metricfunc)) {
     data_type <- "custom"
     metric <- metricfunc(data, model, test_indices)
   } else if (data_type %in% "continuous") {
@@ -32,10 +32,11 @@ glm_wrapper <- function(formula,
     actual <- data[test_indices,][[all.vars(formula)[1]]]
     metric <- sqrt(mean((pred - actual)^2))
   } else if (data_type %in% "binary") {
+    levels <- levels(factor(data[[all.vars(formula)[1]]]))
     pred <- predict.glm(model, newdata = data[test_indices,], type = "response")
     actual <- data[test_indices, ][[all.vars(formula)[1]]]
     pred_class <- ifelse(pred > 0.5, 1, 0)
-    cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
+    cm <- caret::confusionMatrix(factor(pred_class, levels = levels), factor(actual, levels = levels))
     metric <- cm$overall["Kappa"]
   }
   return(metric)
