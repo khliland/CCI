@@ -89,6 +89,9 @@ perm.test <- function(formula,
     } else if (is.null(formula)) {
       ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
+      if (length(ci_statement$CI$Z) == 0) {
+        stop("The formula indicate an unconditional independence statement. Ensure that you include conditioning variables.")
+      }
       formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
   }
