@@ -238,7 +238,7 @@ p = 1/3
 CCI.test(formula = Y ~ X | Z1, data = dat, method = 'xgboost', data_type = "categorical", num_class = 3, p = p, nperm = 300, parametric = TRUE)
 ```
 ## 6. ️ Passing Other Arguments to the Machine Learning Function
-When using different machine learning methods with `CCI.test()`, you can fine-tune the models by passing in additional arguments specific to the algorithm. For example, the `nrounds` argument controls the number of trees in `rf` and `xgboost` (default is 120). You can also adjust parameters like `max.depth`, `min.node.size`, and `sample.fraction` to control the depth of the trees, minimum node size, and fraction of the data used, respectively.
+When using different machine learning methods with `CCI.test()`, you can fine-tune the models by passing in additional arguments specific to the algorithm. For example, the `nrounds` argument controls the number of trees in `rf` (default is 120). You can also adjust parameters like `max.depth`, `min.node.size`, and `sample.fraction` to control the depth of the trees, minimum node size, and fraction of the data used, respectively.
 
 In the example below, we set the number of trees to 100, limit the maximum depth of the trees to 6 (unlimited by default), reduce the minimum node size to 4 (default is 5), and use 70% of the data (default is 100%). These adjustments help speed up the estimation process:
 
@@ -250,7 +250,7 @@ CCI.test(formula = Y ~ X | Z2, data = dat, parametric = TRUE, nrounds = 100, max
 
 By reducing the number of trees, limiting tree depth, and using a smaller sample fraction, you can significantly speed up the testing process, however, the settings on the machine learning function should ideally be determined by pre tuning. 
 
-The CCI package leverages the `xgboost` package to estimate the null distribution via the `xgb.train()` function. You can pass in various arguments to fine-tune the performance of `xgboost`. For example:
+Using the `xgboost` option for method, you can pass in various arguments to "fine-tune" the performance of `xgboost`. For example:
 
 ```r
 set.seed(69)
@@ -259,7 +259,7 @@ CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", parametric = TRUE
 ```
 In this example:
 
-- **`nthread = 5`**: Uses 5 threads for parallel processing, hopefully speeding up computation.
+- **`nthread = 5`**: Uses 5 threads for parallel processing, hopefully speeding up computation (default = 1).
 - **`subsample = 0.7`**: Uses 70% of the data for each boosting round, helping prevent overfitting and speed up computation.
 - **`lambda = 0.8`**: Adds L2 regularization to the weights, making the model more robust.
 - **`objective = "reg:pseudohubererror"`**: Changes the loss function to pseudohuber, which is more resistant to outliers than squared error (the default).
@@ -325,11 +325,12 @@ neuralnet <- function(formula,
 }
 
 dat <- NonLinNormal(2000)
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet, nperm = 250, size = 10, decay = 0.1, maxit = 200, tail = "left")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet, nperm = 200, size = 10, decay = 0.1, maxit = 200, tail = "left")
 ```
 
 ## 10. More Examples
 
+### Example 1 (Bagging tree)
 Here’s an example of using the `CCI` test with custom data:
 
 ```r
@@ -365,6 +366,65 @@ CCI.test(formula = X ~ Y + Z1,
          subsample = 0.7,  
          colsample_bytree = 0.7)
 ```
+In this example we use the bagging tree algorithm as implemented in the `xgboost` package.
+
+### Example 2 (Custom multi class log loss with xgboost)
+First we define a new data generating function.
+```r
+Multinominal <- function(N, zeta = 1.5) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+  xb1 <- Z2 + zeta*Z1*Z2 + zeta*Z1
+  xb2 <- Z2 - zeta*Z1
+  xp1 <- 1/(1+exp(xb1) + exp(xb2))
+  xp2 <- exp(xb1) /(1+exp(xb1) + exp(xb2))
+  random <- runif(N,0, 1)
+  X <- ifelse(random < xp1, "C", ifelse(random < xp1 + xp2,"A","B"))
+  yb1 = zeta*Z1*Z2
+  yb2 <- exp(Z2) +  zeta*Z1
+  yp1 <- 1/(1+exp(yb1) + exp(yb2))
+  yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
+  random <- runif(N,0, 1)
+  Y <- ifelse(random < yp1, "X", ifelse(random < yp1 + yp2,"Y","Z"))
+  return(data.frame(Z1,Z2,X,Y))
+}
+```
+```r
+  multi_class_log_loss <- function(data, model, test_indices, test_matrix) {
+    eps = 0.001
+    pred <- predict(model, newdata = test_matrix)
+    actual <- data[test_indices,][['Y']] #Hard coded, must change if you have a different formula
+    actual_matrix <- model.matrix(~ factor(actual) - 1)
+    num_classes <- length(unique(actual))
+    pred_matrix <- matrix(pred, ncol = num_classes, byrow = TRUE)
+
+    pred_matrix <- pmax(pmin(pred_matrix, 1 - eps), eps)
+    log_loss <- -sum(actual_matrix * log(pred_matrix)) / nrow(pred_matrix)
+    return(log_loss)
+  }
+
+  data <- Multinominal(1000)
+  data$Y <- as.numeric(as.factor(data$Y))-1
+  data$X <- as.numeric(as.factor(data$X))-1
+
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- CCI.test(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            data_type = "categorical",
+                            method = "xgboost",
+                            nrounds = 120,
+                            num_class = 3,
+                            eta = 0.1,
+                            lambda = 0.5,
+                            alpha = 0.5,
+                            metricfunc = multi_class_log_loss,
+                            tail = "left")
+```
+### Example 3 
+
 
 ## 11. Methodology of the CCI Test
 

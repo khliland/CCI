@@ -285,7 +285,7 @@ test_that("wrapper_xgboost log loss score output", {
   multi_class_log_loss <- function(data, model, test_indices, test_matrix) {
     eps = 0.001
     pred <- predict(model, newdata = test_matrix)
-    actual <- data[test_indices,][['Y']]
+    actual <- data[test_indices,][['Y']] #Hard coded, must change if you have a different formula
     actual_matrix <- model.matrix(~ factor(actual) - 1)
     num_classes <- length(unique(actual))
     pred_matrix <- matrix(pred, ncol = num_classes, byrow = TRUE)
