@@ -1,6 +1,12 @@
 # Welcome to the CCI Package
 
-Thanks for checking out the CCI (Computational Conditional Independence) package in R. The package is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. This method is especially useful in causal inference modeling.
+Thanks for checking out the CCI (Computational Conditional Independence) package in R. The CCI test is designed to assess whether two variables are conditionally independent given a set of conditioning variables.
+
+Here's how the CCI test works testing the statement\( X \perp\!\!\!\perp Y \mid Z \):
+1. **Generating the Null Distribution**: The CCI test begins by generate a null distribution. This is done by numerous instances of; 1. permuting \(Y\) into \(Y^p\) ,  2. then take p size (where \(0 <p < 1\) subset of the data and estimate the relationship \(X = f(Y^p, Z)\) using the p subset of data, 3. use the remaining \(1-p\) to calculate the performance of the predicitions from \(X = f(Y^p, Z)\).
+
+
+The package is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. Testing conditional independence is especially useful in causal inference modeling.
 
 ### Key Features:
 - Generates null distributions and test statistics using permutation testing.
@@ -246,11 +252,26 @@ dat <- NonLinNormal(1000)
 CCI.test(formula = Y ~ X | Z2, data = dat, parametric = TRUE, nrounds = 100, max.depth = 6, min.node.size = 4, sample.fraction = 0.7)
 ```
 
-By reducing the number of trees, limiting tree depth, and using a smaller sample fraction, you can significantly speed up the testing process, especially useful when working with large datasets or when time is a critical factor.
+By reducing the number of trees, limiting tree depth, and using a smaller sample fraction, you can significantly speed up the testing process, however, the settings on the machine learning function should ideally be determined by pre tuning. 
 
+The CCI package leverages the `xgboost` package to estimate the null distribution via the `xgb.train()` function. You can pass in various arguments to fine-tune the performance of `xgboost`. For example:
 
+```r
+set.seed(69)
+dat <- NonLinNormal(1000)
+CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", parametric = TRUE, nthread = 5, subsample = 0.7, lambda = 0.8, objective = "reg:pseudohubererror", seed = 2)
+```
+In this example:
 
-### X. A note on formula usage
+- **`nthread = 5`**: Uses 5 threads for parallel processing, hopefully speeding up computation.
+- **`subsample = 0.7`**: Uses 70% of the data for each boosting round, helping prevent overfitting and speed up computation.
+- **`lambda = 0.8`**: Adds L2 regularization to the weights, making the model more robust.
+- **`objective = "reg:pseudohubererror"`**: Changes the loss function to pseudohuber, which is more resistant to outliers than squared error (the default).
+
+### Custom performance metric through the metricfunc argument. 
+The default performance metrics used by CCI.test() are RMSE (Root Mean Square Error) for continous outcomes, and Kappa scores for binary and categorical outcomes. However, a user can define his or her own custom performance metric. 
+
+### Pre-tuning
 
 
 
