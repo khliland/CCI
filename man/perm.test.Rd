@@ -21,7 +21,7 @@ perm.test(
   tail = NA,
   metricfunc = NULL,
   mlfunc = NULL,
-  seed = NULL,
+  nthread = 1,
   ...
 )
 }
@@ -57,8 +57,6 @@ perm.test(
 \item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
 
 \item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
-
-\item{seed}{An optional seed for random number generation to ensure reproducibility. Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }

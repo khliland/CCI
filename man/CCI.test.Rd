@@ -2,6 +2,7 @@
 % Please edit documentation in R/CCI.test.R
 \name{CCI.test}
 \alias{CCI.test}
+\alias{CCI}
 \title{Computational test for conditional independence based on ML and Monte Carlo Cross Validation}
 \usage{
 CCI.test(
@@ -10,15 +11,17 @@ CCI.test(
   plot = TRUE,
   p = 0.8,
   nperm = 500,
+  nrounds = 120,
   dag = NA,
   dag_n = 1,
   data_type = "continuous",
   method = "rf",
   parametric = FALSE,
-  seed = NULL,
   metricfunc = NULL,
   mlfunc = NULL,
   tail = NA,
+  seed = NA,
+  nthread = 1,
   ...
 )
 }
@@ -43,13 +46,13 @@ CCI.test(
 
 \item{parametric}{Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.}
 
-\item{seed}{Optional integer. Specifies a seed for random number generation to ensure reproducibility. Default is NULL.}
-
 \item{metricfunc}{Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
 
 \item{mlfunc}{Optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
+
+\item{seed}{Optional integer. Specifies a seed for random number generation to ensure reproducibility. Default is NA.}
 
 \item{...}{Additional arguments to pass to the \code{perm.test} function.}
 }

@@ -12,6 +12,7 @@ wrapper_ranger(
   data_type,
   num.trees = 500,
   metricfunc = NULL,
+  num.threads = nthread,
   ...
 )
 }

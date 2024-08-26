@@ -247,7 +247,8 @@ CCI.test(formula = Y ~ X | Z2, data = dat, parametric = TRUE, nrounds = 100, max
 ```
 
 By reducing the number of trees, limiting tree depth, and using a smaller sample fraction, you can significantly speed up the testing process, especially useful when working with large datasets or when time is a critical factor.
-`
+
+
 
 ### X. A note on formula usage
 

@@ -19,6 +19,7 @@ test.gen(
   nrounds = 120,
   family,
   num_class = NULL,
+  nthread = 1,
   permutation = FALSE,
   metricfunc = NULL,
   mlfunc = NULL,
