@@ -166,9 +166,9 @@ These examples show the basics of comuptational testing of conditional independe
 
 ## 3. Testing CI in dagitty DAGs
 
-As we have seen above, the absolute bare minimum arguments which need to be provided are `formula` and `data`, or `dag` and `data`. The formula must be of class formula and of the form Y ~ X + V + Z + ... etc or Y ~ X | V + Z + ... etc for testing the condition Y _||_ X | V, Z, ... .
+As we have seen above, the absolute bare minimum arguments which need to be provided are `formula` and `data`. The formula must be of class formula and of the form Y ~ X + V + Z + ... etc or Y ~ X | V + Z + ... etc for testing the condition Y _||_ X | V, Z, ... .
 
-The `dag` argument in `CCI.test()` can take a `dagitty` class object, representing a Directed Acyclic Graph (DAG). DAGs often contain multiple testable conditional independence statements. The specific statement you want to test is determined by the `dag_n` argument (with the default being `1`). Here’s a quick example:
+The `dag` argument in `CCI.test()` can take a `dagitty` class object, representing a Directed Acyclic Graph (DAG). DAGs often contain multiple testable conditional independence statements. The specific statement you want to test is determined by the `dag_n` argument (with the default being `1`). When `dag` is define, we do not need to specify `formula`. Here’s an example:
 
 
 ```r
@@ -305,7 +305,7 @@ You can also define a custom machine learning function using the `mlfunc` argume
 - **`train_indices`**: Indices for the training data.
 - **`test_indices`**: Indices for the test data.
 
-The function should return a numeric value representing the model's performance. Here's an example using a neural network and Mean Squared Logarithmic Error (MSLE) as the performance metric:
+The function should return a numeric value representing the model's performance. Here's an example using a neural network and RMSE for performance metric:
 
 ```r
 neuralnet <- function(formula,
