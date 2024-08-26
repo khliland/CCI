@@ -108,7 +108,7 @@ The output of the last test should look something like this:
 
 At significant level 0.05 the test rejects the null hypothesis of `Y ~ X | Z1`, since the p-value is less than 0.05. The CCI.test automatically generates a histogram over the null distribution and the corresponding test statistic. When the `parametric` argument is set to `TRUE`, the method assumes that the null distribution is approximately Gaussian.
 
-### Handling Different Data Types
+## 2. Handling Different Data Types
 
 Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, you can adjust the `data_type` parameter to `"continuous"` (default), `"binary"`, or `"categorical"`. Here is an example with binary data:
 
@@ -164,7 +164,7 @@ Note that assessing a qq plot is not a statistical test, and each test must be j
 
 These examples show the basics of comuptational testing of conditional independence with the CCI-package. Next we will show the various arguments in CCI.test() 
 
-### Testing CI in dagitty DAGs
+## 3. Testing CI in dagitty DAGs
 
 As we have seen above, the absolute bare minimum arguments which need to be provided are `formula` and `data`, or `dag` and `data`. The formula must be of class formula and of the form Y ~ X + V + Z + ... etc or Y ~ X | V + Z + ... etc for testing the condition Y _||_ X | V, Z, ... .
 
@@ -200,7 +200,7 @@ In this example:
 - Edges represent causal relationships: `Z1` and `Z2` both influence `X` and `Y`.
 - We then run `CCI.test()` to test the first conditional independence statement in the DAG (`dag_n = 1`).
 
-### ⏩ Speeding Things Up with the `p` Argument
+### Speeding Things Up with the `p` Argument
 The `p` argument controls the proportion of data used for training the model, with the default set to `0.8`. If you’re dealing with a large dataset, you might want to set `p` to a lower value, like `0.1`, to speed up the process and increase precision. Here's how you can do it:
 
 ```r
@@ -212,7 +212,7 @@ CCI.test(formula = Y ~ X | Z1, data = dat, method = 'xgboost', parametric = T, p
 ```
 In this case, only 10% of the data is used for training, making the test faster (although still slow) and potentially more precise
 
-### 🌀 The `nperm` Argument
+## 4.  The `nperm` Argument
 
 The `nperm` argument controls the number of Monte Carlo samples used to generate the null distribution. Adjusting `nperm` can help speed up testing, but be aware that a lower number of samples might lead to less precise results. Here’s an example:
 
@@ -226,7 +226,7 @@ CCI.test(formula = Y ~ X | Z1, data = dat, method = 'xgboost', data_type = "cate
 
 In this example, we use only 100 permutations, which speeds up the test but might slightly reduce precision.
 
-### ⏩ Combining `p` and `nperm` for Faster, Precise Testing
+## 5. Combining `p` and `nperm` for Faster, Precise Testing
 
 You can also combine the `p` and `nperm` arguments for both speed and precision. For instance, by using only one-third of the data for training (`p = 1/3`) and increasing the number of permutations to 300, you can create a robust null distribution while keeping the test efficient:
 
@@ -237,7 +237,7 @@ dat$Y <- dat$Y - 1
 p = 1/3
 CCI.test(formula = Y ~ X | Z1, data = dat, method = 'xgboost', data_type = "categorical", num_class = 3, p = p, nperm = 300, parametric = TRUE)
 ```
-### 🛠️ Passing Other Arguments to the Machine Learning Function
+## 6. ️ Passing Other Arguments to the Machine Learning Function
 When using different machine learning methods with `CCI.test()`, you can fine-tune the models by passing in additional arguments specific to the algorithm. For example, the `nrounds` argument controls the number of trees in `rf` and `xgboost` (default is 120). You can also adjust parameters like `max.depth`, `min.node.size`, and `sample.fraction` to control the depth of the trees, minimum node size, and fraction of the data used, respectively.
 
 In the example below, we set the number of trees to 100, limit the maximum depth of the trees to 6 (unlimited by default), reduce the minimum node size to 4 (default is 5), and use 70% of the data (default is 100%). These adjustments help speed up the estimation process:
@@ -264,8 +264,18 @@ In this example:
 - **`lambda = 0.8`**: Adds L2 regularization to the weights, making the model more robust.
 - **`objective = "reg:pseudohubererror"`**: Changes the loss function to pseudohuber, which is more resistant to outliers than squared error (the default).
 
-### Custom performance metric through the metricfunc argument. 
-The default performance metrics used by CCI.test() are RMSE (Root Mean Square Error) for continuous outcomes, and Kappa scores for binary and categorical outcomes. However, a user can define his or her own custom performance metric. The metrifunc argument must take a function with the inputs `data`, `model`, `test_indices` and `test_matrix`, and the output must a numeric value. The argument `test_matrix` is only intended for cases where `xgboost` is used as method. Here is an example of how a function calculating \(R^2\) can be implemented with the method = `xgboost`.
+## 7. ️ Custom Performance Metric with `metricfunc`
+
+The CCI package provides default performance metrics, such as RMSE for continuous outcomes and Kappa scores for binary and categorical outcomes. However, if you have a specific performance metric in mind, you can easily define your own using the `metricfunc` argument.
+
+Your custom function should take the following inputs:
+
+- **`data`**: The dataset used for the test.
+- **`model`**: The trained model.
+- **`test_indices`**: Indices for the test data.
+- **`test_matrix`**: (For `xgboost` only) The matrix used for predictions.
+
+The output should be a numeric value representing the performance metric. Here’s an example that calculates the \(R^2\) metric using `xgboost`:
 
 ```r
 Rsquare_metric  <- function(data, model, test_indices, test_matrix) {
@@ -275,17 +285,28 @@ Rsquare_metric  <- function(data, model, test_indices, test_matrix) {
     ssr <- sum((actual - pred)^2)
     metric <- 1 - (ssr / sst)
     return(metric)
-  }
+}
                   
 set.seed(1914)
 dat <- NonLinNormal(500)
 CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", metricfunc = Rsquare_metric, tail = "right")
-
 ```
-When one is using a custom performance metric, one must also define the argument `tail`. If the a higher value of the performance metric indicate a better model in terms of prediction use tail = "right" and "left" otherwise. 
 
-### Custom machine learning algorith through the mlfunc argument. 
-The user can also define their own machine learning function for testing throguht the `mlfunc` argument. The `mlfunc` takes a function with the arguments `formula`, `data`, `train_indices` and `test_indices` and must output a numeric value. Here is an example where we use a neural net as the machine learning algorithm and Mean Squared Logarithmic Error (MSLE) as performance metric.
+**Important:** When using a custom performance metric, you must also specify the `tail` argument:
+- **`tail = "right"`**: Use if higher metric values indicate better model performance.
+- **`tail = "left"`**: Use if lower metric values indicate better model performance.
+
+## 8. Custom Machine Learning Algorithm with `mlfunc`
+
+You can also define a custom machine learning function using the `mlfunc` argument. This allows you to implement any algorithm of your choice, tailored to your specific needs. The custom function should take these inputs:
+
+- **`formula`**: The formula for the model.
+- **`data`**: The dataset used for training and testing.
+- **`train_indices`**: Indices for the training data.
+- **`test_indices`**: Indices for the test data.
+
+The function should return a numeric value representing the model's performance. Here's an example using a neural network and Mean Squared Logarithmic Error (MSLE) as the performance metric:
+
 ```r
 neuralnet <- function(formula,
                       data,
@@ -298,16 +319,18 @@ neuralnet <- function(formula,
     predictions <- predict(model, newdata = data[test_indices, ])
     actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
-     metric <- sqrt(mean((predictions - actual)^2))
+    metric <- sqrt(mean((predictions - actual)^2))
 
-  return(metric)
+    return(metric)
 }
 
 dat <- NonLinNormal(2000)
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet, nperm = 250, size = 10, decay = 0.1, maxit = 200, tail = "left")
-                             
 ```
-### Some more examples
+
+## 10. More Examples
+
+Here’s an example of using the `CCI` test with custom data:
 
 ```r
 PolyData <- function(N) {
@@ -328,37 +351,29 @@ PolyData <- function(N) {
 
   return(data.frame(Z1, Z2, X, Y))
 }
+
 set.seed(100)
 dat <- PolyData(931)
 CCI.test(formula = X ~ Y + Z1, 
-          data = dat, 
-          data_type = "categorical",  
-          method = "xgboost", 
-          booster = "gbtree", 
-          num_class = 4,
-          max_depth = 6, 
-          eta = 0.3, 
-          subsample = 0.7,  
-          colsample_bytree = 0.7)
+         data = dat, 
+         data_type = "categorical",  
+         method = "xgboost", 
+         booster = "gbtree", 
+         num_class = 4,
+         max_depth = 6, 
+         eta = 0.3, 
+         subsample = 0.7,  
+         colsample_bytree = 0.7)
 ```
 
+## 11. Methodology of the CCI Test
 
-### The CCI metodology
-Here's how the CCI test works testing the statement\( X \perp\!\!\!\perp Y \mid Z \):
+Here's how the CCI test works when testing the statement \( X \perp\!\!\!\perp Y \mid Z \):
 
-1. Start by permuting \(Y\) into \(Y^p\) 
-2. Then take p size (where \(0 <p < 1\) subset of the data and estimate the relationship \(X = f(Y^p, Z)\) using the p subset of data. 
-3. Use the remaining \(1-p\) to calculate the performance of the predictions (e.g., RMSE, accuracy) from \(X = f(Y^p, Z)\).
-4. In such a way we generate the null distribution by doing the above steps, say 500 times.
-5. The test statistic is then generated by the same process only replacing the relationship \(X = f(Y^p, Z)\) with \(X = f(Y, Z)\).
+1. **Permuting \(Y\)**: Start by permuting \(Y\) into \(Y^p\), which breaks any existing dependency between \(X\) and \(Y\).
+2. **Subset Selection and Model Estimation**: Take a subset of the data of size \(p\) (where \(0 < p < 1\)) and estimate the relationship \(X = f(Y^p, Z)\) using this subset.
+3. **Performance Evaluation**: Use the remaining \(1-p\) portion of the data to evaluate the performance of the predictions from \(X = f(Y^p, Z)\) using a performance metric like RMSE.
+4. **Generating the Null Distribution**: Repeat the above steps (e.g., 500 times) to generate a null distribution of the performance metric under the assumption of conditional independence.
+5. **Test Statistic Calculation**: Finally, calculate the test statistic by estimating the relationship \(X = f(Y, Z)\) using the original (non-permuted) data.
 
-The observed test statistic is then compared against the null distribution generated. If the observed test statistic falls far from the bulk of the null distribution, it suggests that the relationship between \(X\) and \(Y\) given \(Z\) is stronger than what would be expected under the null hypothesis of conditional independence.
-
-
-
-
-
-
-
-
-
+The observed test statistic is compared against the null distribution. If it falls far from the bulk of the null distribution, it suggests a strong relationship between \(X\) and \(Y\) given \(Z\), violating the null hypothesis of conditional independence.
