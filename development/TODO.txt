@@ -1,11 +1,4 @@
-# Wrappere
-- Linear model, ranger and xgboost
-
-- Tar seg av datakonvertering og eventuell tilpasning til formel-interface.
-
-# Data til pakken
-- Import fra andre pakker, f.eks. GCM, spesielt om vi vil vise eksempler med begge pakkene.
-- Simulere data, enten som egen funksjon, som pre-genererte data, eller "live" i eksempel.
+# Bugs
 
 # Artikkel
 - Tuning

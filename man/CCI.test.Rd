@@ -20,7 +20,6 @@ CCI.test(
   metricfunc = NULL,
   mlfunc = NULL,
   tail = NA,
-  seed = NA,
   nthread = 1,
   ...
 )
@@ -51,8 +50,6 @@ CCI.test(
 \item{mlfunc}{Optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
-
-\item{seed}{Optional integer. Specifies a seed for random number generation to ensure reproducibility. Default is NA.}
 
 \item{...}{Additional arguments to pass to the \code{perm.test} function.}
 }
