@@ -1,6 +1,6 @@
-# CCI Package
+# Welcome to the CCI Package
 
-The CCI (Computational Conditional Independence) package in R is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. This method is especially useful in causal inference modeling.
+Thanks for checking out the CCI (Computational Conditional Independence) package in R. The package is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. This method is especially useful in causal inference modeling.
 
 ### Key Features:
 - Generates null distributions and test statistics using permutation testing.
@@ -9,8 +9,8 @@ The CCI (Computational Conditional Independence) package in R is designed to tes
 - Allows for custom machine learning functions and performance metrics.
 
 ## Installation
+First things first, you can the development version of `CCI` from GitHub:
 
-Install the development version of `CCI` from GitHub:
 
 ```r
 install.packages("devtools")
@@ -22,7 +22,7 @@ library(CCI)
 
 ### Simulating Data
 
-First, define functions to generate different types of data:
+First, define functions to simulate different types of data. In all the simulate data functions 'X' and 'Y' are independent only when conditioned on both 'Z1' and 'Z2', conditioning on either one alone is not sufficient. 
 
 ```r
 NormalData <- function(N){
@@ -71,8 +71,8 @@ NonLinNormal <- function(N){
 ```
 
 ### Testing Conditional Independence
+Below is an example of the simplest line of code needed to test the hypothesis `Y _||_ X | Z1, Z2` using the CCI package.
 
-The generated data structure assumes that 'X' and 'Y' are independent when conditioned on both 'Z1' and 'Z2', but not when conditioned on either one alone. Below is an example of how to test this hypothesis using the CCI package.
 
 ```r
 set.seed(1985)
@@ -81,6 +81,19 @@ dat <- NormalData(400)
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat)
 CCI.test(formula = Y ~ X | Z1, data = dat, parametric = TRUE)
 ```
+The output of the last test should look something like this: 
+
+- ** Computational conditional independence test using 'rf'** 
+- **CI Condition Tested**: `Y ~ X | Z1` 
+- **Number of Monte Carlo Samples**: 500
+- **Performance Metric**: Root Mean Square Error (RMSE)
+- **Test Statistic**: 1.230432
+- **P-value**: 0.01594247
+- **Tail**: Left-tailed test
+- **Null Distribution Summary**: Mean = 1.461339, SD = 0.1076059
+- **Visualization**: A plot of the null distribution and test statistic has been generated.
+
+Additionally, you can see the CCI.test automatically generates a histogram over the null distribution and the corresponding test statistic. 
 
 These tests will plot the null distribution along with the calculated test statistic. When the `parametric` argument is set to `TRUE`, the method assumes that the null distribution is approximately Gaussian.
 
@@ -109,36 +122,40 @@ CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = 'categorical', metho
 CCI.test(formula = Y ~ X | Z1, data = dat, data_type = 'categorical', method = "xgboost", num_class = 3)
 ```
 
-rf is fast, however, you can switch to a linear parametric model which is even faster, though potentially less precise. If we can assume that the regression 'Y ~ X + Z1 + Z2' is well estimated by a parametric model, 'lm' is a good choice. When using the 'lm' method, you must also define the family argument as required by glm(). Since 'lm' is much faster, we generate 2000 Monte Carlo samples for the null distribution. Here’s how to do it:
+rf is fast, however, you can switch to a linear parametric model which is even faster, though potentially less precise. If we can assume that the regression 'Y ~ X + Z1 + Z2' is well estimated by a parametric model, 'lm' is a good choice. When using the 'lm' method, you must also define the family argument as required by glm(). The exception is when `data_type` is `categorical` and `method` is `lm`. Since `lm` is much faster, we generate 2000 Monte Carlo samples for the null distribution. Here’s how to do it:
 
 ```r
 set.seed(1984)
-dat <- NormalData(200)
+normal_dat <- NormalData(200)
+trig_dat <- TrigData(200)
 
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
-CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = normal_dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = trig_dat, nperm = 2000, method = 'lm', data_type = "categorical", parametric = T)
+CCI.test(formula = Y ~ X | Z2, data = normal_dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
 
 ```
-In the last case we fail to reject to null although it should be rejected. It might be the case that we have insufficient power. An extra level of analysis in CCI is to create QQplots over p-values, to see if they approximately follows a uniform distribution, here is how to do it. 
+In any statistical test, it might be the case that we have insufficient power and therefor one can not rely on one single p-value. An extra level of analysis in CCI is to create quantile-quantile (qq) plots over p-values, to see if they approximately follows a uniform distribution, here is how to do it. 
 
 ```r
-set.seed(1984)
-dat <- NormalData(200)
+set.seed(1985)
+dat <- NormalData(100)
 
 CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
-CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T)
+CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T) # Fail to reject null
 
 test <- CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T, plot = F)
-QQplot(test)
+QQplot(test) # P-values roughly follow the diagonal line
 
 test <- CCI.test(formula = Y ~ X | Z2, data = dat, nperm = 2000, method = 'lm', family = gaussian(), parametric = T, plot = F)
-QQplot(test)
+QQplot(test) # Distinct pattern of a skewed distribution of p-values, which make us reject the null
 ```
+Note that assessing a qq plot is not a statistical test, and each test must be judge subjectively. 
 
+These examples show the basics of comuptational testing of conditional independence with the CCI-package. Next we will show the various arguments in CCI.test() 
 
 ### 2. Arguments in CCI.test()
 
-The absolute bare minimum arguments which need to be provided are `formula` and `data`, or `dag` and `data`. The formula must be of class formula and of the form Y ~ X + V + Z + ... etc or Y ~ X | V + Z + ... etc for testing the condition Y _||_ X | V, Z, ... .
+As we have seen above, the absolute bare minimum arguments which need to be provided are `formula` and `data`, or `dag` and `data`. The formula must be of class formula and of the form Y ~ X + V + Z + ... etc or Y ~ X | V + Z + ... etc for testing the condition Y _||_ X | V, Z, ... .
 
 The argument `dag` can take a `dagitty` class object of a directed acyclic graph (DAG). Most dagitty DAG's has several testable conditional independence statements, which one we want to test in our DAG is determined by the `dag_n` argument (default = 1). Here is an example of how to do it. 
 
