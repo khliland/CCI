@@ -284,6 +284,63 @@ CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", metricfunc = Rsqu
 ```
 When one is using a custom performance metric, one must also define the argument `tail`. If the a higher value of the performance metric indicate a better model in terms of prediction use tail = "right" and "left" otherwise. 
 
+### Custom machine learning algorith through the mlfunc argument. 
+The user can also define their own machine learning function for testing throguht the `mlfunc` argument. The `mlfunc` takes a function with the arguments `formula`, `data`, `train_indices` and `test_indices` and must output a numeric value. Here is an example where we use a neural net as the machine learning algorithm and Mean Squared Logarithmic Error (MSLE) as performance metric.
+```r
+neuralnet <- function(formula,
+                      data,
+                      train_indices,
+                      test_indices,
+                      ...) {
+                              
+    model <- nnet::nnet(formula, data = data[train_indices, ], linout = TRUE, trace = FALSE, ...)
+  
+    predictions <- predict(model, newdata = data[test_indices, ])
+    actual <- data[test_indices, ][[all.vars(formula)[1]]]
+
+     metric <- sqrt(mean((predictions - actual)^2))
+
+  return(metric)
+}
+
+dat <- NonLinNormal(2000)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet, nperm = 250, size = 10, decay = 0.1, maxit = 200, tail = "left")
+                             
+```
+### Some more examples
+
+```r
+PolyData <- function(N) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+  X <- numeric(N)
+  Y <- numeric(N)
+
+  for (i in 1:N) {
+    X[i] <- ifelse(Z1[i]^2 + Z2[i]^2 > 2, 3,
+                   ifelse(Z1[i]^2 + Z2[i] > 0.5, 2,
+                          ifelse(Z1[i] + Z2[i]^2 > 0, 1, 0)))
+
+    Y[i] <- ifelse(Z1[i]^3 + Z2[i] > 1, 3,
+                   ifelse(Z1[i]^2 - Z2[i]^2 > 0, 2,
+                          ifelse(Z1[i] - Z2[i]^3 > -1, 1, 0)))
+  }
+
+  return(data.frame(Z1, Z2, X, Y))
+}
+set.seed(100)
+dat <- PolyData(931)
+CCI.test(formula = X ~ Y + Z1, 
+          data = dat, 
+          data_type = "categorical",  
+          method = "xgboost", 
+          booster = "gbtree", 
+          num_class = 4,
+          max_depth = 6, 
+          eta = 0.3, 
+          subsample = 0.7,  
+          colsample_bytree = 0.7)
+```
 
 
 ### The CCI metodology
