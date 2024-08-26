@@ -16,7 +16,6 @@
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
-#' @param seed An optional seed for random number generation to ensure reproducibility. Default is NULL.
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
@@ -53,7 +52,7 @@ perm.test <- function(formula,
                       tail = NA,
                       metricfunc = NULL,
                       mlfunc = NULL,
-                      seed = NULL,
+                      nthread = 1,
                       ...) {
 
 
@@ -101,7 +100,7 @@ perm.test <- function(formula,
   # Creating the null distribution
   dist <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = 1, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  test_statistic <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = 1, nrounds = nrounds, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 

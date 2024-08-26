@@ -202,11 +202,12 @@ wrapper_ranger <- function(formula,
                            data_type,
                            num.trees = 500,
                            metricfunc = NULL,
+                           num.threads = nthread,
                            ...) {
   if (data_type %in% c("binary", "categorical")) {
-    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = TRUE, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = TRUE, num.threads = num.threads, ...)
   } else if (data_type %in% "continuous") {
-    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = FALSE, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = FALSE, num.threads = num.threads, ...)
   }
 
   predictions <- predict(model, data = data[test_indices, ])$predictions

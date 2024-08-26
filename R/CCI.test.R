@@ -16,7 +16,7 @@
 #' @param mlfunc Optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using `metricfunc` or `mlfunc`. Default is NA.
-#' @param seed Optional integer. Specifies a seed for random number generation to ensure reproducibility. Default is NULL.
+#' @param seed Optional integer. Specifies a seed for random number generation to ensure reproducibility. Default is NA.
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
 #' @importFrom stats lm predict
@@ -89,6 +89,7 @@ CCI.test <- function(formula = NA,
                      plot = TRUE,
                      p = 0.8,
                      nperm = 500,
+                     nrounds = 120,
                      dag = NA,
                      dag_n = 1,
                      data_type = "continuous",
@@ -98,7 +99,13 @@ CCI.test <- function(formula = NA,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      tail = NA,
+                     seed = NA,
+                     nthread = 1,
                      ...) {
+  if (!is.na(seed)) {
+    set.seed(seed)
+  }
+
   if (is.character(formula)) {
     stop("The formula should not be a string. Please provide a formula object.")
   }
@@ -127,6 +134,7 @@ CCI.test <- function(formula = NA,
                       nperm = nperm,
                       dag = dag,
                       dag_n = dag_n,
+                      nrounds = nrounds,
                       data_type = data_type,
                       method = method,
                       parametric = parametric,

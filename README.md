@@ -226,7 +226,7 @@ In this example, we use only 100 permutations, which speeds up the test but migh
 
 ### ⏩ Combining `p` and `nperm` for Faster, Precise Testing
 
-You can also combine the `p` and `nperm` arguments to achieve both speed and precision. For instance, by using only one-third of the data for training (`p = 1/3`) and increasing the number of permutations to 300, you can create a robust null distribution while keeping the test efficient:
+You can also combine the `p` and `nperm` arguments for both speed and precision. For instance, by using only one-third of the data for training (`p = 1/3`) and increasing the number of permutations to 300, you can create a robust null distribution while keeping the test efficient:
 
 ```r
 set.seed(1983)
@@ -235,8 +235,19 @@ dat$Y <- dat$Y - 1
 p = 1/3
 CCI.test(formula = Y ~ X | Z1, data = dat, method = 'xgboost', data_type = "categorical", num_class = 3, p = p, nperm = 300, parametric = TRUE)
 ```
+### 🛠️ Passing Other Arguments to the Machine Learning Function
+When using different machine learning methods with `CCI.test()`, you can fine-tune the models by passing in additional arguments specific to the algorithm. For example, the `nrounds` argument controls the number of trees in `rf` and `xgboost` (default is 120). You can also adjust parameters like `max.depth`, `min.node.size`, and `sample.fraction` to control the depth of the trees, minimum node size, and fraction of the data used, respectively.
 
-This approach allows you to maintain high precision in your results without sacrificing too much time.
+In the example below, we set the number of trees to 100, limit the maximum depth of the trees to 6 (unlimited by default), reduce the minimum node size to 4 (default is 5), and use 70% of the data (default is 100%). These adjustments help speed up the estimation process:
+
+```r
+set.seed(1979)
+dat <- NonLinNormal(1000)
+CCI.test(formula = Y ~ X | Z2, data = dat, parametric = TRUE, nrounds = 100, max.depth = 6, min.node.size = 4, sample.fraction = 0.7)
+```
+
+By reducing the number of trees, limiting tree depth, and using a smaller sample fraction, you can significantly speed up the testing process, especially useful when working with large datasets or when time is a critical factor.
+`
 
 ### X. A note on formula usage
 
