@@ -1,19 +1,17 @@
 # Welcome to the CCI Package
 
-Thanks for checking out the CCI (Computational Conditional Independence) package in R. The CCI test is designed to assess whether two variables are conditionally independent given a set of conditioning variables.
+Thanks for checking out the CCI (Computational Conditional Independence) package in R. The CCI-test conducts a computational test whether two variables are conditionally independent.
 
-The package is designed to test for conditional independence between two variables given a set of conditioning variables. It utilizes machine learning models, permutation testing, and Monte Carlo cross-validation to estimate a null distribution of a performance metric and a corresponding test statistic. Testing conditional independence is especially useful in causal inference modeling.
+The test is based on predictive machine learning methods in combination with permutation and Monte Carlo Cross-Validation (MCCV), building an empirical null distribution and estimating a test statistic. Testing conditional independence is especially useful in causal inference modeling.
 
 ### Key Features:
-- Generates null distributions and test statistics using permutation testing.
+- Generates null distributions and test statistics using permutation and MCCV.
 - Computes p-values and provides visualization of distributions.
 - Supports the machine learning algorithms: linear models (`lm`), random forests, and gradient boosting (`xgboost`).
 - Allows for custom machine learning functions and performance metrics.
 
 ## Installation
-First things first, you can the development version of `CCI` from GitHub:
-
-
+You can install the development version of `CCI` from GitHub:
 ```r
 install.packages("devtools")
 devtools::install_github("khliland/CCI")
@@ -24,7 +22,7 @@ library(CCI)
 
 ### Simulating Data
 
-First, define functions to simulate different types of data. In all the simulate data functions 'X' and 'Y' are independent only when conditioned on both 'Z1' and 'Z2', conditioning on either one alone is not sufficient. 
+First, define functions to simulate different types of data. In all the simulate data functions 'X' and 'Y' are independent by construction only when conditioned on both 'Z1' and 'Z2', conditioning on either one alone is not sufficient. 
 
 ```r
 NormalData <- function(N){
@@ -66,8 +64,7 @@ NonLinNormal <- function(N){
   Z2 = rnorm(N,0,1)
   X = exp(Z1*Z2) + rnorm(N,0,1)
   Y <- Z1*Z2 + rnorm(N,0,1)
-  df <- data.frame(Z1,Z2,X,Y)
-  return(df)
+  return( data.frame(Z1,Z2,X,Y))
 }
 
 SinusoidalData <- function(N, a = 1){
@@ -76,11 +73,8 @@ SinusoidalData <- function(N, a = 1){
   Z <- Z1 + Z2
   X = exp(-(Z)^2 / 2) * sin(a * (2*Z1 + 0.1*Z2)) + rnorm(N,0,0.1)
   Y = exp(-(Z)^2 / 2) * sin(a * (2*Z2 + 0.1*Z1)) + rnorm(N,0,0.1)
-  df <- data.frame(Z1,Z2,X,Y)
-  return(df)
+  return(data.frame(Z1,Z2,X,Y))
 }
-
- 
 ```
 
 ### Testing Conditional Independence
