@@ -423,8 +423,40 @@ Multinominal <- function(N, zeta = 1.5) {
                             metricfunc = multi_class_log_loss,
                             tail = "left")
 ```
-### Example 3 
+### Example 3 (Time series data)
+CCI can also be used to test wheter two time series variables are conditionally independent. However, analyzing time series data with CCI requires a relatively large dataset due to the complexity and dependencies inherent in time series analysis. In this example we test if two (\(X\) and \(Y\) trends which diverge in a times series are conditional independent given previous lags of X. We then to the same for lags of Y to show that this test is rejected (using significance level = 0.05). 
 
+
+
+```r
+time_series <- function(n, phi1, phi2) {
+  phi <- c(phi1, phi2)
+  # We generate X
+  X <- arima.sim(n = n, list(ar = phi))
+  Y <- numeric(n)
+  
+  for (t in 3:n) {
+    Y[t] <- 0.01 * t +  1.2 * X[t-1] +  0.7 * X[t-2] +  0.5 * X[t-2]*X[t-1] + rnorm(1, sd = 1)
+  }
+  data <- data.frame(Time = 1:n, X = X, Y = Y)
+}
+set.seed(1993) 
+data <- time_series(n = 1500, phi1 = 0.9, phi2 = -0.5)
+
+data$X_lag1 <- c(NA, data$X[-length(data$X)])  
+data$X_lag2 <- c(NA, NA, data$X[-(length(data$X)-1):-(length(data$X))])
+
+cor(data$Y, data$X) # Showing the correlation between Y and X, indicating that they are not independent
+
+# Inputing Time as a conditioning variables for general trends.
+data <- na.omit(data)
+CCI.test(formula = X ~ Y | X_lag1 + Time, data = data, p = 0.5, nperm = 200, method = "xgboost")
+CCI.test(formula = Y ~ X | X_lag1 + X_lag2 + Time, p = 0.5, nperm = 200, data = data, method = "xgboost")
+
+data$Y_lag1 <- c(NA, data$Y[-length(data$Y)])  
+data$Y_lag2 <- c(NA, NA, data$Y[-(length(data$Y)-1):-(length(data$Y))])
+CCI.test(formula = Y ~ X | Y_lag1 + Y_lag2 + Time, p = 0.5, nperm = 200, data = data, method = "xgboost", parametric = T)
+```
 
 ## 11. Methodology of the CCI Test
 
