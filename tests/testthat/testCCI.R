@@ -1017,13 +1017,14 @@ test_that("CCI.test works with dagitty", {
   Z2 -> X
   Z2 -> Y
 }')
+plot(dag)
 
-  result <- CCI.test(formula = NULL,
+result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      p = 0.7,
                      data = data,
                      dag = dag,
                      dag_n = 1,
-                     nperm = 50,
+                     nperm = 500,
                      parametric = T
   )
 
@@ -1072,11 +1073,11 @@ test_that("CCI.test works with custom wrapper function, calculating R-squared", 
 ##################### QQplot() ###############################
 #-------------------------------------------------------------------------------
 
-data <- SinusoidalData(300)
+data <- SinusoidalData(1000)
 result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                    p = 0.7,
                    data = data,
-                   nperm = 60,
+                   nperm = 520,
                    parametric = T
 )
 QQplot(result)
