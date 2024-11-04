@@ -1,5 +1,5 @@
 # Bugs
-
+- Feil når man har mange variabler man betinger på
 # Artikkel
 - Tuning
 - Overfitting
