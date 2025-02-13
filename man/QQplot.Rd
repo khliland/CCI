@@ -8,6 +8,8 @@ QQplot(object, ...)
 }
 \arguments{
 \item{object}{Object of class 'CCI'}
+
+\item{...}{Additional arguments to pass to the \code{test.gen} function.}
 }
 \value{
 A QQ-plot of the p-values in ggplot2 format.

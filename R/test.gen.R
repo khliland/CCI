@@ -17,6 +17,7 @@
 #' @param nrounds Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.
 #' @param family Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).
 #' @param num_class Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.
+#' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
 #' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
@@ -69,6 +70,11 @@ test.gen <- function(Y,
   }
   if (method %in% "xgboost" && data_type %in% "categorical" && !exists("num_class")) {
     stop("num_class needs to be set.")
+  }
+
+  if (any(sapply(data[Z], is.factor))) {
+    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
+    poly <- FALSE
   }
 
   if (poly && degree > 1){

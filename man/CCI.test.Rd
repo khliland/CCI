@@ -35,6 +35,8 @@ CCI.test(
 
 \item{nperm}{Integer. The number of permutations to perform. Default is 500.}
 
+\item{nrounds}{Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
+
 \item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.}
 
 \item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
@@ -50,6 +52,8 @@ CCI.test(
 \item{mlfunc}{Optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
+
+\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
 \item{...}{Additional arguments to pass to the \code{perm.test} function.}
 }
@@ -69,18 +73,23 @@ result <- CCI.test(y ~ x1 | x2, data = data, nperm = 500)
 
 # Example 2: Using a binary outcome (y) with logistic regression (method = "lm")
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rbinom(100, 1, 0.5))
-result <- CCI.test(y ~ x1 | x2, data = data, method = "lm", nperm = 500, data_type = "binary", family = binomial())
+result <- CCI.test(y ~ x1 | x2, data = data, method = "lm", nperm = 500,
+                   data_type = "binary", family = binomial())
 
-# Example 3: The same test can be done by switching x1 and y, using linear regression (method = "lm")
+# Example 3: The same test can be done by switching x1 and y,
+# using linear regression (method = "lm")
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rbinom(100, 1, 0.5))
 result <- CCI.test(x1 ~ y | x2, data = data, method = "lm", nperm = 500,  family = gaussian())
 
 # Example 4: Using xgboost when y is categorical
-data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = sample(1:3, 100, replace = TRUE) - 1)
-result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost", data_type = "categorical", nperm = 200, num_class = 3)
+data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
+                   y = sample(1:3, 100, replace = TRUE) - 1)
+result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
+                   data_type = "categorical", nperm = 200, num_class = 3)
 
 # Example 5: Again we can switch y and x1 (still using xgboost)
-data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = sample(1:3, 100, replace = TRUE) - 1)
+data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
+                   y = sample(1:3, 100, replace = TRUE) - 1)
 result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 200, seed = 1)
 
 # Example 4:
@@ -92,7 +101,8 @@ custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {
   return(metric)
 }
 
-result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000, mlfunc = custom_ml_func, tail = "right")
+result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000,
+                   mlfunc = custom_ml_func, tail = "right")
 
 # Example 5: Using a custom performance metric function
 data_generator <-  function(N){
@@ -113,8 +123,10 @@ custom_metric <- function(data, model, test_indices) {
  rsq <- 1 - (ssr / sst)
  return(rsq) # R-squared
 }
-correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 300, metricfunc = custom_metric, tail = "right")
-false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 300, metricfunc = custom_metric, tail = "right")
+correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 300,
+                         metricfunc = custom_metric, tail = "right")
+false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 300,
+                       metricfunc = custom_metric, tail = "right")
 }
 \seealso{
 \code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}

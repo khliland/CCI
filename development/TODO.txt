@@ -1,5 +1,6 @@
 # Bugs
 - Feil når man har mange variabler man betinger på
+
 # Artikkel
 - Tuning
 - Overfitting
@@ -9,3 +10,6 @@
 
 # Eventuelt: Testing av funksjoner
 - Teste funksjoner som er lagt til i pakken mot forhåndslagrede verdier (perm.test)
+
+# Pakken:
+- Gjøre data-funksjonene tilgjengelige for brukeren?

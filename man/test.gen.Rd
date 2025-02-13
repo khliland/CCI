@@ -55,6 +55,8 @@ test.gen(
 
 \item{num_class}{Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.}
 
+\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+
 \item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
 
 \item{metricfunc}{Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.}

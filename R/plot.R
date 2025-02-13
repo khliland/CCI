@@ -1,6 +1,6 @@
 #' Plot for CCI testing
 #'
-#' @param object Object of class 'CCI'
+#' @param x Object of class 'CCI'
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2
@@ -15,14 +15,14 @@
 #' plot(cci)
 
 
-plot.CCI <- function(object,  ...) {
-  if (!inherits(object, "CCI")) {
+plot.CCI <- function(x,  ...) {
+  if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
 
   # Extracting the null distribution and test statistic
-  null_dist <- unlist(object$null.distribution)
-  test_stat <- unlist(object$test.statistic)
+  null_dist <- unlist(x$null.distribution)
+  test_stat <- unlist(x$test.statistic)
 
   # Create a data frame for ggplot2
   df <- data.frame(null_dist = null_dist)

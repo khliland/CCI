@@ -12,7 +12,7 @@ wrapper_ranger(
   data_type,
   num.trees = 500,
   metricfunc = NULL,
-  num.threads = nthread,
+  nthread = 1,
   ...
 )
 }
@@ -30,6 +30,8 @@ wrapper_ranger(
 \item{num.trees}{Integer specifying the number of trees to grow in the random forest. Default is 500.}
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
+
+\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
 \item{...}{Additional arguments passed to the \code{ranger} function.}
 }

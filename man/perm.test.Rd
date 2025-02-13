@@ -58,6 +58,8 @@ perm.test(
 
 \item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
+\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }
 \value{
