@@ -706,15 +706,26 @@ test_that("test.gen works correctly with  SVM", {
                      Z = c("Z1", "Z2"),
                      data = data,
                      nperm = 100,
-                     method = "lm",
-                     data_type = "categorical",
-                     permutation = TRUE,
-                     degree = 3)
+                     method = "svm")
 
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
 })
+#-------------------------------------------------------------------------------
+test_that("test.gen works correctly withSVM categorical", {
+  data <- InteractiondData(600)
 
+  result <- test.gen(Y = "Y",
+                     X = "X",
+                     Z = c("Z1", "Z2"),
+                     data = data,
+                     nperm = 100,
+                     data_type = "categorical",
+                     method = "svm")
+
+  expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+})
 
 #-------------------------------------------------------------------------------
 # Creating a wrapper function using the caret package with cross-validation
