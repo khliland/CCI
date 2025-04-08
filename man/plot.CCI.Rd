@@ -4,10 +4,10 @@
 \alias{plot.CCI}
 \title{Plot for CCI testing}
 \usage{
-\method{plot}{CCI}(object, ...)
+\method{plot}{CCI}(x, ...)
 }
 \arguments{
-\item{object}{Object of class 'CCI'}
+\item{x}{Object of class 'CCI'}
 
 \item{...}{Additional arguments to ggplot2}
 }

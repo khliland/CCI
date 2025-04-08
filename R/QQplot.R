@@ -1,6 +1,7 @@
 #' QQ-plot for multiple testing in CCI
 #'
 #' @param object Object of class 'CCI'
+#' @param ... Additional arguments to pass to the \code{test.gen} function.
 #'
 #' @importFrom ggplot2 ggplot aes geom_qq geom_abline labs theme_minimal theme element_text
 #' @importFrom stats qunif
@@ -79,6 +80,7 @@ QQplot <- function(object, ...) {
     get_pvalues(unlist(null_dist), stat, parametric = parametric, tail = tail)
   }))
   colnames(p_values) <- c("pvalues")
+  pvalues <- NULL # Dummy to avoid 'globals' warning in package test.
 
   ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = pvalues)) +
     ggplot2::geom_qq(distribution = stats::qunif, size = 0.1)  +

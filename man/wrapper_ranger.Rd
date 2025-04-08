@@ -31,6 +31,8 @@ wrapper_ranger(
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
 
+\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+
 \item{...}{Additional arguments passed to the \code{ranger} function.}
 }
 \value{

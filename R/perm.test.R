@@ -16,6 +16,7 @@
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
+#' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
@@ -89,7 +90,7 @@ perm.test <- function(formula,
       ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
       if (length(ci_statement$CI$Z) == 0) {
-        warning("The formula indicate an unconditional independence statement. Are you sure that you don't need conditioning variables.")
+        warning("The formula indicates an unconditional independence statement. Are you sure that you don't need conditioning variables.")
       }
       formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
