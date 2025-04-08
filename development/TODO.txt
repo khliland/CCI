@@ -1,11 +1,40 @@
-# Bugs
+HVa som artikkelen skal inneholde (fleksibilitet, robusthet og fart)
+Programmer
 
-# Artikkel
-- Tuning
-- Overfitting
-- Beskrivelse av null-fordeling
-- ML-metoder
-- Empirisk vs parametrisk P-verdi
+Bygge pretuning funksjonalitet
 
-# Eventuelt: Testing av funksjoner
-- Teste funksjoner som er lagt til i pakken mot forhåndslagrede verdier (perm.test)
+Fikse bug om factoravariabel (dplyr)
+
+
+1. Når skal man ha en pre-tuning? Datakrav
+- Proof of concept med simulering, hvor følsomt er tuning på forhånd?
+  - Uavhengighet er en sterk antagelse, hva om p-verdi er < 0.2 (et eller annet sånn)
+- Tuning versus å lage en fordeling av test-observatorer.
+- Et ekte problem med faktisk data
+
+2.Tuning overfitting Robusthet-testing
+- Hvor viktig er tuning? Robusthet i forhold til å tune bare en "del" av testen?
+  - ML metode, hvilke ML metode er robuste
+- XGBoost
+- Randomforest
+- SVM bibliotek (raskt men trenger tuning (gamma og c-parameter)) e-1071
+- Test med og uten pretuning
+
+3. Parametrisk versus ikke parametrisk
+- Glatthet? robusthet? kan man greie seg med færre permutasjoner? Legge inn en sjekk for normalitetstest. Plotte og legge over normallinjen. (mer fart men hva med robusthet)
+
+Bygge en god historie.
+- Ta utgangspunkt i en DAG og at det er en sterk antagelse å anta uavhengighet.
+
+Disposisjon.
+1. Intro
+- Presentere problemet, hva er det pakken skal løse (peke til orginialartikkelen) og lage en DAG figur
+- Presentere metoden kort,
+- I forrige artikkel, kjører på uten spesiell tuning, kun proof of concept.
+2. Over og underfitting, vise en skisse over hvordan test observatoren flytter seg på null fordelingen.
+- Robusthet og eksakthet
+- Fleksibilitet
+- Fart
+3. Test script seksojn
+4. Diskusjon og konklusjon
+

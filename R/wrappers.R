@@ -62,7 +62,7 @@ wrapper_multinom <- function(formula,
                              test_indices,
                              metricfunc = NULL,
                              ...) {
-  model <- nnet::multinom(formula = Y ~ X + Z1 + Z2, data = data, subset = train_indices, trace = FALSE, ...)
+  model <- nnet::multinom(formula = formula, data = data, subset = train_indices, trace = FALSE, ...)
 
   if (!is.null(metricfunc)) {
     data_type <- "custom"
@@ -233,3 +233,45 @@ wrapper_ranger <- function(formula,
   return(metric)
 }
 
+#' Wrapper function for SVM model training and evaluation
+#'
+#' @param formula Model formula
+#' @param data Data frame
+#' @param train_indices Indices for training data
+#' @param test_indices Indices for testing data
+#' @param data_type Type of data ("continuous", "binary", or "categorical")
+#' @param metricfunc Optional user-defined function to calculate a custom performance metric.
+#' @param ... Additional arguments passed to e1071::svm
+#'
+#' @importFrom e1071 svm
+#' @importFrom caret confusionMatrix
+#' @return Performance metric (RMSE for continuous, Kappa for classification)
+#' @export
+
+wrapper_svm <- function(formula,
+                        data,
+                        train_indices,
+                        test_indices,
+                        data_type,
+                        metricfunc = NULL,
+                        ...) {
+
+  model <- e1071::svm(formula = formula, data = data[train_indices, ], probability = TRUE, ...)
+
+  predictions <- predict(model, newdata = data[test_indices, ], probability = TRUE)
+  actual <- data[test_indices, ][[all.vars(formula)[1]]]
+
+  if (!is.null(metricfunc)) {
+    metric <- metricfunc(data, model, test_indices)
+  } else if (data_type == "continuous") {
+    metric <- sqrt(mean((predictions - actual)^2))
+  } else if (data_type %in% c("binary", "categorical")) {
+    pred_class <- factor(predictions, levels = levels(factor(actual)))
+    cm <- caret::confusionMatrix(pred_class, factor(actual))
+    metric <- cm$overall["Kappa"]
+  } else {
+    stop("Unsupported data_type for SVM wrapper.")
+  }
+
+  return(metric)
+}

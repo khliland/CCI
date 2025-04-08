@@ -157,6 +157,14 @@ test.gen <- function(Y,
                                         num.trees = nrounds,
                                         metricfunc = metricfunc,
                                         ...)
+    } else if (method %in% "svm") {
+      null[iteration] <- wrapper_svm(formula,
+                                     resampled_data,
+                                     train_indices,
+                                     test_indices,
+                                     data_type,
+                                     metricfunc = metricfunc,
+                                     ...)
     } else {
       stop("Method chosen is not supported by the test.gen() function")
     }

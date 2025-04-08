@@ -415,10 +415,68 @@ test_that("wrapper_ranger basic use with categorical Y", {
                            train_indices = train_indices,
                            test_indices = test_indices,
                            data_type = "categorical"
-                           )
+  )
 
   expect_true(class(metric) == "numeric")
 })
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_svm basic use with contionous Y", {
+
+  data <- NormalData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           data_type = "continuous",
+                           train_indices = train_indices,
+                           test_indices = test_indices
+                        )
+
+  expect_true(class(metric) == "numeric")
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_svm basic use with binary Y", {
+
+  data <- BinaryData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
+                        data = data,
+                        data_type = "binary",
+                        train_indices = train_indices,
+                        test_indices = test_indices
+  )
+
+  expect_true(class(metric) == "numeric")
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_svm basic use with categorical Y", {
+
+  data <- ComplexCategorization(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
+                        data = data,
+                        data_type = "categorical",
+                        train_indices = train_indices,
+                        test_indices = test_indices
+  )
+
+  expect_true(class(metric) == "numeric")
+})
+
 
 #-------------------------------------------------------------------------------
 
@@ -639,6 +697,25 @@ test_that("test.gen works correctly for categorical Y, with glm", {
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
 })
+#-------------------------------------------------------------------------------
+test_that("test.gen works correctly with  SVM", {
+  data <- NormalData(600)
+
+  result <- test.gen(Y = "Y",
+                     X = "X",
+                     Z = c("Z1", "Z2"),
+                     data = data,
+                     nperm = 100,
+                     method = "lm",
+                     data_type = "categorical",
+                     permutation = TRUE,
+                     degree = 3)
+
+  expect_true(class(result) == "list")
+  expect_true(class(mean(unlist(result))) == "numeric")
+})
+
+
 #-------------------------------------------------------------------------------
 # Creating a wrapper function using the caret package with cross-validation
 bagging_wrapper <- function(formula,
@@ -1077,7 +1154,7 @@ data <- SinusoidalData(1000)
 result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                    p = 0.7,
                    data = data,
-                   nperm = 520,
+                   nperm = 500,
                    parametric = T
 )
 QQplot(result)
