@@ -306,7 +306,7 @@ wrapper_gpr <- function(formula,
   }
 
 
-  model <- kernlab::gausspr(formula, data = data[train_indices, ], ...)
+  model <- suppressMessages(kernlab::gausspr(formula, data = data[train_indices, ], ...))
 
   predictions <- kernlab::predict(model, newdata = data[test_indices, ])
   actual <- data[test_indices, all.vars(formula)[1]]
