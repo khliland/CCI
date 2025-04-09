@@ -293,6 +293,7 @@ wrapper_svm <- function(formula,
 #' @importFrom kernlab gausspr predict
 #' @return A numeric value representing the test set performance (e.g. RMSE or R²).
 #' @export
+#'
 wrapper_gpr <- function(formula,
                         data,
                         train_indices,
@@ -307,7 +308,7 @@ wrapper_gpr <- function(formula,
 
   model <- kernlab::gausspr(formula, data = data[train_indices, ], ...)
 
-  predictions <- predict(model, newdata = data[test_indices, ])
+  predictions <- kernlab::predict(model, newdata = data[test_indices, ])
   actual <- data[test_indices, all.vars(formula)[1]]
 
 
