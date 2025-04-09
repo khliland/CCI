@@ -319,3 +319,64 @@ wrapper_gpr <- function(formula,
   rmse <- sqrt(mean((actual - predictions)^2))
   return(rmse)
 }
+
+#' Neural Network Wrapper for CCI
+#'
+#' Trains and evaluates a neural network model using `nnet::nnet` and returns a performance metric on the test set.
+#'
+#' @param formula A formula describing the model to be fitted.
+#' @param data A data frame containing the variables in the model.
+#' @param train_indices Integer vector of training set indices.
+#' @param test_indices Integer vector of test set indices.
+#' @param data_type Type of data: "continuous" or "binary".
+#' @param metricfunc Optional custom metric function. Should accept (data, model, test_indices, test_matrix).
+#' @param ... Additional arguments passed to `nnet::nnet()`, such as `size`, `decay`, `maxit`, etc.
+#'
+#'@importFrom nnet nnet predict
+#' @return A numeric value representing model performance (e.g. RMSE or misclassification error).
+#' @export
+wrapper_nnet <- function(formula,
+                         data,
+                         train_indices,
+                         test_indices,
+                         data_type = "continuous",
+                         metricfunc = NULL,
+                         ...) {
+  if (!(data_type %in% c("continuous", "binary"))) {
+    stop("nnet wrapper currently supports only continuous and binary outcomes.")
+  }
+
+  library(nnet)
+
+  # Prepare train and test data
+  train_data <- data[train_indices, ]
+  test_data <- data[test_indices, ]
+
+  y_name <- all.vars(formula)[1]
+
+
+  model <- nnet::nnet(formula,
+                      data = train_data,
+                      linout = (data_type == "continuous"), # linout = TRUE for regression
+                      trace = FALSE,
+                      ...)
+
+
+  predictions <- nnet::predict(model, newdata = test_data, type = ifelse(data_type == "binary", "raw", "raw"))
+
+
+  actual <- test_data[[y_name]]
+
+  # Custom metric
+  if (!is.null(metricfunc)) {
+    return(metricfunc(data = data, model = model, test_indices = test_indices))
+  }
+
+  # Default metric
+  if (data_type == "continuous") {
+    return(sqrt(mean((actual - predictions)^2)))  # RMSE
+  } else {
+    predicted_class <- ifelse(predictions > 0.5, 1, 0)
+    return(mean(predicted_class != actual))  # misclassification rate
+  }
+}
