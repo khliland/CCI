@@ -332,7 +332,7 @@ wrapper_gpr <- function(formula,
 #' @param metricfunc Optional custom metric function. Should accept (data, model, test_indices, test_matrix).
 #' @param ... Additional arguments passed to `nnet::nnet()`, such as `size`, `decay`, `maxit`, etc.
 #'
-#'@importFrom nnet nnet predict
+#'@importFrom nnet nnet
 #' @return A numeric value representing model performance (e.g. RMSE or misclassification error).
 #' @export
 wrapper_nnet <- function(formula,
@@ -345,8 +345,6 @@ wrapper_nnet <- function(formula,
   if (!(data_type %in% c("continuous", "binary"))) {
     stop("nnet wrapper currently supports only continuous and binary outcomes.")
   }
-
-  library(nnet)
 
   # Prepare train and test data
   train_data <- data[train_indices, ]
@@ -362,7 +360,7 @@ wrapper_nnet <- function(formula,
                       ...)
 
 
-  predictions <- nnet::predict(model, newdata = test_data, type = ifelse(data_type == "binary", "raw", "raw"))
+  predictions <- predict(model, newdata = test_data, type = ifelse(data_type == "binary", "raw", "raw"))
 
 
   actual <- test_data[[y_name]]

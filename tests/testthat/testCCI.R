@@ -279,6 +279,7 @@ test_that("wrapper_xgboost Kappa score output", {
                             nrounds = 120)
   expect_true(class(metric) == "numeric")
 })
+
 #-------------------------------------------------------------------------------
 
 test_that("wrapper_xgboost log loss score output", {
@@ -503,6 +504,26 @@ test_that("wrapper_ranger basic use with custom metric function ", {
 
   expect_true(class(metric) == "numeric")
 })
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_nnet basic use", {
+
+  data <- NormalData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           train_indices = train_indices,
+                           test_indices = test_indices,
+                           data_type = "continuous",
+                           size = 3)
+
+  expect_true(class(metric) == "numeric")
+})
+
 
 #-------------------------------------------------------------------------------
 # Testing of test.gen function. The test.gen function is the function which creates the
