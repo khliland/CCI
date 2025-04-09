@@ -276,3 +276,45 @@ wrapper_svm <- function(formula,
 
   return(metric)
 }
+
+#' Gaussian Process Regression Wrapper for CCI
+#'
+#' Trains and evaluates a Gaussian Process Regression (GPR) model using kernlab::gausspr
+#' and returns a performance metric on the test set.
+#'
+#' @param formula A formula describing the model to be fitted.
+#' @param data A data frame containing the variables in the model.
+#' @param train_indices Integer vector of training set indices.
+#' @param test_indices Integer vector of test set indices.
+#' @param data_type Type of data ("continuous" only supported for GPR).
+#' @param metricfunc Optional custom metric function. Should accept (data, model, test_indices, test_matrix).
+#' @param ... Additional arguments passed to `gausspr()`.
+#'
+#' @importFrom kernlab gausspr predict
+#' @return A numeric value representing the test set performance (e.g. RMSE or R²).
+#' @export
+wrapper_gpr <- function(formula,
+                        data,
+                        train_indices,
+                        test_indices,
+                        data_type = "continuous",
+                        metricfunc = NULL,
+                        ...) {
+  if (data_type != "continuous") {
+    stop("Gaussian Process Regression currently only supports continuous outcomes.")
+  }
+
+
+  model <- kernlab::gausspr(formula, data = data[train_indices, ], ...)
+
+  predictions <- predict(model, newdata = data[test_indices, ])
+  actual <- data[test_indices, all.vars(formula)[1]]
+
+
+  if (!is.null(metricfunc)) {
+    return(metricfunc(data = data, model = model, test_indices = test_indices))
+  }
+
+  rmse <- sqrt(mean((actual - predictions)^2))
+  return(rmse)
+}

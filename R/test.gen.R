@@ -171,6 +171,14 @@ test.gen <- function(Y,
                                      data_type,
                                      metricfunc = metricfunc,
                                      ...)
+    } else if (method %in% "gpr") {
+      null[iteration] <- wrapper_gpr(formula,
+                                     resampled_data,
+                                     train_indices,
+                                     test_indices,
+                                     data_type = data_type,
+                                     metricfunc = metricfunc,
+                                     ...)
     } else {
       stop("Method chosen is not supported by the test.gen() function")
     }

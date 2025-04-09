@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 HVa som artikkelen skal inneholde (fleksibilitet, robusthet og fart)
 Programmer
+=======
+# Bugs
+- Feil når man har mange variabler man betinger på
+>>>>>>> 67d8055975ba1d160fb28903cd94d0d90968ca9b
 
 Bygge pretuning funksjonalitet
 
@@ -38,3 +43,11 @@ Disposisjon.
 3. Test script seksojn
 4. Diskusjon og konklusjon
 
+<<<<<<< HEAD
+=======
+# Eventuelt: Testing av funksjoner
+- Teste funksjoner som er lagt til i pakken mot forhåndslagrede verdier (perm.test)
+
+# Pakken:
+- Gjøre data-funksjonene tilgjengelige for brukeren?
+>>>>>>> 67d8055975ba1d160fb28903cd94d0d90968ca9b
