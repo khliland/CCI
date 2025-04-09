@@ -12,13 +12,17 @@
 check_formula <- function(formula, data) {
   all_vars <- all.vars(formula)
   if (all(all_vars %in% colnames(data))) {
-    cat("All variables are present in the data.\n")
-  } else {
+    # All variables are present, do nothing
+  } else if (any(all_vars %in% colnames(data))) {
+    # Some variables are present, but not all
     missing_vars <- all_vars[!all_vars %in% colnames(data)]
-    stop("The following variables are missing from the data: ", paste(missing_vars, collapse = ", "))
+    warning("The following variables are missing from the data: ", paste(missing_vars, collapse = ", "))
   }
+  else {
+    # No variables are present
+    stop("The formula contains variables that are not present in the data.")
   }
-
+}
 
 #' Clean and Reformat Formula String
 #'
