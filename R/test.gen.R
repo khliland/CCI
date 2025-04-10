@@ -49,7 +49,7 @@ test.gen <- function(Y,
                      data_type = "continuous",
                      method = "rf",
                      nperm = 100,
-                     p = 0.85,
+                     p = 0.8,
                      N = nrow(data),
                      poly = TRUE,
                      degree = 3,
@@ -93,11 +93,15 @@ test.gen <- function(Y,
     }))
 
     # Create pairwise interaction terms (1st degree)
-    interaction_terms <- combn(Z, 2, FUN = function(x) {
-      interaction_name <- paste0(x[1], "_int_", x[2])
-      data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
-      return(interaction_name)
-    })
+    if (length(Z) >= 2) {
+      interaction_terms <- combn(Z, 2, FUN = function(x) {
+        interaction_name <- paste0(x[1], "_int_", x[2])
+        data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
+        return(interaction_name)
+      })
+    } else {
+      interaction_terms <- character(0)
+    }
 
     formula <- as.formula(paste(
       Y, "~", X, "+",

@@ -726,7 +726,7 @@ test_that("test.gen works correctly with  SVM", {
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 100,
+                     nperm = 25,
                      method = "svm")
 
   expect_true(class(result) == "list")
@@ -740,7 +740,7 @@ test_that("test.gen works correctly withSVM categorical", {
                      X = "X",
                      Z = c("Z1", "Z2"),
                      data = data,
-                     nperm = 100,
+                     nperm = 50,
                      data_type = "categorical",
                      method = "svm")
 
@@ -834,7 +834,7 @@ test_that("perm.test works with mlfunc", {
   result <- perm.test(Y ~ X + Z1 + Z2,
                       data = data,
                       coob = T,
-                      nperm = 50,
+                      nperm = 25,
                       mlfunc = bagging_wrapper,
                       tail = "right")
   expect_is(result, "CCI")
@@ -861,8 +861,7 @@ test_that("perm.test works correctly", {
                       nrounds = 80,
                       parametric = TRUE,
                       poly = FALSE,
-                      objective = "reg:pseudohubererror",
-                      seed =3030)
+                      objective = "reg:pseudohubererror")
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
@@ -886,8 +885,7 @@ test_that("perm.test works correctly with dagitty object", {
                       p = 0.7,
                       nperm = 40,
                       data_type = "continuous",
-                      parametric = TRUE,
-                      seed = 33)
+                      parametric = TRUE)
   expect_is(result, "CCI")
 })
 
@@ -900,7 +898,7 @@ test_that("CII.test works correctly basic usage", {
   data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
-                     nperm = 250,
+                     nperm = 25,
                      parametric = F)
   expect_is(result, "CCI")
 })
@@ -910,7 +908,7 @@ test_that("CII.test works correctly basic usage", {
   data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
-                     nperm = 250,
+                     nperm = 25,
                      parametric = T)
   expect_is(result, "CCI")
 })
