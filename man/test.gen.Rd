@@ -12,7 +12,7 @@ test.gen(
   data_type = "continuous",
   method = "rf",
   nperm = 100,
-  p = 0.85,
+  p = 0.8,
   N = nrow(data),
   poly = TRUE,
   degree = 3,

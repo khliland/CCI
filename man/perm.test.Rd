@@ -7,8 +7,8 @@
 perm.test(
   formula,
   data,
-  p = 0.825,
-  nperm = 500,
+  p = 0.7,
+  nperm = 100,
   dag = NA,
   dag_n = NA,
   data_type = "continuous",

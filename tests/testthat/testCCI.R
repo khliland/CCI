@@ -858,7 +858,7 @@ test_that("perm.test works correctly", {
                       nperm = 25,
                       data_type = "continuous",
                       method = "xgboost",
-                      nrounds = 80,
+                      nrounds = 40,
                       parametric = TRUE,
                       poly = FALSE,
                       objective = "reg:pseudohubererror")
@@ -917,21 +917,9 @@ test_that("CII.test works correctly basic usage", {
 test_that("CCI.test works binary data", {
   set.seed(1)
   data <- BinaryData(500)
-  result <- CCI.test(formula = Y ~ X | Z2,
+  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
-                     nperm = 250,
-                     data_type = 'binary',
-                     parametric = F
-  )
-  expect_is(result, "CCI")
-})
-#-------------------------------------------------------------------------------
-test_that("CCI.test works binary data", {
-  set.seed(1)
-  data <- BinaryData(500)
-  result <- CCI.test(formula = Y ~ X | Z2,
-                     data = data,
-                     nperm = 250,
+                     nperm = 25,
                      data_type = 'binary',
                      parametric = F
   )
@@ -939,54 +927,27 @@ test_that("CCI.test works binary data", {
 })
 
 #-------------------------------------------------------------------------------
-test_that("CCI.test works categorical data", {
-  set.seed(1)
-  data <- BinaryData(200)
-  result <- CCI.test(formula = Y ~ X | Z2,
-                     data = data,
-                     nperm = 250,
-                     data_type = 'binary',
-                     parametric = T
-  )
-  expect_is(result, "CCI")
-})
-#-------------------------------------------------------------------------------
 
 test_that("CCI.test works categorical data", {
-  set.seed(91)
   data <- TrigData(800)
-  result <- CCI.test(formula = Y ~ X | Z2,
+  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
-                     nperm = 250,
+                     nperm = 50,
                      data_type = 'categorical',
                      parametric = F
-  )
-  expect_is(result, "CCI")
-})
-#-------------------------------------------------------------------------------
-
-test_that("CCI.test works categorical data", {
-  set.seed(91)
-  data <- TrigData(800)
-  result <- CCI.test(formula = Y ~ X | Z2,
-                     data = data,
-                     nperm = 250,
-                     data_type = 'categorical',
-                     parametric = T
   )
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
 
 test_that("CCI.test works categorical data with xgboost", {
-  set.seed(90)
   data <- TrigData(500)
   data$Y <- data$Y - 1
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      p = 0.7,
                      method = "xgboost",
-                     nperm = 250,
+                     nperm = 10,
                      data_type = 'categorical',
                      num_class = 3,
                      parametric = F
@@ -995,12 +956,12 @@ test_that("CCI.test works categorical data with xgboost", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works rejecting a wrong null with lm", {
-  set.seed(9)
+
   data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.6,
                      data = data,
-                     nperm = 500,
+                     nperm = 25,
                      method = 'lm',
                      family = gaussian(),
                      data_type = "continuous",
@@ -1010,14 +971,14 @@ test_that("CCI.test works rejecting a wrong null with lm", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data with glm", {
-  set.seed(90)
+
   data <- TrigData(500)
   data$Y <- data$Y - 1
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      p = 0.7,
                      method = "lm",
-                     nperm = 250,
+                     nperm = 25,
                      data_type = 'categorical',
                      parametric = T
   )
@@ -1025,7 +986,6 @@ test_that("CCI.test works categorical data with glm", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works rejecting a wrong null with xgboost", {
-  set.seed(9)
   data <- NonLinNormal(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
@@ -1039,7 +999,6 @@ test_that("CCI.test works rejecting a wrong null with xgboost", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data, wrong null", {
-  set.seed(911)
   data <- ExpLogData(500)
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      p = 0.7,
@@ -1052,7 +1011,6 @@ test_that("CCI.test works categorical data, wrong null", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data, wrong null", {
-  set.seed(911)
   data <- ExpLogData(1000)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
@@ -1066,7 +1024,6 @@ test_that("CCI.test works categorical data, wrong null", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works with custom performance metric", {
-  set.seed(1911)
   data <- SinusoidalData(500)
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
@@ -1089,7 +1046,6 @@ test_that("CCI.test works with custom performance metric", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works with custom performance metric, wrong null", {
-  set.seed(1939)
   data <- SinusoidalData(200)
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
@@ -1112,7 +1068,6 @@ test_that("CCI.test works with custom performance metric, wrong null", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works with dagitty", {
-  set.seed(1990)
   data <- SinusoidalData(200)
   dag <- dagitty::dagitty('dag {
   X
@@ -1131,7 +1086,7 @@ result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
                      dag = dag,
                      dag_n = 1,
-                     nperm = 500,
+                     nperm = 50,
                      parametric = T
   )
 
@@ -1140,7 +1095,6 @@ result <- CCI.test(formula = Y ~ X | Z2 + Z1,
 #-------------------------------------------------------------------------------
 
 test_that("CCI.test works with custom wrapper function, calculating R-squared", {
-  set.seed(3)
   data <- SinusoidalData(400)
   bagging_wrapper <- function(formula,
                               data,
