@@ -99,16 +99,18 @@ test.gen <- function(Y,
         data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
         return(interaction_name)
       })
+      formula <- as.formula(paste(
+        Y, "~", X, "+",
+        paste(Z, collapse = " + "), "+",
+        paste(new_terms, collapse = " + "), "+",
+        paste(interaction_terms, collapse = " + ")
+      ))
     } else {
-      interaction_terms <- character(0)
+      formula <- as.formula(paste(
+        Y, "~", X, "+",
+        paste(Z, collapse = " + "), "+",
+        paste(new_terms, collapse = " + ")))
     }
-
-    formula <- as.formula(paste(
-      Y, "~", X, "+",
-      paste(Z, collapse = " + "), "+",
-      paste(new_terms, collapse = " + "), "+",
-      paste(interaction_terms, collapse = " + ")
-    ))
   } else {
     formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = "+")))
   }
