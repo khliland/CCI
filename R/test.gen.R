@@ -91,7 +91,20 @@ test.gen <- function(Y,
         paste0(var, "_d_", d)
       })
     }))
-    formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = " + "), " + ",paste(new_terms, collapse = " + ")))
+
+    # Create pairwise interaction terms (1st degree)
+    interaction_terms <- combn(Z, 2, FUN = function(x) {
+      interaction_name <- paste0(x[1], "_int_", x[2])
+      data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
+      return(interaction_name)
+    })
+
+    formula <- as.formula(paste(
+      Y, "~", X, "+",
+      paste(Z, collapse = " + "), "+",
+      paste(new_terms, collapse = " + "), "+",
+      paste(interaction_terms, collapse = " + ")
+    ))
   } else {
     formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = "+")))
   }

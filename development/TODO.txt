@@ -2,13 +2,12 @@
 HVa som artikkelen skal inneholde (fleksibilitet, robusthet og fart)
 Programmer
 =======
-# Bugs
-- Feil når man har mange variabler man betinger på
+# TO do programmering
+- Legge inn pretuner funksjon som en generell funksjon som kan brukes til å tune prediksjonsmodellen.
+- Legge inn flere tester av funksjoner, test scriptet (testCCI.R) mangler en del tester særlig med svm, nnet og gpr
 >>>>>>> 67d8055975ba1d160fb28903cd94d0d90968ca9b
 
 Bygge pretuning funksjonalitet
-
-Fikse bug om factoravariabel (dplyr)
 
 
 1. Når skal man ha en pre-tuning? Datakrav

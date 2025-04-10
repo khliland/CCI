@@ -13,6 +13,7 @@
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
 #' @param data_type Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".
+#' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
@@ -104,6 +105,7 @@ CCI.test <- function(formula = NA,
                      data_type = "continuous",
                      method = 'rf',
                      parametric = FALSE,
+                     poly = TRUE,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      tail = NA,
