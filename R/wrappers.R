@@ -290,7 +290,7 @@ wrapper_svm <- function(formula,
 #' @param metricfunc Optional custom metric function. Should accept (data, model, test_indices, test_matrix).
 #' @param ... Additional arguments passed to `gausspr()`.
 #'
-#' @importFrom kernlab gausspr predict
+#' @importFrom kernlab gausspr
 #' @return A numeric value representing the test set performance (e.g. RMSE or R²).
 #' @export
 #'
