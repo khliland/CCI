@@ -207,7 +207,7 @@ test.gen <- function(Y,
                                       metricfunc = metricfunc,
                                       ...)
     } else {
-      stop("Method chosen is not supported by the test.gen() function")
+      stop("Method chosen is not supported")
     }
 
     percentage <- (iteration / nperm) * 100

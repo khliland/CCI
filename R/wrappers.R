@@ -301,10 +301,12 @@ wrapper_gpr <- function(formula,
                         data_type = "continuous",
                         metricfunc = NULL,
                         ...) {
-  if (data_type != "continuous") {
-    stop("Gaussian Process Regression currently only supports continuous outcomes.")
-  }
 
+  y_name <- all.vars(formula)[1]
+
+  if (data_type %in% c("binary", "categorical")) {
+    data[[y_name]] <- as.factor(data[[y_name]])
+  }
 
   model <- suppressMessages(kernlab::gausspr(formula, data = data[train_indices, ], ...))
 
@@ -313,11 +315,16 @@ wrapper_gpr <- function(formula,
 
 
   if (!is.null(metricfunc)) {
-    return(metricfunc(data = data, model = model, test_indices = test_indices))
-  }
+    metric <- metricfunc(data = data, model = model, test_indices = test_indices)
+  } else if (data_type == "continuous") {
+    metric <- sqrt(mean((actual - predictions)^2))
 
-  rmse <- sqrt(mean((actual - predictions)^2))
-  return(rmse)
+  } else if (data_type %in% c("binary", "categorical")) {
+    pred_class <- factor(predictions, levels = levels(factor(actual)))
+    cm <- caret::confusionMatrix(pred_class, factor(actual))
+    metric <- cm$overall["Kappa"]
+  }
+  return(metric)
 }
 
 #' Neural Network Wrapper for CCI
@@ -342,39 +349,36 @@ wrapper_nnet <- function(formula,
                          data_type = "continuous",
                          metricfunc = NULL,
                          ...) {
-  if (!(data_type %in% c("continuous", "binary"))) {
-    stop("nnet wrapper currently supports only continuous and binary outcomes.")
-  }
-
-  # Prepare train and test data
-  train_data <- data[train_indices, ]
-  test_data <- data[test_indices, ]
 
   y_name <- all.vars(formula)[1]
 
+  is_regression <- (data_type == "continuous")
+  use_softmax <- (data_type == "categorical")
 
   model <- nnet::nnet(formula,
-                      data = train_data,
-                      linout = (data_type == "continuous"), # linout = TRUE for regression
+                      data = data[train_indices, ],
+                      linout = is_regression,
+                      softmax = use_softmax,
                       trace = FALSE,
                       ...)
 
 
-  predictions <- predict(model, newdata = test_data, type = ifelse(data_type == "binary", "raw", "raw"))
+  predictions <- predict(model, newdata = data[test_indices, ])
+  actual <-  data[test_indices, ][[y_name]]
 
-
-  actual <- test_data[[y_name]]
-
-  # Custom metric
   if (!is.null(metricfunc)) {
-    return(metricfunc(data = data, model = model, test_indices = test_indices))
+    metric <- metricfunc(data = data, model = model, test_indices = test_indices)
+  } else if (is_regression) {
+    metric <- sqrt(mean((actual - predictions)^2))
+  } else if (data_type == "binary") {
+    pred_class <- ifelse(predictions > 0.5, 1, 0)
+    cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
+    metric <- cm$overall["Kappa"]
+  } else if (data_type == "categorical") {
+    pred_class <- apply(predictions, 1, which.max)
+    pred_class <- factor(pred_class, levels = levels(factor(actual)))
+    cm <- caret::confusionMatrix(pred_class, factor(actual))
+    metric <- cm$overall["Kappa"]
   }
-
-  # Default metric
-  if (data_type == "continuous") {
-    return(sqrt(mean((actual - predictions)^2)))  # RMSE
-  } else {
-    predicted_class <- ifelse(predictions > 0.5, 1, 0)
-    return(mean(predicted_class != actual))  # misclassification rate
-  }
+  return(metric)
 }
