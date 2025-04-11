@@ -9,6 +9,8 @@
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 10.
+#' @param seed Integer. The seed for random number generation. Default is 1984.
+#' @param metric Character. The performance metric to optimize during tuning. Default is NULL, which will be set to "Accuracy" for classification tasks and "RMSE" for regression tasks.
 #' @param ... Additional arguments to pass to the \code{CCI.tuner} function.
 #'
 #' @importFrom caret train trainControl
@@ -27,6 +29,7 @@ CCI.pretuner <- function(formula,
                      tune_length = 10,
                      seed = 1984,
                      metric = NULL,
+                     random_grid = TRUE,
                      ...) {
 
   set.seed(seed)
@@ -38,6 +41,14 @@ CCI.pretuner <- function(formula,
       metric <- "RMSE"
     }
   }
+  if (random_grid) {
+    search <- "random"
+  } else {
+    search <- "grid"
+  }
+  # Check if the formula is a valid formula
+  formula <- clean_formula(formula)
+  check_formula(formula, data)
 
   caret_method <- switch(method,
                          rf = "rf",
@@ -47,7 +58,7 @@ CCI.pretuner <- function(formula,
                          svm = "svmRadial",
                          stop("Unsupported method"))
 
-  ctrl <- trainControl(method = "cv", number = folds)
+  ctrl <- trainControl(method = "cv", number = folds, , search = search)
 
   # Run tuning
   tuned_model <- train(

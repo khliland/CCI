@@ -13,6 +13,7 @@ CCI.pretuner(
   tune_length = 10,
   seed = 1984,
   metric = NULL,
+  random_grid = TRUE,
   ...
 )
 }
@@ -27,9 +28,13 @@ CCI.pretuner(
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
 
-\item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
+\item{seed}{Integer. The seed for random number generation. Default is 1984.}
+
+\item{metric}{Character. The performance metric to optimize during tuning. Default is NULL, which will be set to "Accuracy" for classification tasks and "RMSE" for regression tasks.}
 
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
+
+\item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
 }
 \value{
 Returns tuned parameters values for the predictive function

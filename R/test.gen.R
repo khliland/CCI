@@ -32,6 +32,7 @@
 #' @importFrom data.table :=
 #' @importFrom utils flush.console
 #' @importFrom dplyr mutate across all_of
+#' @importFrom utils combn
 #' @export
 #' @examples
 #' set.seed(123)

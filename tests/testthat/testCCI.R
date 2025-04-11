@@ -1,19 +1,19 @@
+# Test script for the CCI package
 devtools::check()
 devtools::build
-# Test script for the CCI package
 devtools::load_all()
 library(CCI)
 #-------------------------------------------------------------------------------
 test_that("clean_formula outputs correct formula", {
-  clean_formula <- clean_formula(y ~ x | z)
+  clean_formula <- clean_formula(y ~ x | z + v)
   expect_true(class(clean_formula) == "formula")
-  expect_equal(clean_formula, y ~ x | z)
+  expect_equal(clean_formula, y ~ x | z + v)
 })
 #-------------------------------------------------------------------------------
 test_that("clean_formula outputs correct formula", {
-  clean_formula <- clean_formula(y ~ x + z)
+  clean_formula <- clean_formula(y ~ x + z + v)
   expect_true(class(clean_formula) == "formula")
-  expect_equal(clean_formula, y ~ x | z)
+  expect_equal(clean_formula, y ~ x | z + v)
 })
 #-------------------------------------------------------------------------------
 # Get pvalues
@@ -51,7 +51,9 @@ test_that("wrapper_glm outputs a metric score (basic use)", {
   train_indices <- c(1:80)
   test_indices <- c(81:100)
   metric <- wrapper_glm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous", family = gaussian(link = "identity"))
-  expect_true(class(metric) == "numeric")
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 #-------------------------------------------------------------------------------
 test_that("wrapper_glm outputs a custom metric score (advance use)", {
@@ -75,11 +77,13 @@ test_that("wrapper_glm outputs a custom metric score (advance use)", {
                         data_type = "continuous",
                         family = gaussian(link = "identity"),
                         metricfunc = rSquared)
-  expect_true(class(metric) == "numeric")
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 #-------------------------------------------------------------------------------
 test_that("wrapper_glm outputs a metric score (binary var)", {
-  data <- BinaryData(300)
+  data <- BinaryData(100)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -89,13 +93,12 @@ test_that("wrapper_glm outputs a metric score (binary var)", {
                         test_indices = test_indices,
                         data_type = "binary",
                         family = binomial(link = "logit"))
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
-#-------------------------------------------------------------------------------
-# Example of a custom function for calculating log loss with categorical outcome
-#-------------------------------------------------------------------------------
+
 test_that("wrapper_multinom", {
-  data <- InteractiondData(1000)
+  data <- InteractiondData(100)
 
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
@@ -106,7 +109,8 @@ test_that("wrapper_multinom", {
                              train_indices = train_indices,
                              test_indices = test_indices)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -139,7 +143,8 @@ test_that("wrapper_multinom outputs a custom log loss metric score", {
                         test_indices = test_indices,
                         metricfunc = multi_class_log_loss)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -157,7 +162,8 @@ test_that("wrapper_xgboost rmse output", {
                             data_type = "continuous",
                             nrounds = 120)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 #-------------------------------------------------------------------------------
 test_that("wrapper_xgboost rmse output", {
@@ -173,7 +179,8 @@ test_that("wrapper_xgboost rmse output", {
                             nrounds = 100,
                             objective = "reg:squarederror")
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -192,7 +199,8 @@ test_that("wrapper_xgboost rmse output using a different objective", {
                             objective = "reg:squaredlogerror",
                             nrounds = 120)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -213,7 +221,8 @@ test_that("wrapper_xgboost rmse output with reg:pseudohubererror and various par
                             max_depth = 4,
                             lambda = 0.5)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -244,7 +253,8 @@ test_that("wrapper_xgboost rmse output with reg:squarederror, various parameter 
                             lambda = 0.5,
                             metricfunc = rSquared)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -261,7 +271,8 @@ test_that("wrapper_xgboost Kappa score output", {
                             test_indices = test_indices,
                             objective = "binary:logistic",
                             nrounds = 120)
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 #-------------------------------------------------------------------------------
 test_that("wrapper_xgboost Kappa score output", {
@@ -277,7 +288,8 @@ test_that("wrapper_xgboost Kappa score output", {
                             test_indices = test_indices,
                             data_type = "binary",
                             nrounds = 120)
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -296,7 +308,7 @@ test_that("wrapper_xgboost log loss score output", {
     return(log_loss)
   }
 
-  data <- Multinominal(1000)
+  data <- Multinominal(200)
   data$Y <- as.numeric(as.factor(data$Y))-1
   data$X <- as.numeric(as.factor(data$X))-1
 
@@ -316,7 +328,8 @@ test_that("wrapper_xgboost log loss score output", {
                             alpha = 0.5,
                             metricfunc = multi_class_log_loss)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -338,7 +351,8 @@ test_that("wrapper_xgboost Kappa score output", {
                             eta = 0.1,
                             lambda = 0.5,
                             alpha = 0.5)
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -356,7 +370,8 @@ test_that("wrapper_ranger basic use ", {
                            test_indices = test_indices,
                            data_type = "continuous")
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -377,14 +392,15 @@ test_that("wrapper_ranger basic use with added parameters", {
                            train_indices = train_indices,
                            test_indices = test_indices)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
 
 test_that("wrapper_ranger basic use with binary Y", {
 
-  data <- BinaryData(500)
+  data <- BinaryData(100)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -396,14 +412,15 @@ test_that("wrapper_ranger basic use with binary Y", {
                            test_indices = test_indices,
                            data_type = "binary")
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
 
 test_that("wrapper_ranger basic use with categorical Y", {
 
-  data <- ComplexCategorization(500)
+  data <- ComplexCategorization(100)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -418,14 +435,15 @@ test_that("wrapper_ranger basic use with categorical Y", {
                            data_type = "categorical"
   )
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
 
 test_that("wrapper_svm basic use with contionous Y", {
 
-  data <- NormalData(500)
+  data <- NormalData(100)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
@@ -437,7 +455,8 @@ test_that("wrapper_svm basic use with contionous Y", {
                            test_indices = test_indices
                         )
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -456,7 +475,8 @@ test_that("wrapper_svm basic use with binary Y", {
                         test_indices = test_indices
   )
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -475,7 +495,8 @@ test_that("wrapper_svm basic use with categorical Y", {
                         test_indices = test_indices
   )
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 
