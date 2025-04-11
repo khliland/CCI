@@ -256,10 +256,17 @@ wrapper_svm <- function(formula,
                         data_type,
                         metricfunc = NULL,
                         ...) {
+  y_name <- all.vars(formula)[1]
+
+  if (data_type %in% c("binary", "categorical")) {
+    data[[y_name]] <- as.factor(data[[y_name]])
+  }
+
 
   model <- e1071::svm(formula = formula, data = data[train_indices, ], probability = TRUE, ...)
 
   predictions <- predict(model, newdata = data[test_indices, ], probability = TRUE)
+
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
@@ -276,6 +283,7 @@ wrapper_svm <- function(formula,
 
   return(metric)
 }
+
 
 #' Gaussian Process Regression Wrapper for CCI
 #'
