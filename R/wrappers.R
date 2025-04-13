@@ -360,24 +360,34 @@ wrapper_nnet <- function(formula,
 
   y_name <- all.vars(formula)[1]
 
-  is_regression <- (data_type == "continuous")
-  use_softmax <- (data_type == "categorical")
+  if (data_type %in% c("binary", "categorical")) {
+    data[[y_name]] <- as.factor(data[[y_name]])
+  }
 
-  if (is_regression) {
-    model <- nnet::nnet(formula,
-                        data = data[train_indices, ],
-                        linout = is_regression,
-                        trace = FALSE,
-                        ...)
-  } else if (use_softmax) {
-    model <- nnet::nnet(formula,
-                        data = data[train_indices, ],
-                        softmax = use_softmax,
-                        trace = FALSE,
-                        ...)
+  is_regression <- (data_type == "continuous")
+  use_softmax <- data_type %in% c("binary", "categorical")
+
+  if (use_softmax) {
+    model <- nnet::nnet(
+      formula = formula,
+      data = data[train_indices, ],
+      linout = FALSE,
+      softmax = TRUE,
+      trace = FALSE,
+      ...
+    )
+  } else if (is_regression) {
+    model <- nnet::nnet(
+      formula = formula,
+      data = data[train_indices, ],
+      linout = is_regression,
+      trace = FALSE,
+      ...
+    )
   }
 
 
+  model <- do.call(nnet::nnet, base_args)
 
   predictions <- predict(model, newdata = data[test_indices, ])
   actual <-  data[test_indices, ][[y_name]]
