@@ -350,6 +350,7 @@ wrapper_gpr <- function(formula,
 #'@importFrom nnet nnet
 #' @return A numeric value representing model performance (e.g. RMSE or misclassification error).
 #' @export
+
 wrapper_nnet <- function(formula,
                          data,
                          train_indices,
@@ -360,41 +361,22 @@ wrapper_nnet <- function(formula,
 
   y_name <- all.vars(formula)[1]
 
-  if (data_type %in% c("binary", "categorical")) {
+  if (data_type %in% c("categorical")) {
     data[[y_name]] <- as.factor(data[[y_name]])
+  } else if (data_type %in% c("binary")) {
+    data[[y_name]] <- as.numeric(data[[y_name]]) - 1
+  } else if (data_type %in% c("continuous")) {
+    data[[y_name]] <- as.numeric(data[[y_name]])
   }
 
-  is_regression <- (data_type == "continuous")
-  use_softmax <- data_type %in% c("binary", "categorical")
-
-  if (use_softmax) {
-    model <- nnet::nnet(
-      formula = formula,
-      data = data[train_indices, ],
-      linout = FALSE,
-      softmax = TRUE,
-      trace = FALSE,
-      ...
-    )
-  } else if (is_regression) {
-    model <- nnet::nnet(
-      formula = formula,
-      data = data[train_indices, ],
-      linout = is_regression,
-      trace = FALSE,
-      ...
-    )
-  }
-
-
-  model <- do.call(nnet::nnet, base_args)
+  model <- nnet::nnet(formula = formula, data = data[train_indices, ],trace = FALSE, ...)
 
   predictions <- predict(model, newdata = data[test_indices, ])
   actual <-  data[test_indices, ][[y_name]]
 
   if (!is.null(metricfunc)) {
     metric <- metricfunc(data = data, model = model, test_indices = test_indices)
-  } else if (is_regression) {
+  } else if (data_type == "continuous") {
     metric <- sqrt(mean((actual - predictions)^2))
   } else if (data_type == "binary") {
     pred_class <- ifelse(predictions > 0.5, 1, 0)
