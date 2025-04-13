@@ -523,7 +523,8 @@ test_that("wrapper_ranger basic use with custom metric function ", {
                            data_type = "continuous",
                            metricfunc = rSquared)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
@@ -542,8 +543,48 @@ test_that("wrapper_nnet basic use", {
                            data_type = "continuous",
                            size = 3)
 
-  expect_true(class(metric) == "numeric")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
 })
+
+test_that("wrapper_nnet basic use", {
+
+  data <- NormalData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
+                         data = data,
+                         train_indices = train_indices,
+                         test_indices = test_indices,
+                         data_type = "continuous",
+                         size = 3)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+
+test_that("wrapper_nnet categorical data", {
+
+  data <- ComplexCategorization(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.7 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
+                         data = data,
+                         train_indices = train_indices,
+                         test_indices = test_indices,
+                         data_type = "categorical",
+                         size = 3)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+
 
 
 #-------------------------------------------------------------------------------
