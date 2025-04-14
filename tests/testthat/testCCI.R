@@ -36,6 +36,20 @@ test_that("get_pvalues outputs p-values", {
   expect_gt(p_value, 0)
 })
 
+
+#-------------------------------------------------------------------------------
+# Testing the tuning function
+#-------------------------------------------------------------------------------
+
+test_that("Tuning using 'rf' (default)", {
+  dat <- NonLinNormal(800)
+  parameters_rf <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, seed = 19, tune_length = 5)
+
+
+  expect_true(is.numeric(parameters_rf$mtry))
+  expect_false(is.nan(parameters_rf$mtry))
+})
+
 #-------------------------------------------------------------------------------
 # Testing ML-wrapper functions
 # The machine learning wrapper functions takes formula, data and indices for training and test data.

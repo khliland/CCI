@@ -26,7 +26,7 @@ CCI.pretuner <- function(formula,
                      data,
                      method = "rf",
                      folds = 10,
-                     tune_length = 10,
+                     tune_length = 5,
                      seed = 1984,
                      metric = NULL,
                      random_grid = TRUE,
@@ -58,7 +58,7 @@ CCI.pretuner <- function(formula,
                          svm = "svmRadial",
                          stop("Unsupported method"))
 
-  ctrl <- trainControl(method = "cv", number = folds, , search = search)
+  ctrl <- trainControl(method = "cv", number = folds, search = search,  verboseIter = TRUE)
 
   # Run tuning
   tuned_model <- train(

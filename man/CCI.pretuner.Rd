@@ -10,7 +10,7 @@ CCI.pretuner(
   data,
   method = "rf",
   folds = 10,
-  tune_length = 10,
+  tune_length = 5,
   seed = 1984,
   metric = NULL,
   random_grid = TRUE,
