@@ -108,3 +108,50 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 }
 
 
+
+#' Get the best parameters after tuning with CCI.tuner
+#'
+#'
+#' @param tuned_model A model object returned from the CCI.pretuner function. This object contains the tuned parameters and other relevant information.
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+#' set.seed(123)
+#' data_generator <-  function(N){
+#' Z1 <- rnorm(N,0,1)
+#' Z2 <- rnorm(N,0,1)
+#' X <- rnorm(N, Z1 + Z2, 1)
+#' Y <- rnorm(N, Z1 + Z2, 1)
+#' df <- data.frame(Z1, Z2, X, Y)
+#' return(df)
+#' }
+#' dat <- data_generator(250)
+#' tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, tune_length = 5, method = 'xgboost')
+#' tuned_params <- get_tuned_params(tuned_model)
+#' print(tuned_params)
+#'
+get_tuned_params <- function(tuned_model) {
+  if (tuned_model$method == 'rf') {
+    return(list(mtry = tuned_model$mtry))
+  } else if (tuned_model$method == 'xgboost') {
+    return(list(eta = tuned_model$eta,
+                max_depth = tuned_model$max_depth,
+                subsample = tuned_model$subsample,
+                gamma = tuned_model$gamma,
+                colsample_bytree = tuned_model$colsample_bytree,
+                min_child_weight = tuned_model$min_child_weight,
+                nrounds = tuned_model$nrounds))
+  } else if (tuned_model$method == 'nnet') {
+    return(list(size = tuned_model$size,
+                decay = tuned_model$decay))
+  } else if (tuned_model$method == 'svm') {
+    return(list(gamma = tuned_model$sigma,
+                cost = tuned_model$C))
+  } else if (tuned_model$method == 'gpr'){
+    return(list(kpar = list(sigma = tuned_model$sigma)))
+  } else {
+    return(NULL)
+  }
+}

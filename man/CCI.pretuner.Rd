@@ -9,11 +9,12 @@ CCI.pretuner(
   formula,
   data,
   method = "rf",
-  folds = 10,
-  tune_length = 5,
+  folds = 5,
+  tune_length = 10,
   seed = 1984,
-  metric = NULL,
+  metric = "RMSE",
   random_grid = TRUE,
+  verboseIter = FALSE,
   ...
 )
 }
@@ -30,9 +31,9 @@ CCI.pretuner(
 
 \item{seed}{Integer. The seed for random number generation. Default is 1984.}
 
-\item{metric}{Character. The performance metric to optimize during tuning. Default is NULL, which will be set to "Accuracy" for classification tasks and "RMSE" for regression tasks.}
-
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
+
+\item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
 
 \item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
 }

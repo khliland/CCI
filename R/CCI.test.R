@@ -18,6 +18,11 @@
 #' @param mlfunc Optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using `metricfunc` or `mlfunc`. Default is NA.
+#' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.
+#' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
+#' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
+#' @param seed Integer. The seed for tuning. Default is 1984.
+#' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
@@ -28,7 +33,7 @@
 #' @aliases CCI
 #' @export
 #'
-#' @seealso \code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
+#' @seealso \code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{CCI.pretuner}}, \code{\link{QQplot}}
 #'
 #' @examples
 #' set.seed(123)
@@ -109,6 +114,11 @@ CCI.test <- function(formula = NA,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      tail = NA,
+                     tune = FALSE,
+                     folds = 5,
+                     tune_length = 10,
+                     seed = 1984,
+                     random_grid = TRUE,
                      nthread = 1,
                      ...) {
 
@@ -128,6 +138,23 @@ CCI.test <- function(formula = NA,
       "Kappa Score"
     }
   }
+
+  if (tune && is.null(mlfunc)) {
+
+    best_params <- CCI.pretuner(formula = formula,
+                                data = data,
+                                method = method,
+                                folds = folds,
+                                tune_length = tune_length,
+                                seed = seed,
+                                metric = metric,
+                                random_grid = random_grid,
+                                ...)
+    params <- get_tuned_params(method = best_params$method, param_list = best_params)
+  } else if (tune && !is.null(mlfunc)) {
+    stop("Tuning parameters is not available when using a custom ML function.")
+  }
+
 
   method <- if (!is.null(mlfunc)) {
     deparse(substitute(mlfunc))

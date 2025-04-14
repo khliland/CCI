@@ -1,6 +1,11 @@
 # Test script for the CCI package
 devtools::check()
-devtools::build
+devtools::build()
+install.packages("CCI_0.1.0.tar.gz", repos = NULL, type = "source")
+
+devtools::document()
+
+# devtools::install()
 devtools::load_all()
 library(CCI)
 
@@ -42,13 +47,109 @@ test_that("get_pvalues outputs p-values", {
 #-------------------------------------------------------------------------------
 
 test_that("Tuning using 'rf' (default)", {
-  dat <- NonLinNormal(800)
-  parameters_rf <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, seed = 19, tune_length = 5)
+  dat <- NonLinNormal10(1000)
+  parameters_rf <- CCI.pretuner(formula = Y ~ X + Z1 + Z2 + Z3 + Z4 + Z5 + Z6 + Z7 + Z8 + Z9 + Z10, data = dat, seed = 19, tune_length = 5,
+                                tuneGrid = expand.grid(mtry = 1:8))
 
 
-  expect_true(is.numeric(parameters_rf$mtry))
-  expect_false(is.nan(parameters_rf$mtry))
+  expect_true(is.numeric(parameters_rf$best_param.mtry))
+  expect_false(is.nan(parameters_rf$best_param.mtry))
 })
+
+test_that("Tuning using 'xgboost'", {
+  dat <- NormalData(1000)
+  parameters_xgboost <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                                     data = dat,
+                                     seed = 192,
+                                     tune_length = 5,
+                                     method = 'xgboost')
+
+
+  expect_true(is.numeric(parameters_xgboost$best_param.nrounds))
+  expect_true(is.numeric(parameters_xgboost$best_param.max_depth))
+  expect_true(is.numeric(parameters_xgboost$best_param.eta))
+  expect_true(is.numeric(parameters_xgboost$best_param.gamma))
+  expect_true(is.numeric(parameters_xgboost$best_param.colsample_bytree))
+  expect_true(is.numeric(parameters_xgboost$best_param.subsample))
+  expect_true(is.numeric(parameters_xgboost$best_param.min_child_weight))
+
+})
+
+test_that("Tuning using 'nnet'", {
+  dat <- NormalData(1000)
+  parameters_nnet <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                                  data = dat,
+                                  seed = 192,
+                                  tune_length = 5,
+                                  method = 'nnet')
+
+
+  expect_true(is.numeric(parameters_nnet$best_param.size))
+  expect_true(is.numeric(parameters_nnet$best_param.decay))
+})
+
+test_that("Tuning using 'svm'", {
+  dat <- NormalData(1000)
+  parameters_svm <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                                 data = dat,
+                                 seed = 192,
+                                 tune_length = 5,
+                                 method = 'svm')
+
+
+  expect_true(is.numeric(parameters_svm$sigma))
+  expect_true(is.numeric(parameters_svm$C))
+
+
+})
+
+test_that("Tuning using 'gpr'", {
+  dat <- NormalData(1000)
+  parameters_gpr <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                                 data = dat,
+                                 seed = 192,
+                                 tune_length = 5,
+                                 method = 'gpr')
+
+
+  expect_true(is.numeric(parameters_gpr$sigma))
+})
+
+
+test_that("Testing utils get_tuned_params ", {
+  dat <- NormalData(1000)
+  tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                              data = dat,
+                              tune_length = 5,
+                              method = 'rf')
+
+  tuned_params <- get_tuned_params(tuned_model)
+  expect_true(is.numeric(tuned_params$mtry))
+})
+
+test_that("Testing utils get_tuned_params ", {
+  dat <- NormalData(1000)
+  tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                              data = dat,
+                              tune_length = 5,
+                              method = 'xgboost')
+
+  tuned_params <- get_tuned_params(tuned_model)
+  expect_true(is.numeric(tuned_params$ets))
+})
+
+test_that("Testing utils get_tuned_params ", {
+  dat <- NormalData(1000)
+  tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                              data = dat,
+                              tune_length = 5,
+                              method = 'svm')
+
+  tuned_params <- get_tuned_params(tuned_model)
+  expect_true(is.numeric(tuned_params$gamma))
+})
+
+
 
 #-------------------------------------------------------------------------------
 # Testing ML-wrapper functions

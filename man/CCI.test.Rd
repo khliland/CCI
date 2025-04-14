@@ -21,6 +21,11 @@ CCI.test(
   metricfunc = NULL,
   mlfunc = NULL,
   tail = NA,
+  tune = FALSE,
+  folds = 5,
+  tune_length = 10,
+  seed = 1984,
+  random_grid = TRUE,
   nthread = 1,
   ...
 )
@@ -55,6 +60,16 @@ CCI.test(
 \item{mlfunc}{Optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
+
+\item{tune}{Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.}
+
+\item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 5.}
+
+\item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
+
+\item{seed}{Integer. The seed for tuning. Default is 1984.}
+
+\item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
@@ -132,5 +147,5 @@ false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 300,
                        metricfunc = custom_metric, tail = "right")
 }
 \seealso{
-\code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
+\code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{CCI.pretuner}}, \code{\link{QQplot}}
 }
