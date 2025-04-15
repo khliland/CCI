@@ -1053,9 +1053,9 @@ test_that("perm.test works correctly with dagitty object", {
 #-------------------------------------------------------------------------------
 ##################### Troubleshooting CCI.test() ###############################
 #-------------------------------------------------------------------------------
-
+# HER!
 test_that("CII.test works correctly basic usage", {
-  set.seed(8)
+
   data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
@@ -1063,6 +1063,18 @@ test_that("CII.test works correctly basic usage", {
                      parametric = F)
   expect_is(result, "CCI")
 })
+
+test_that("CII.test works correctly with pre tuning", {
+
+  data <- NormalData(700)
+  result <- CCI.test(formula = Y ~ X |  Z2,
+                     data = data,
+                     nperm = 100,
+                     tune = T,
+                     parametric = T)
+  expect_is(result, "CCI")
+})
+
 
 test_that("CII.test works correctly basic usage", {
   set.seed(11)

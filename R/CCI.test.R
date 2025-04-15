@@ -150,9 +150,11 @@ CCI.test <- function(formula = NA,
                                 metric = metric,
                                 random_grid = random_grid,
                                 ...)
-    params <- get_tuned_params(method = best_params$method, param_list = best_params)
+    params <- get_tuned_params(best_params)
   } else if (tune && !is.null(mlfunc)) {
     stop("Tuning parameters is not available when using a custom ML function.")
+  } else {
+    params <- list()
   }
 
 
@@ -162,20 +164,23 @@ CCI.test <- function(formula = NA,
     method
   }
 
-  result <- perm.test(formula = formula,
-                      data = data,
-                      p = p,
-                      nperm = nperm,
-                      dag = dag,
-                      dag_n = dag_n,
-                      nrounds = nrounds,
-                      data_type = data_type,
-                      method = method,
-                      parametric = parametric,
-                      tail = tail,
-                      metricfunc = metricfunc,
-                      mlfunc = mlfunc,
-                      ...)
+  result <- perm.test(
+    formula = formula,
+    data = data,
+    p = p,
+    nperm = nperm,
+    dag = dag,
+    dag_n = dag_n,
+    nrounds = nrounds,
+    data_type = data_type,
+    method = method,
+    parametric = parametric,
+    tail = tail,
+    metricfunc = metricfunc,
+    mlfunc = mlfunc,
+    !!!params,
+    ...
+  )
   result$metric <- metric
   print.summary.CCI(result)
 
