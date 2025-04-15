@@ -43,6 +43,8 @@ CCI.pretuner <- function(formula,
     search <- "grid"
   }
 
+  check_formula(formula, data)
+
   outcome_name <- all.vars(formula)[1]
 
   if (data_type %in% c("categorical", "binary")) {
@@ -53,7 +55,6 @@ CCI.pretuner <- function(formula,
 
   X <- model.matrix(formula, data = data)[, -1, drop = FALSE]
 
-  check_formula(formula, data)
 
   caret_method <- switch(method,
                          rf = "rf",

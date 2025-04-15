@@ -150,6 +150,23 @@ test_that("Tuning using 'xgboost' and categorical data", {
   expect_true(is.numeric(parameter$mtry))
 })
 
+test_that("Tuning using 'svm' and categorical data", {
+
+  data <- TrigData(700)
+  data$Y <- data$Y - 1
+
+  parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            seed = 1,
+                            tune_length = 10,
+                            data_type = 'categorical',
+                            method = 'svm',
+                            verboseIter = F)
+
+
+  expect_true(is.numeric(parameter$mtry))
+})
+
 
 test_that("Testing utils get_tuned_params ", {
   dat <- NormalData(1000)
