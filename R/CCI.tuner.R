@@ -14,6 +14,7 @@
 #' @param ... Additional arguments to pass to the \code{CCI.tuner} function.
 #'
 #' @importFrom caret train trainControl
+#' @importFrom dplyr %>%
 #'
 #' @return Returns tuned parameters values for the predictive function
 #' @aliases tuner
@@ -30,21 +31,29 @@ CCI.pretuner <- function(formula,
                      seed = 1984,
                      metric = 'RMSE',
                      random_grid = TRUE,
+                     data_type = "continuous",
                      verboseIter = FALSE,
                      ...) {
 
   set.seed(seed)
-  print("Tuning parameters...")
+
   if (random_grid) {
     search <- "random"
   } else {
     search <- "grid"
   }
-  # Check if the formula is a valid formula
-  check_formula(formula, data)
 
-  Y <- data[[all.vars(formula)[1]]]
+  outcome_name <- all.vars(formula)[1]
+
+  if (data_type %in% c("categorical", "binary")) {
+    Y <- as.factor(data[[outcome_name]])
+  } else {
+    Y <- data[[outcome_name]]
+  }
+
   X <- model.matrix(formula, data = data)[, -1, drop = FALSE]
+
+  check_formula(formula, data)
 
   caret_method <- switch(method,
                          rf = "rf",
@@ -54,9 +63,14 @@ CCI.pretuner <- function(formula,
                          svm = "svmRadial",
                          stop("Unsupported method"))
 
+  if (!random_grid) {
+    cat("Performing grid search...\n")
+  } else {
+    cat("Performing random grid search...\n")
+  }
+
   ctrl <- caret::trainControl(method = "cv", number = folds, search = search, verboseIter = verboseIter)
 
-  # Run tuning
   tuned_model <- caret::train(
     x = X,
     y = Y,

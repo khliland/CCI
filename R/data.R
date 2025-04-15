@@ -241,12 +241,10 @@ SinusoidalData <- function(N, a = 1){
 }
 
 NonLinNormal10 <- function(N) {
-  # Generate 10 independent standard normal Z variables
   Z <- replicate(10, rnorm(N, 0, 1))
   colnames(Z) <- paste0("Z", 1:10)
   Z_df <- as.data.frame(Z)
 
-  # Create nonlinear interactions for X and Y
   X <- exp(Z[,1] * Z[,2]) + sin(Z[,3] * Z[,4]) + log(abs(Z[,5]) + 1) + rnorm(N, 0, 1)
   Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - sqrt(abs(Z[,8])) + rnorm(N, 0, 1)
 

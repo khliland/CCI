@@ -57,21 +57,22 @@ test_that("Tuning using 'rf' (default)", {
 })
 
 test_that("Tuning using 'xgboost'", {
-  dat <- NormalData(1000)
+  dat <- NormalData(300)
   parameters_xgboost <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                      data = dat,
                                      seed = 192,
                                      tune_length = 5,
                                      method = 'xgboost')
+  args <- get_tuned_params(parameters_xgboost)
 
 
-  expect_true(is.numeric(parameters_xgboost$best_param.nrounds))
-  expect_true(is.numeric(parameters_xgboost$best_param.max_depth))
-  expect_true(is.numeric(parameters_xgboost$best_param.eta))
-  expect_true(is.numeric(parameters_xgboost$best_param.gamma))
-  expect_true(is.numeric(parameters_xgboost$best_param.colsample_bytree))
-  expect_true(is.numeric(parameters_xgboost$best_param.subsample))
-  expect_true(is.numeric(parameters_xgboost$best_param.min_child_weight))
+  expect_true(is.numeric(args$best_param.nrounds))
+  expect_true(is.numeric(args$best_param.max_depth))
+  expect_true(is.numeric(args$best_param.eta))
+  expect_true(is.numeric(args$best_param.gamma))
+  expect_true(is.numeric(args$best_param.colsample_bytree))
+  expect_true(is.numeric(args$best_param.subsample))
+  expect_true(is.numeric(args$best_param.min_child_weight))
 
 })
 
@@ -113,6 +114,40 @@ test_that("Tuning using 'gpr'", {
 
 
   expect_true(is.numeric(parameters_gpr$sigma))
+})
+
+test_that("Tuning using 'rf' and categorical data", {
+
+  data <- TrigData(500)
+  data$Y <- data$Y - 1
+
+  parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                                 data = data,
+                                 seed = 192,
+                                 tune_length = 10,
+                                 data_type = 'categorical',
+                                 method = 'rf',
+                                 verboseIter = T)
+
+
+  expect_true(is.numeric(parameter$mtry))
+})
+
+test_that("Tuning using 'xgboost' and categorical data", {
+
+  data <- TrigData(700)
+  data$Y <- data$Y - 1
+
+  parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            seed = 1,
+                            tune_length = 10,
+                            data_type = 'categorical',
+                            method = 'xgboost',
+                            verboseIter = F)
+
+
+  expect_true(is.numeric(parameter$mtry))
 })
 
 
@@ -1053,7 +1088,7 @@ test_that("perm.test works correctly with dagitty object", {
 #-------------------------------------------------------------------------------
 ##################### Troubleshooting CCI.test() ###############################
 #-------------------------------------------------------------------------------
-# HER!
+
 test_that("CII.test works correctly basic usage", {
 
   data <- NormalData(500)
@@ -1067,28 +1102,18 @@ test_that("CII.test works correctly basic usage", {
 test_that("CII.test works correctly with pre tuning", {
 
   data <- NormalData(700)
-  result <- CCI.test(formula = Y ~ X |  Z2,
+  result <- CCI.test(formula = Y ~ X |  Z2 + Z1,
                      data = data,
                      nperm = 100,
                      tune = T,
-                     parametric = T)
-  expect_is(result, "CCI")
-})
-
-
-test_that("CII.test works correctly basic usage", {
-  set.seed(11)
-  data <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X |  Z2,
-                     data = data,
-                     nperm = 25,
+                     tune_length = 2,
                      parametric = T)
   expect_is(result, "CCI")
 })
 
 #-------------------------------------------------------------------------------
 test_that("CCI.test works binary data", {
-  set.seed(1)
+
   data <- BinaryData(500)
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
@@ -1111,6 +1136,52 @@ test_that("CCI.test works categorical data", {
   )
   expect_is(result, "CCI")
 })
+
+#-------------------------------------------------------------------------------
+
+test_that("CII.test works correctly with pre tuning", {
+
+  data <- ExponentialNoise(500)
+  result <- CCI.test(formula = Y ~ X |  Z2,
+                     data = data,
+                     nperm = 100,
+                     tune = T,
+                     tune_length = 4,
+                     method = "rf",
+                     parametric = T)
+  expect_is(result, "CCI")
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("CII.test works correctly with pre tuning", {
+
+  data <- BinaryData(700)
+  data$Y <- as.factor(data$Y)
+  result <- CCI.test(formula = Y ~ X |  Z2,
+                     data = data,
+                     nperm = 100,
+                     tune = T,
+                     tune_length = 10,
+                     method = "xgboost",
+                     data_type = 'binary',
+                     parametric = T)
+  expect_is(result, "CCI")
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("CII.test works correctly basic usage", {
+  set.seed(11)
+  data <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X |  Z2,
+                     data = data,
+                     nperm = 25,
+                     parametric = T)
+  expect_is(result, "CCI")
+})
+
+
 #-------------------------------------------------------------------------------
 
 test_that("CCI.test works categorical data with xgboost", {
@@ -1127,6 +1198,25 @@ test_that("CCI.test works categorical data with xgboost", {
   )
   expect_is(result, "CCI")
 })
+#-------------------------------------------------------------------------------
+# HER
+test_that("CCI.test works categorical data", {
+  data <- TrigData(500)
+  head(data)
+  data$Y <- data$Y - 1
+  data$X <- as.factor(data$X)
+
+  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+                     data = data,
+                     nperm = 100,
+                     data_type = 'categorical',
+                     parametric = T,
+                     tune = T,
+                     verboseIter = T
+  )
+  expect_is(result, "CCI")
+})
+
 #-------------------------------------------------------------------------------
 test_that("CCI.test works rejecting a wrong null with lm", {
 

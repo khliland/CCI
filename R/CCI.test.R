@@ -149,6 +149,7 @@ CCI.test <- function(formula = NA,
                                 seed = seed,
                                 metric = metric,
                                 random_grid = random_grid,
+                                data_type = data_type,
                                 ...)
     params <- get_tuned_params(best_params)
   } else if (tune && !is.null(mlfunc)) {
@@ -178,7 +179,7 @@ CCI.test <- function(formula = NA,
     tail = tail,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
-    !!!params,
+    params,
     ...
   )
   result$metric <- metric
