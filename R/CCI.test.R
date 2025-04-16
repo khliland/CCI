@@ -56,7 +56,7 @@
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
 #' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
-#'                    data_type = "categorical", nperm = 200, num_class = 3)
+#'                    data_type = "categorical", nperm = 50, num_class = 3)
 #'
 #' # Example 5: Again we can switch y and x1 (still using xgboost)
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
@@ -94,9 +94,9 @@
 #'  rsq <- 1 - (ssr / sst)
 #'  return(rsq) # R-squared
 #' }
-#' correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 300,
+#' correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 100,
 #'                          metricfunc = custom_metric, tail = "right")
-#' false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 300,
+#' false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 100,
 #'                        metricfunc = custom_metric, tail = "right")
 
 CCI.test <- function(formula = NA,
@@ -174,6 +174,8 @@ CCI.test <- function(formula = NA,
     dag_n = dag_n,
     nrounds = nrounds,
     data_type = data_type,
+    degrees = degrees,
+    poly = poly,
     method = method,
     parametric = parametric,
     tail = tail,

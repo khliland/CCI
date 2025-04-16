@@ -45,9 +45,13 @@ CCI.pretuner(
 
 \item{seed}{Integer. The seed for random number generation. Default is 1984.}
 
+\item{metric}{Character. The performance metric to optimize during tuning. Default is 'RMSE'.}
+
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 
 \item{samples}{Integer. The number of random samples to take from the grid. Default is 30.}
+
+\item{data_type}{Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".}
 
 \item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
 

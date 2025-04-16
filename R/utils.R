@@ -80,7 +80,6 @@ clean_formula <- function(formula) {
 #' p_value <- get_pvalues(null_dist, observed_stat, parametric = FALSE, tail = "right")
 #' print(p_value)
 
-
 get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left", "right")) {
   dist <- as.numeric(dist)
   test_statistic <- as.numeric(test_statistic)
@@ -107,8 +106,6 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
   return(pvalue)
 }
 
-
-
 #' Get the best parameters after tuning with CCI.tuner
 #'
 #'
@@ -118,20 +115,23 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #' @export
 #'
 #' @examples
-set.seed(123)
-data_generator <-  function(N){
-Z1 <- rnorm(N,0,1)
-Z2 <- rnorm(N,0,1)
-X <- rnorm(N, Z1 + Z2, 1)
-Y <- rnorm(N, Z1 + Z2, 1)
-df <- data.frame(Z1, Z2, X, Y)
-return(df)
-}
-dat <- data_generator(250)
-tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, tune_length = 5, method = 'xgboost')
-tuned_params <- get_tuned_params(tuned_model$best_param)
-print(tuned_params)
+#' set.seed(123)
+#' data_generator <-  function(N){
+#' Z1 <- rnorm(N,0,1)
+#' Z2 <- rnorm(N,0,1)
+#' X <- rnorm(N, Z1 + Z2, 1)
+#' Y <- rnorm(N, Z1 + Z2, 1)
+#' df <- data.frame(Z1, Z2, X, Y)
+#' return(df)
+#' }
+#' dat <- data_generator(250)
+#' tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
+#' data = dat,
+#' method = 'xgboost')
+#' tuned_params <- get_tuned_params(tuned_model$best_param)
+#' print(tuned_params)
 #'
+
 get_tuned_params <- function(tuned_model) {
   if (tuned_model$method == 'rf') {
     return(list(mtry = tuned_model$mtry))
@@ -154,4 +154,121 @@ get_tuned_params <- function(tuned_model) {
   } else {
     return(NULL)
   }
+}
+
+#' Creates polynomial terms for specified variables in a data frame
+#'
+#'
+#' @param data Data frame. The data frame containing the variables for which polynomial terms are to be created.
+#' @param Z Character vector. The names of the variables for which polynomial terms are to be created.
+#' @param degree Integer. The maximum degree of polynomial terms to be created. Default is 3.
+#' @param poly Logical. If TRUE, polynomial terms will be created. If FALSE, no polynomial terms will be created. Default is TRUE.
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+#' set.seed(123)
+#' data_generator <-  function(N){
+#' Z1 <- rnorm(N,0,1)
+#' Z2 <- rnorm(N,0,1)
+#' X <- rnorm(N, Z1 + Z2, 1)
+#' Y <- rnorm(N, Z1 + Z2, 1)
+#' df <- data.frame(Z1, Z2, X, Y)
+#' return(df)
+#' }
+#' dat <- data_generator(250)
+#' poly_terms <- add_poly_terms(data = dat, Z = c("Z1", "Z2"), degree = 3, poly = TRUE)
+#' print(poly_terms$new_terms)
+
+add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
+  if (!poly || degree <= 1) {
+    return(list(data = data, new_terms = character(0), poly = FALSE))
+  }
+
+  if (any(sapply(data[Z], is.factor))) {
+    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
+    return(list(data = data, new_terms = character(0), poly = FALSE))
+  }
+
+  transformations <- lapply(2:degree, function(d) {
+    eval(parse(text = paste0("~ .^", d)))
+  })
+  names(transformations) <- paste0("d_", 2:degree)
+
+  data <- data %>%
+    dplyr::mutate(dplyr::across(all_of(Z), transformations, .names = "{col}_{fn}"))
+
+  new_terms <- unlist(lapply(Z, function(var) {
+    sapply(2:degree, function(d) paste0(var, "_d_", d))
+  }))
+
+  return(list(data = data, new_terms = new_terms, poly = TRUE))
+}
+
+#' Creates interaction terms for specified variables in a data frame
+#'
+#'
+#' @param data Data frame. The data frame containing the variables for which interaction terms are to be created.
+#' @param Z Character vector. The names of the variables for which interaction terms are to be created.
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+#' data_generator <-  function(N){
+#' Z1 <- rnorm(N,0,1)
+#' Z2 <- rnorm(N,0,1)
+#' X <- rnorm(N, Z1 + Z2, 1)
+#' Y <- rnorm(N, Z1 + Z2, 1)
+#' df <- data.frame(Z1, Z2, X, Y)
+#' return(df)
+#' }
+#' dat <- data_generator(250)
+#' interaction_terms <- add_interaction_terms(data = dat, Z = c("Z1", "Z2"))
+#' head(interaction_terms$data$Z1_int_Z2)
+#'
+add_interaction_terms <- function(data, Z) {
+  interaction_terms <- character(0)
+
+  if (length(Z) >= 2) {
+    interaction_terms <- combn(Z, 2, FUN = function(x) {
+      interaction_name <- paste0(x[1], "_int_", x[2])
+      data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
+      return(interaction_name)
+    })
+  }
+
+  return(list(data = data, interaction_terms = interaction_terms))
+}
+
+#' Build an expanded formula with poly and interaction terms
+#'
+#' @param formula A base formula in the format Y ~ X | Z1 + Z2
+#' @param poly_terms Character vector of polynomial term names
+#' @param interaction_terms Character vector of interaction term names
+#'
+#' @return A formula object combining all terms
+#' @export
+#'
+#' @examples
+#' poly_terms <- c("Z1_d_2", "Z2_d_2")
+#' interaction_terms <- c("Z1_int_Z2")
+#' formula <- Y ~ X | Z1 + Z2
+#' final_formula <- build_formula(formula, poly_terms, interaction_terms)
+#' print(final_formula)
+
+build_formula <- function(formula, poly_terms = NULL, interaction_terms = NULL) {
+  # Clean up and parse formula
+  formula <- clean_formula(formula)
+
+  Y <- all.vars(formula)[1]
+  X <- all.vars(formula[[3]][[2]])  # e.g., x1 in x1 | z1 + z2
+  Z <- all.vars(formula[[3]][[3]])  # conditioning variables
+
+  # Combine all RHS terms
+  rhs_vars <- unique(c(X, Z, poly_terms, interaction_terms))
+  formula_string <- paste(Y, "~", paste(rhs_vars, collapse = " + "))
+
+  return(as.formula(formula_string))
 }

@@ -9,8 +9,10 @@
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param samples Integer. The number of random samples to take from the grid. Default is 30.
+#' @param data_type Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 10.
 #' @param seed Integer. The seed for random number generation. Default is 1984.
+#' @param metric Character. The performance metric to optimize during tuning. Default is 'RMSE'.
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param size Integer. The size of the neural network. Default is 1:5.
 #' @param decay Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).
