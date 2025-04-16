@@ -27,7 +27,7 @@ return(df)
 }
 dat <- data_generator(250)
 tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, tune_length = 5, method = 'xgboost')
-tuned_params <- get_tuned_params(tuned_model)
+tuned_params <- get_tuned_params(tuned_model$best_param)
 print(tuned_params)
 
 }

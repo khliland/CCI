@@ -151,7 +151,7 @@ CCI.test <- function(formula = NA,
                                 random_grid = random_grid,
                                 data_type = data_type,
                                 ...)
-    params <- get_tuned_params(best_params)
+    params <- get_tuned_params(best_params$best_param)
   } else if (tune && !is.null(mlfunc)) {
     stop("Tuning parameters is not available when using a custom ML function.")
   } else {

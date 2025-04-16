@@ -118,19 +118,19 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #' @export
 #'
 #' @examples
-#' set.seed(123)
-#' data_generator <-  function(N){
-#' Z1 <- rnorm(N,0,1)
-#' Z2 <- rnorm(N,0,1)
-#' X <- rnorm(N, Z1 + Z2, 1)
-#' Y <- rnorm(N, Z1 + Z2, 1)
-#' df <- data.frame(Z1, Z2, X, Y)
-#' return(df)
-#' }
-#' dat <- data_generator(250)
-#' tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, tune_length = 5, method = 'xgboost')
-#' tuned_params <- get_tuned_params(tuned_model)
-#' print(tuned_params)
+set.seed(123)
+data_generator <-  function(N){
+Z1 <- rnorm(N,0,1)
+Z2 <- rnorm(N,0,1)
+X <- rnorm(N, Z1 + Z2, 1)
+Y <- rnorm(N, Z1 + Z2, 1)
+df <- data.frame(Z1, Z2, X, Y)
+return(df)
+}
+dat <- data_generator(250)
+tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, tune_length = 5, method = 'xgboost')
+tuned_params <- get_tuned_params(tuned_model$best_param)
+print(tuned_params)
 #'
 get_tuned_params <- function(tuned_model) {
   if (tuned_model$method == 'rf') {

@@ -47,9 +47,10 @@ test_that("get_pvalues outputs p-values", {
 #-------------------------------------------------------------------------------
 
 test_that("Tuning using 'rf' (default)", {
-  dat <- NonLinNormal10(1000)
-  parameters_rf <- CCI.pretuner(formula = Y ~ X + Z1 + Z2 + Z3 + Z4 + Z5 + Z6 + Z7 + Z8 + Z9 + Z10, data = dat, seed = 19, tune_length = 5,
-                                tuneGrid = expand.grid(mtry = 1:8))
+  dat <- NonLinNormal10(500)
+  parameters_rf <- CCI.pretuner(formula = Y ~ X + Z1 + Z2 + Z3 + Z4 + Z5 + Z6 + Z7 + Z8 + Z9 + Z10,
+                                data = dat,
+                                seed = 19)
 
 
   expect_true(is.numeric(parameters_rf$best_param.mtry))
@@ -57,14 +58,13 @@ test_that("Tuning using 'rf' (default)", {
 })
 
 test_that("Tuning using 'xgboost'", {
-  dat <- NormalData(300)
+  dat <- NormalData(500)
   parameters_xgboost <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                      data = dat,
                                      seed = 192,
-                                     tune_length = 5,
+                                     samples = 100,
                                      method = 'xgboost')
-  args <- get_tuned_params(parameters_xgboost)
-
+  args <- get_tuned_params(parameters_xgboost$best_param)
 
   expect_true(is.numeric(args$best_param.nrounds))
   expect_true(is.numeric(args$best_param.max_depth))
@@ -80,11 +80,11 @@ test_that("Tuning using 'nnet'", {
   dat <- NormalData(1000)
   parameters_nnet <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                   data = dat,
-                                  seed = 192,
-                                  tune_length = 5,
-                                  method = 'nnet')
+                                  samples = 500,
+                                  method = 'nnet',
+                                  trace = F)
 
-
+  parameters_nnet
   expect_true(is.numeric(parameters_nnet$best_param.size))
   expect_true(is.numeric(parameters_nnet$best_param.decay))
 })
@@ -93,8 +93,6 @@ test_that("Tuning using 'svm'", {
   dat <- NormalData(1000)
   parameters_svm <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                  data = dat,
-                                 seed = 192,
-                                 tune_length = 5,
                                  method = 'svm')
 
 
@@ -108,8 +106,6 @@ test_that("Tuning using 'gpr'", {
   dat <- NormalData(1000)
   parameters_gpr <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                  data = dat,
-                                 seed = 192,
-                                 tune_length = 5,
                                  method = 'gpr')
 
 
@@ -124,10 +120,8 @@ test_that("Tuning using 'rf' and categorical data", {
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                  data = data,
                                  seed = 192,
-                                 tune_length = 10,
                                  data_type = 'categorical',
-                                 method = 'rf',
-                                 verboseIter = T)
+                                 method = 'rf')
 
 
   expect_true(is.numeric(parameter$mtry))
@@ -141,7 +135,6 @@ test_that("Tuning using 'xgboost' and categorical data", {
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             seed = 1,
-                            tune_length = 10,
                             data_type = 'categorical',
                             method = 'xgboost',
                             verboseIter = F)
@@ -1230,6 +1223,20 @@ test_that("CCI.test works categorical data", {
                      parametric = T,
                      tune = T,
                      verboseIter = T
+  )
+  expect_is(result, "CCI")
+})
+#-------------------------------------------------------------------------------
+# HER
+test_that("CCI.test works nnet", {
+  data <- NormalData(500)
+
+  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+                     data = data,
+                     nperm = 100,
+                     parametric = T,
+                     tune = T,
+                     method = 'nnet'
   )
   expect_is(result, "CCI")
 })

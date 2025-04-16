@@ -14,7 +14,21 @@ CCI.pretuner(
   seed = 1984,
   metric = "RMSE",
   random_grid = TRUE,
+  samples = 30,
+  data_type = "continuous",
   verboseIter = FALSE,
+  size = 1:5,
+  decay = c(0, 0.01, 0.1),
+  mtry = 1:5,
+  nrounds = seq(50, 200, by = 25),
+  eta = seq(0.01, 0.3, by = 0.05),
+  max_depth = 1:6,
+  subsample = seq(0.5, 1, by = 0.1),
+  gamma = seq(0, 5, by = 1),
+  colsample_bytree = seq(0.5, 1, by = 0.1),
+  min_child_weight = 1:5,
+  sigma = seq(0.1, 2, by = 0.3),
+  C = seq(0.1, 2, by = 0.5),
   ...
 )
 }
@@ -33,7 +47,33 @@ CCI.pretuner(
 
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 
+\item{samples}{Integer. The number of random samples to take from the grid. Default is 30.}
+
 \item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
+
+\item{size}{Integer. The size of the neural network. Default is 1:5.}
+
+\item{decay}{Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).}
+
+\item{mtry}{Integer. The number of variables randomly sampled as candidates at each split for random forest. Default is 1:5.}
+
+\item{nrounds}{Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is seq(50, 200, by = 25).}
+
+\item{eta}{Numeric. The learning rate for xgboost. Default is seq(0.01, 0.3, by = 0.05).}
+
+\item{max_depth}{Integer. The maximum depth of the tree for xgboost. Default is 1:6.}
+
+\item{subsample}{Numeric. The subsample ratio of the training instances for xgboost. Default is seq(0.5, 1, by = 0.1).}
+
+\item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node for xgboost. Default is seq(0, 5, by = 1).}
+
+\item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for xgboost. Default is seq(0.5, 1, by = 0.1).}
+
+\item{min_child_weight}{Integer. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1:5.}
+
+\item{sigma}{Numeric. The standard deviation of the Gaussian kernel for Gaussian Process Regression. Default is seq(0.1, 2, by = 0.3).}
+
+\item{C}{Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).}
 
 \item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
 }
