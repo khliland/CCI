@@ -42,6 +42,8 @@ test.gen(
 
 \item{poly}{Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.}
 
+\item{interaction}{Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.}
+
 \item{degree}{Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.}
 
 \item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.}

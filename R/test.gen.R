@@ -11,6 +11,7 @@
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.85.
 #' @param N Integer. The total number of observations in the data. Default is the number of rows in the data frame.
 #' @param poly Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.
+#' @param interaction Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.
 #' @param nrounds Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.
 #' @param family Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).
@@ -70,22 +71,25 @@ test.gen <- function(formula,
     stop("num_class needs to be set.")
   }
 
-  if (any(sapply(data[Z], is.factor))) {
-    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
-    poly <- FALSE
-  }
   # SPlitting up the terms in formula
   Y = formula[[2]]
   X = formula[[3]][[2]]
   Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
-
+  if (any(sapply(data[Z], is.factor))) {
+    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
+    poly <- FALSE
+  }
   poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
   data <- poly_result$data
   poly_terms <- poly_result$new_terms
 
-  interaction_result <- add_interaction_terms(data, Z)
-  data <- interaction_result$data
-  interaction_terms <- interaction_result$interaction_terms
+  if (interaction) {
+    interaction_result <- add_interaction_terms(data, Z)
+    data <- interaction_result$data
+    interaction_terms <- interaction_result$interaction_terms
+  } else {
+    interaction_terms <- NULL
+  }
 
   formula <- build_formula(formula, poly_terms, interaction_terms)
 
