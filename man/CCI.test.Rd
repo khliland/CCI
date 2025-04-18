@@ -18,6 +18,8 @@ CCI.test(
   method = "rf",
   parametric = FALSE,
   poly = TRUE,
+  degree = 3,
+  interaction = TRUE,
   metricfunc = NULL,
   mlfunc = NULL,
   tail = NA,
@@ -49,11 +51,15 @@ CCI.test(
 
 \item{data_type}{Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".}
 
-\item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".}
+\item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
 
 \item{parametric}{Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.}
 
 \item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
+
+\item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+
+\item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
 
 \item{metricfunc}{Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
 

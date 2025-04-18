@@ -14,6 +14,7 @@
 #' @param data_type Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
+#' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional custom machine learning function to use instead of the predefined methods. Default is NULL.
@@ -112,6 +113,7 @@ CCI.test <- function(formula = NA,
                      method = 'rf',
                      parametric = FALSE,
                      poly = TRUE,
+                     degree = 3,
                      interaction = TRUE,
                      metricfunc = NULL,
                      mlfunc = NULL,
@@ -176,7 +178,7 @@ CCI.test <- function(formula = NA,
     dag_n = dag_n,
     nrounds = nrounds,
     data_type = data_type,
-    degrees = degrees,
+    degree = degree,
     poly = poly,
     interaction = interaction,
     method = method,

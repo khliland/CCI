@@ -184,7 +184,6 @@ wrapper_xgboost <- function(formula,
 #' @param train_indices A vector of indices specifying the rows in `data` to be used as the training set.
 #' @param test_indices A vector of indices specifying the rows in `data` to be used as the test set.
 #' @param data_type Character string indicating the type of data. Can be "continuous" for regression, "binary" for binary classification, or "categorical" for multiclass classification.
-#' @param num.trees Integer specifying the number of trees to grow in the random forest. Default is 500.
 #' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments passed to the `ranger` function.
@@ -201,14 +200,13 @@ wrapper_ranger <- function(formula,
                            train_indices,
                            test_indices,
                            data_type,
-                           num.trees = 500,
                            metricfunc = NULL,
                            nthread = 1,
                            ...) {
   if (data_type %in% c("binary", "categorical")) {
-    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = TRUE, num.threads = nthread, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, ...)
   } else if (data_type %in% "continuous") {
-    model <- ranger::ranger(formula, data = data[train_indices, ], num.trees, probability = FALSE, num.threads = nthread, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, ...)
   }
 
   predictions <- predict(model, data = data[test_indices, ])$predictions

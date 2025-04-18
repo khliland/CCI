@@ -10,7 +10,6 @@ wrapper_ranger(
   train_indices,
   test_indices,
   data_type,
-  num.trees = 500,
   metricfunc = NULL,
   nthread = 1,
   ...
@@ -26,8 +25,6 @@ wrapper_ranger(
 \item{test_indices}{A vector of indices specifying the rows in \code{data} to be used as the test set.}
 
 \item{data_type}{Character string indicating the type of data. Can be "continuous" for regression, "binary" for binary classification, or "categorical" for multiclass classification.}
-
-\item{num.trees}{Integer specifying the number of trees to grow in the random forest. Default is 500.}
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
 

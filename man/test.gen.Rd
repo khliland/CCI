@@ -5,9 +5,7 @@
 \title{Generate the Test Statistic or Null Distribution Using Permutation}
 \usage{
 test.gen(
-  Y,
-  X,
-  Z,
+  formula,
   data,
   data_type = "continuous",
   method = "rf",
@@ -15,6 +13,7 @@ test.gen(
   p = 0.8,
   N = nrow(data),
   poly = TRUE,
+  interaction = TRUE,
   degree = 3,
   nrounds = 120,
   family,
@@ -27,11 +26,7 @@ test.gen(
 )
 }
 \arguments{
-\item{Y}{Character. The name of the dependent (response) variable in the data.}
-
-\item{X}{Character. The name of the independent (predictor) variable to be permuted.}
-
-\item{Z}{Character vector. The names of the conditioning variables to be included in the model.}
+\item{formula}{Model formula or DAGitty object specifying the relationship between dependent and independent variables.}
 
 \item{data}{Data frame. The data containing the variables used in the analysis.}
 
@@ -79,5 +74,5 @@ x2 = rnorm(100),
 x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
-result <- test.gen(Y = "y", X = "x1", Z = c("x2", "x3", "x4"), data = data)
+result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, degree = 4)
 }

@@ -3,9 +3,7 @@
 #' This function generates the test statistic or a null distribution through permutation for conditional independence testing.
 #' It supports various machine learning methods, including linear models, random forests, and gradient boosting, and allows for custom metric functions and model fitting functions.
 #'
-#' @param Y Character. The name of the dependent (response) variable in the data.
-#' @param X Character. The name of the independent (predictor) variable to be permuted.
-#' @param Z Character vector. The names of the conditioning variables to be included in the model.
+#' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data Data frame. The data containing the variables used in the analysis.
 #' @param data_type Character. The type of data of the Y parameter: can be "continuous", "binary", or "multinomial".
 #' @param method Character. The modeling method to be used. Options include "lm" for linear models, "xgboost" for gradient boosting, or "rf" for random forests.
@@ -41,7 +39,7 @@
 #' x3 = rnorm(100),
 #' x4 = rnorm(100),
 #' y = rnorm(100))
-#' result <- test.gen(formula = y ~ x1 + x2 + x3 + 4, data = data, poly = 4)
+#' result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, degree = 4)
 
 test.gen <- function(formula,
                      data,
@@ -83,8 +81,7 @@ test.gen <- function(formula,
 
   poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
   data <- poly_result$data
-  new_terms <- poly_result$new_terms
-  poly <- poly_result$poly
+  poly_terms <- poly_result$new_terms
 
   interaction_result <- add_interaction_terms(data, Z)
   data <- interaction_result$data

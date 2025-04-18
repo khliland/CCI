@@ -16,6 +16,7 @@ perm.test(
   nrounds = 120,
   parametric = FALSE,
   poly = TRUE,
+  interaction = TRUE,
   degree = 3,
   family = gaussian(),
   tail = NA,
@@ -47,6 +48,8 @@ perm.test(
 \item{parametric}{Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.}
 
 \item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
+
+\item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
 
 \item{degree}{The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
