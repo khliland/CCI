@@ -41,11 +41,9 @@
 #' x3 = rnorm(100),
 #' x4 = rnorm(100),
 #' y = rnorm(100))
-#' result <- test.gen(Y = "y", X = "x1", Z = c("x2", "x3", "x4"), data = data)
+#' result <- test.gen(formula = y ~ x1 + x2 + x3 + 4, data = data, poly = 4)
 
-test.gen <- function(Y,
-                     X,
-                     Z,
+test.gen <- function(formula,
                      data,
                      data_type = "continuous",
                      method = "rf",
@@ -53,6 +51,7 @@ test.gen <- function(Y,
                      p = 0.8,
                      N = nrow(data),
                      poly = TRUE,
+                     interaction = TRUE,
                      degree = 3,
                      nrounds = 120,
                      family,
@@ -77,44 +76,21 @@ test.gen <- function(Y,
     warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
     poly <- FALSE
   }
+  # SPlitting up the terms in formula
+  Y = formula[[2]]
+  X = formula[[3]][[2]]
+  Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
 
-  if (poly && degree > 1){
-    transformations <- lapply(2:degree, function(d) {
-      eval(parse(text = paste0("~ .^", d)))
-    })
-    names(transformations) <- paste0("d_", 2:degree)
+  poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
+  data <- poly_result$data
+  new_terms <- poly_result$new_terms
+  poly <- poly_result$poly
 
-    data <- data %>%
-      mutate(across(all_of(Z), transformations, .names = "{col}_{fn}"))
+  interaction_result <- add_interaction_terms(data, Z)
+  data <- interaction_result$data
+  interaction_terms <- interaction_result$interaction_terms
 
-    new_terms <- unlist(lapply(Z, function(var) {
-      sapply(2:degree, function(d) {
-        paste0(var, "_d_", d)
-      })
-    }))
-
-    # Create pairwise interaction terms (1st degree)
-    if (length(Z) >= 2) {
-      interaction_terms <- combn(Z, 2, FUN = function(x) {
-        interaction_name <- paste0(x[1], "_int_", x[2])
-        data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
-        return(interaction_name)
-      })
-      formula <- as.formula(paste(
-        Y, "~", X, "+",
-        paste(Z, collapse = " + "), "+",
-        paste(new_terms, collapse = " + "), "+",
-        paste(interaction_terms, collapse = " + ")
-      ))
-    } else {
-      formula <- as.formula(paste(
-        Y, "~", X, "+",
-        paste(Z, collapse = " + "), "+",
-        paste(new_terms, collapse = " + ")))
-    }
-  } else {
-    formula <- as.formula(paste(Y, " ~ ", X, " + ", paste(Z, collapse = "+")))
-  }
+  formula <- build_formula(formula, poly_terms, interaction_terms)
 
   null <- matrix(NA, nrow = nperm, ncol = 1)
 

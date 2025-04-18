@@ -11,6 +11,7 @@
 #' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param parametric Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
+#' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param family The family object for glm, specifying the distribution and link function to use. Default is gaussian().
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
@@ -48,6 +49,7 @@ perm.test <- function(formula,
                       nrounds = 120,
                       parametric = FALSE,
                       poly = TRUE,
+                      interaction = TRUE,
                       degree = 3,
                       family = gaussian(),
                       tail = NA,
@@ -99,9 +101,9 @@ perm.test <- function(formula,
   check_formula(formula, data)
 
   # Creating the null distribution
-  dist <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = nperm, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  dist <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(Y = formula[[2]], X = formula[[3]][[2]], Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")), data_type = data_type, data = data, method, nperm = 1, nrounds = nrounds, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  test_statistic <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
@@ -131,6 +133,7 @@ perm.test <- function(formula,
               dag = dag,
               dag_n = dag_n,
               poly = poly,
+              interaction = interaction,
               degree = degree,
               nperm = nperm,
               nrounds = nrounds,
