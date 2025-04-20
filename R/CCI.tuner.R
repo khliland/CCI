@@ -59,9 +59,10 @@ CCI.pretuner <- function(formula,
                          samples = 30,
                          data_type = "continuous",
                          verboseIter = FALSE,
+                         trace = FALSE,
 
                          size = 1:5,
-                         decay = c(0.001, 0.01, 0.1),
+                         decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
                          mtry = 1:5,
                          nrounds = seq(50, 200, by = 25),
                          eta = seq(0.01, 0.3, by = 0.05),
@@ -112,7 +113,7 @@ CCI.pretuner <- function(formula,
   ctrl <- caret::trainControl(method = 'cv', number = folds, search = search, verboseIter = verboseIter)
 
   tuneGrid <- switch(method,
-                     nnet = expand.grid(size = size, decay = decay),
+                     nnet = expand.grid(size = size, decay = decay, trace = trace),
                      rf   = expand.grid(mtry = mtry),
                      xgboost = expand.grid(
                        nrounds = nrounds,
@@ -147,7 +148,6 @@ CCI.pretuner <- function(formula,
       trControl = ctrl,
       tuneGrid = row,
       metric = metric,
-      trace = FALSE,
       ...
     )
     cbind(row, model$results[1, ])
