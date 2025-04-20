@@ -113,7 +113,7 @@ CCI.pretuner <- function(formula,
   ctrl <- caret::trainControl(method = 'cv', number = folds, search = search, verboseIter = verboseIter)
 
   tuneGrid <- switch(method,
-                     nnet = expand.grid(size = size, decay = decay, trace = trace),
+                     nnet = expand.grid(size = size, decay = decay),
                      rf   = expand.grid(mtry = mtry),
                      xgboost = expand.grid(
                        nrounds = nrounds,
@@ -139,6 +139,22 @@ CCI.pretuner <- function(formula,
   }
 
   # Create progress bar loop for grid search
+  if (method == "nnet") {
+    results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
+      row <- tuneGrid[i, , drop = FALSE]
+      model <- train(
+        x = X,
+        y = Y,
+        method = caret_method,
+        trControl = ctrl,
+        tuneGrid = row,
+        metric = metric,
+        trace = F,
+        ...
+      )
+      cbind(row, model$results[1, ])
+    })
+  } else {
   results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
     row <- tuneGrid[i, , drop = FALSE]
     model <- train(
@@ -152,7 +168,7 @@ CCI.pretuner <- function(formula,
     )
     cbind(row, model$results[1, ])
   })
-
+}
   # Combine results
   results_df <- do.call(rbind, results)
 
