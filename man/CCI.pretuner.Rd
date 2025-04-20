@@ -87,6 +87,14 @@ Returns tuned parameters values for the predictive function
 \description{
 The \code{CCI.tuner} function performs a grid search over parameters for a conditional independence test using machine learning model supported by CCI.test. The tuner use the caret package for tuning.
 }
+\examples{
+set.seed(123)
+
+
+data <- data.frame(x1 = rnorm(500), x2 = rnorm(500), y = rnorm(500))
+
+CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 100,method = 'xgboost')
+}
 \seealso{
 \code{\link{CCI.test} \link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
 }

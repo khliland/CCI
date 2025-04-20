@@ -40,6 +40,13 @@
 #'
 #' @seealso \code{\link{CCI.test} \link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #'
+#' @examples
+#' set.seed(123)
+#'
+#'
+#' data <- data.frame(x1 = rnorm(500), x2 = rnorm(500), y = rnorm(500))
+#'
+#' CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 100,method = 'xgboost')
 
 CCI.pretuner <- function(formula,
                          data,
@@ -140,6 +147,7 @@ CCI.pretuner <- function(formula,
       trControl = ctrl,
       tuneGrid = row,
       metric = metric,
+      trace = FALSE,
       ...
     )
     cbind(row, model$results[1, ])
