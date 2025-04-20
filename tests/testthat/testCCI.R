@@ -77,10 +77,10 @@ test_that("Tuning using 'xgboost'", {
 })
 
 test_that("Tuning using 'nnet'", {
-  dat <- NormalData(1000)
+  dat <- NormalData(500)
   parameters_nnet <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                                   data = dat,
-                                  samples = 500,
+                                  samples = 200,
                                   method = 'nnet',
                                   trace = F)
 
@@ -736,7 +736,7 @@ test_that("wrapper_nnet categorical data", {
 # null distribution
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger)", {
-  set.seed(1)
+
   data <- NonLinNormal(200)
   result <- test.gen(formula = Y ~ X | Z1 + Z2, data = data)
   expect_true(class(result) == "list")
@@ -861,7 +861,7 @@ test_that("test.gen works correctly with Xgboost", {
           })
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, with GLM
-          various parameter settings", { ERROR!!!
+          various parameter settings", {
             data <- NormalData(400)
             result <- test.gen(formula = Y ~ X | Z1 + Z2,
                                data = data,

@@ -18,7 +18,7 @@ CCI.pretuner(
   data_type = "continuous",
   verboseIter = FALSE,
   size = 1:5,
-  decay = c(0, 0.01, 0.1),
+  decay = c(0.001, 0.01, 0.1),
   mtry = 1:5,
   nrounds = seq(50, 200, by = 25),
   eta = seq(0.01, 0.3, by = 0.05),

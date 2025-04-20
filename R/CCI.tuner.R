@@ -31,6 +31,8 @@
 #' @importFrom caret train trainControl
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
+#' @importFrom stats model.matrix
+#' @importFrom lattice levelplot
 #'
 #' @return Returns tuned parameters values for the predictive function
 #' @aliases tuner
@@ -52,7 +54,7 @@ CCI.pretuner <- function(formula,
                          verboseIter = FALSE,
 
                          size = 1:5,
-                         decay = c(0, 0.01, 0.1),
+                         decay = c(0.001, 0.01, 0.1),
                          mtry = 1:5,
                          nrounds = seq(50, 200, by = 25),
                          eta = seq(0.01, 0.3, by = 0.05),

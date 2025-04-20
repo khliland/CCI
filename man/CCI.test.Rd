@@ -98,7 +98,7 @@ result <- CCI.test(y ~ x1 | x2, data = data, nperm = 500)
 # Example 2: Using a binary outcome (y) with logistic regression (method = "lm")
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rbinom(100, 1, 0.5))
 result <- CCI.test(y ~ x1 | x2, data = data, method = "lm", nperm = 500,
-                   data_type = "binary", family = binomial())
+                   data_type = "binary", family = binomial(link = "logit"))
 
 # Example 3: The same test can be done by switching x1 and y,
 # using linear regression (method = "lm")

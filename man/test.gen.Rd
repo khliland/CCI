@@ -77,4 +77,15 @@ x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
 result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, degree = 4)
+data <- BinaryData(400)
+
+test.gen(formula = Y ~ X | Z1 + Z2,
+         data = data,
+         nperm = 40,
+         method = "lm",
+         data_type = "binary",
+         family = binomial(link = "logit"),
+         permutation = FALSE,
+         poly = T,
+         degree = 4)
 }
