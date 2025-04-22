@@ -3,7 +3,7 @@
 #' The `CCI.tuner` function performs a grid search over parameters for a conditional independence test using machine learning model supported by CCI.test. The tuner use the caret package for tuning.
 #'
 #'
-#' @param formula Model formula or a DAGitty object specifying the relationship between dependent and independent variables.
+#' @param formula Model formula specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".
@@ -14,6 +14,8 @@
 #' @param seed Integer. The seed for random number generation. Default is 1984.
 #' @param metric Character. The performance metric to optimize during tuning. Default is 'RMSE'.
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
+#' @param trace Logical. If TRUE, the function will print the tuning process. Default is FALSE.
+#' @param include_explanatory Logical. If TRUE, the function will include explanatory variable in the model. Default is TRUE.
 #' @param size Integer. The size of the neural network. Default is 1:5.
 #' @param decay Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).
 #' @param mtry Integer. The number of variables randomly sampled as candidates at each split for random forest. Default is 1:5.
@@ -60,6 +62,7 @@ CCI.pretuner <- function(formula,
                          data_type = "continuous",
                          verboseIter = FALSE,
                          trace = FALSE,
+                         include_explanatory = TRUE,
 
                          size = 1:5,
                          decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
@@ -87,8 +90,6 @@ CCI.pretuner <- function(formula,
     search <- "grid"
   }
 
-  check_formula(formula, data)
-
   outcome_name <- all.vars(formula)[1]
 
   if (data_type %in% c("categorical", "binary")) {
@@ -97,7 +98,12 @@ CCI.pretuner <- function(formula,
   } else {
     Y <- data[[outcome_name]]
   }
-
+  if (include_explanatory) {
+    formula <- formula
+  } else {
+    formula <- as.formula(paste(all.vars(formula)[1], "~", paste(all.vars(formula[[3]])[-1], collapse = " + ")))  # Building new formula, keeping "X" out
+  }
+  check_formula(formula, data)
   X <- model.matrix(formula, data = data)[, -1, drop = FALSE]
 
 
