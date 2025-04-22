@@ -18,6 +18,7 @@ CCI.pretuner(
   data_type = "continuous",
   verboseIter = FALSE,
   trace = FALSE,
+  include_explanatory = TRUE,
   size = 1:5,
   decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
   mtry = 1:5,
@@ -34,7 +35,7 @@ CCI.pretuner(
 )
 }
 \arguments{
-\item{formula}{Model formula or a DAGitty object specifying the relationship between dependent and independent variables.}
+\item{formula}{Model formula specifying the relationship between dependent and independent variables.}
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
@@ -55,6 +56,10 @@ CCI.pretuner(
 \item{data_type}{Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".}
 
 \item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
+
+\item{trace}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
+
+\item{include_explanatory}{Logical. If TRUE, the function will include explanatory variable in the model. Default is TRUE.}
 
 \item{size}{Integer. The size of the neural network. Default is 1:5.}
 

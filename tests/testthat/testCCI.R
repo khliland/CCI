@@ -63,6 +63,7 @@ test_that("Tuning using 'xgboost'", {
                                      data = dat,
                                      seed = 192,
                                      samples = 100,
+                                     include_explanatory = FALSE,
                                      method = 'xgboost')
   args <- get_tuned_params(parameters_xgboost$best_param)
 
