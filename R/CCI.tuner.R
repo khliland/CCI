@@ -79,7 +79,7 @@ CCI.pretuner <- function(formula,
                          ...) {
 
   set.seed(seed)
-
+  org_formula <- formula # Store the original formula for later use
   if (!is.null(list(...)$tuneGrid)) {
     tuneGrid <- list(...)$tuneGrid
   }
@@ -182,7 +182,7 @@ CCI.pretuner <- function(formula,
   best_idx <- if (metric == "RMSE") which.min(results_df$RMSE) else which.max(results_df[[metric]])
   best <- results_df[best_idx, ]
   best$method <- method
-
+  formula <- org_formula # Restore the original formula
   cat("\n Tuning complete. Best model found.\n")
   return(list(best_param = best, tuning_result = results_df))
 }
