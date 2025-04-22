@@ -2,7 +2,8 @@
 % Please edit documentation in R/utils.R
 \name{add_interaction_terms}
 \alias{add_interaction_terms}
-\title{Creates interaction terms for specified variables in a data frame}
+\title{Creates interaction terms for specified variables in a data frame
+Interaction terms are named as \code{<var1>_int_<var2>} (e.g., \code{Z1_int_Z2} for the product of \code{Z1} and \code{Z2}).}
 \usage{
 add_interaction_terms(data, Z)
 }
@@ -16,6 +17,7 @@ list
 }
 \description{
 Creates interaction terms for specified variables in a data frame
+Interaction terms are named as \code{<var1>_int_<var2>} (e.g., \code{Z1_int_Z2} for the product of \code{Z1} and \code{Z2}).
 }
 \examples{
 data_generator <-  function(N){

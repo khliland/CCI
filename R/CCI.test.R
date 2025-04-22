@@ -127,8 +127,12 @@ CCI.test <- function(formula = NA,
                      ...) {
 
 
-  if (is.character(formula)) {
-    stop("The formula should not be a string. Please provide a formula object.")
+  if (!inherits(formula, "formula") && !inherits(formula, "dagitty")) {
+    stop("The 'formula' must be a formula object or a dagitty object.")
+  }
+
+  if (tune && (folds < 1 || tune_length < 1)) {
+    stop("folds and tune_length must be positive integers.")
   }
 
   metric <- if (!is.null(metricfunc)) {

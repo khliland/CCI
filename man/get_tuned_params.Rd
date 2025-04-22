@@ -10,7 +10,7 @@ get_tuned_params(tuned_model)
 \item{tuned_model}{A model object returned from the CCI.pretuner function. This object contains the tuned parameters and other relevant information.}
 }
 \value{
-list
+A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost). Returns \code{NULL} for unsupported methods.
 }
 \description{
 Get the best parameters after tuning with CCI.tuner

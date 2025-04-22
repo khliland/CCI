@@ -6,17 +6,16 @@
 #' @param formula Formula. The model formula that specifies the relationship between the dependent and independent variables.
 #' @param data Data frame. The data frame in which to check for the presence of variables specified in the formula.
 #'
-#' @return NULL. The function is used for validation purposes and stops execution if any variables are missing.
+#' @return Invisibly returns \code{NULL} if all variables are present. Stops with an error if any variables are missing.
 #' @export
 
 check_formula <- function(formula, data) {
   all_vars <- all.vars(formula)
   if (all(all_vars %in% colnames(data))) {
     # All variables are present, do nothing
-  } else if (any(all_vars %in% colnames(data))) {
-    # Some variables are present, but not all
+  } else if (!all(all_vars %in% colnames(data))) {
     missing_vars <- all_vars[!all_vars %in% colnames(data)]
-    warning("The following variables are missing from the data: ", paste(missing_vars, collapse = ", "))
+    stop("The following variables are missing from the data: ", paste(missing_vars, collapse = ", "))
   }
   else {
     # No variables are present
@@ -42,21 +41,18 @@ check_formula <- function(formula, data) {
 #' try(clean_formula(y ~ x))
 
 clean_formula <- function(formula) {
-  tryCatch({ if (formula[[3]][[1]] == "+") {
-                        response <- as.character(formula[[2]])
-                        predictors <- as.character(deparse(formula[[3]]))
-                        split_predictors <- strsplit(predictors, " \\+ ")
-                        split_predictors <- unlist(split_predictors)
-                        new_formula <-  as.formula(paste(response, "~", split_predictors[1], "|", paste(split_predictors[-1], collapse = " + ")))
-  } else if (formula[[3]][[1]] == "|") {
+  formula_terms <- attr(terms(formula), "term.labels")
+
+  tryCatch({ if ("|" %in% all.names(formula)) {
     new_formula <- formula
-  } else if (formula[[3]][[1]] != "+" & formula[[3]][[1]] != "|") {
-    stop("The formula is not of the right format")
-  }
-  return(new_formula)
-  }, error = function(e) {
-    stop("The formula indicate an unconditional independence statement. Ensure that you include conditioning variables.")
-  })
+  } else if (length(formula_terms) >= 2) {
+    response <- deparse(formula[[2]])
+    x <- formula_terms[1]
+    z <- paste(formula_terms[-1], collapse = " + ")
+    new_formula <- as.formula(paste(response, "~", x, "|", z))
+  } else {
+    stop("The formula must include conditioning variables in the format 'Y ~ X | Z1 + Z2' or 'Y ~ X + Z1 + Z2'.")  }
+})
 }
 
 
@@ -66,7 +62,7 @@ clean_formula <- function(formula) {
 #'
 #' @param dist Numeric vector. Represents the null distribution of the test statistic.
 #' @param test_statistic Numeric. The observed test statistic for which the p-value is to be calculated.
-#' @param parametric Logical. Indicates whether to calculate parametric p-values using a normal distribution. If FALSE, empirical p-values are calculated. Default is FALSE.
+#' @param parametric Logical. If TRUE, calculates parametric p-values assuming the null distribution is normal. If FALSE, calculates empirical p-values. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values. Must be either "left" or "right". Default is "left".
 #'
 #' @importFrom stats pnorm
@@ -85,7 +81,9 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
   test_statistic <- as.numeric(test_statistic)
   null_mean <- mean(dist)
   null_sd <- sd(dist)
-
+  if (parametric && null_sd == 0) {
+    stop("Cannot compute parametric p-value: null distribution has zero standard deviation.")
+  }
   tail <- match.arg(tail)  # Ensure tail is either "left" or "right"
 
   pvalue <- if (parametric == FALSE) {
@@ -111,7 +109,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #'
 #' @param tuned_model A model object returned from the CCI.pretuner function. This object contains the tuned parameters and other relevant information.
 #'
-#' @return list
+#' @return A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost). Returns \code{NULL} for unsupported methods.
 #' @export
 #'
 #' @examples
@@ -133,6 +131,11 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #'
 
 get_tuned_params <- function(tuned_model) {
+  supported_methods <- c("rf", "xgboost", "nnet", "svm", "gpr")
+  if (!tuned_model$method %in% supported_methods) {
+    warning("Unsupported method '", tuned_model$method, "'. Returning NULL.")
+    return(NULL)
+  }
   if (tuned_model$method == 'rf') {
     return(list(mtry = tuned_model$mtry))
   } else if (tuned_model$method == 'xgboost') {
@@ -157,14 +160,16 @@ get_tuned_params <- function(tuned_model) {
 }
 
 #' Creates polynomial terms for specified variables in a data frame
-#'
+#' Polynomial terms are named as \code{<variable>_d_<degree>} (e.g., \code{Z1_d_2} for the square of \code{Z1}).
 #'
 #' @param data Data frame. The data frame containing the variables for which polynomial terms are to be created.
 #' @param Z Character vector. The names of the variables for which polynomial terms are to be created.
 #' @param degree Integer. The maximum degree of polynomial terms to be created. Default is 3.
 #' @param poly Logical. If TRUE, polynomial terms will be created. If FALSE, no polynomial terms will be created. Default is TRUE.
 #'
+#' @importFrom dplyr mutate across
 #' @return list
+#'
 #' @export
 #'
 #' @examples
@@ -192,7 +197,7 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
   }
 
   transformations <- lapply(2:degree, function(d) {
-    eval(parse(text = paste0("~ .^", d)))
+    function(x) x^d
   })
   names(transformations) <- paste0("d_", 2:degree)
 
@@ -207,7 +212,7 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
 }
 
 #' Creates interaction terms for specified variables in a data frame
-#'
+#' Interaction terms are named as \code{<var1>_int_<var2>} (e.g., \code{Z1_int_Z2} for the product of \code{Z1} and \code{Z2}).
 #'
 #' @param data Data frame. The data frame containing the variables for which interaction terms are to be created.
 #' @param Z Character vector. The names of the variables for which interaction terms are to be created.
@@ -230,7 +235,9 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
 #'
 add_interaction_terms <- function(data, Z) {
   interaction_terms <- character(0)
-
+  if (length(Z) < 2) {
+    warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
+  }
   if (length(Z) >= 2) {
     interaction_terms <- combn(Z, 2, FUN = function(x) {
       interaction_name <- paste0(x[1], "_int_", x[2])

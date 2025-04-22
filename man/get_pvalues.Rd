@@ -16,7 +16,7 @@ get_pvalues(
 
 \item{test_statistic}{Numeric. The observed test statistic for which the p-value is to be calculated.}
 
-\item{parametric}{Logical. Indicates whether to calculate parametric p-values using a normal distribution. If FALSE, empirical p-values are calculated. Default is FALSE.}
+\item{parametric}{Logical. If TRUE, calculates parametric p-values assuming the null distribution is normal. If FALSE, calculates empirical p-values. Default is FALSE.}
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values. Must be either "left" or "right". Default is "left".}
 }

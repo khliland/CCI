@@ -2,7 +2,8 @@
 % Please edit documentation in R/utils.R
 \name{add_poly_terms}
 \alias{add_poly_terms}
-\title{Creates polynomial terms for specified variables in a data frame}
+\title{Creates polynomial terms for specified variables in a data frame
+Polynomial terms are named as \code{<variable>_d_<degree>} (e.g., \code{Z1_d_2} for the square of \code{Z1}).}
 \usage{
 add_poly_terms(data, Z, degree = 3, poly = TRUE)
 }
@@ -20,6 +21,7 @@ list
 }
 \description{
 Creates polynomial terms for specified variables in a data frame
+Polynomial terms are named as \code{<variable>_d_<degree>} (e.g., \code{Z1_d_2} for the square of \code{Z1}).
 }
 \examples{
 set.seed(123)

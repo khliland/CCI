@@ -12,7 +12,7 @@ check_formula(formula, data)
 \item{data}{Data frame. The data frame in which to check for the presence of variables specified in the formula.}
 }
 \value{
-NULL. The function is used for validation purposes and stops execution if any variables are missing.
+Invisibly returns \code{NULL} if all variables are present. Stops with an error if any variables are missing.
 }
 \description{
 This function verifies that all variables specified in the formula are present in the provided data frame.

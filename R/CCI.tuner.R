@@ -79,6 +79,18 @@ CCI.pretuner <- function(formula,
                          ...) {
 
   set.seed(seed)
+  if (!is.data.frame(data) || nrow(data) == 0) {
+    stop("The 'data' argument must be a non-empty data frame.")
+  }
+  if (!is.numeric(tune_length) || tune_length < 1) {
+    stop("tune_length must be a positive integer.")
+  }
+  if (!method %in% c("rf", "xgboost", "nnet", "gpr", "svm")) {
+    stop("method must be one of 'rf', 'xgboost', 'nnet', 'gpr', or 'svm'.")
+  }
+  if (!data_type %in% c("continuous", "binary", "categorical")) {
+    stop("data_type must be one of 'continuous', 'binary', or 'categorical'.")
+  }
   org_formula <- formula # Store the original formula for later use
   if (!is.null(list(...)$tuneGrid)) {
     tuneGrid <- list(...)$tuneGrid
