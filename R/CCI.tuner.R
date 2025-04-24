@@ -7,9 +7,13 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".
+#' @param validation_method Character. Specifies the resampling method. Default is "cv".
+#' @param training_share Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param samples Integer. The number of random samples to take from the grid. Default is 30.
 #' @param data_type Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".
+#' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
+#' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 10.
 #' @param seed Integer. The seed for random number generation. Default is 1984.
 #' @param metric Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.
@@ -33,7 +37,7 @@
 #' @importFrom caret train trainControl nearZeroVar
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
-#' @importFrom stats model.matrix var scale
+#' @importFrom stats model.matrix var
 #'
 #' @return A list containing:
 #' \itemize{
@@ -60,13 +64,17 @@
 CCI.pretuner <- function(formula,
                          data,
                          method = "rf",
+                         validation_method = 'cv',
                          folds = 5,
+                         training_share = 0.7,
                          tune_length = 3,
                          seed = 1984,
                          metric = 'RMSE',
                          random_grid = TRUE,
                          samples = 30,
                          data_type = "continuous",
+                         poly = TRUE,
+                         degree = 3,
                          verboseIter = FALSE,
                          trace = FALSE,
                          include_explanatory = TRUE,
@@ -99,6 +107,9 @@ CCI.pretuner <- function(formula,
   if (!data_type %in% c("continuous", "binary", "categorical")) {
     stop("data_type must be one of 'continuous', 'binary', or 'categorical'.")
   }
+  if (poly && degree < 1) {
+    stop("Degree of 0 or less is not allowed")
+  }
   formula_vars <- all.vars(formula)
   if (any(sapply(data[formula_vars], function(x) !is.numeric(x) && !is.factor(x)))) {
     stop("All formula variables must be numeric or factors.")
@@ -106,6 +117,11 @@ CCI.pretuner <- function(formula,
 
   if (data_type == "continuous" && stats::var(data[[formula_vars[1]]]) < 1e-10) {
     warning("Response variable has near-zero variance (", stats::var(data[[formula_vars[1]]]), "). R-squared may be unreliable.")
+  }
+  nzv <- caret::nearZeroVar(data[formula_vars[-1]], saveMetrics = TRUE)
+  if (any(nzv$nzv)) {
+    warning("Predictors with near-zero variance detected: ",
+            paste(names(data)[formula_vars[-1]][nzv$nzv], collapse = ", "))
   }
   n_predictors <- length(all.vars(formula[[3]]))
   if (n_predictors > 9) {
@@ -117,6 +133,27 @@ CCI.pretuner <- function(formula,
   }
 
   org_formula <- formula # Store the original formula for later use
+
+  Y = formula[[2]]
+  X = formula[[3]][[2]]
+  Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
+  if (any(sapply(data[Z], is.factor))) {
+    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
+    poly <- FALSE
+  }
+  poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
+  data <- poly_result$data
+  poly_terms <- poly_result$new_terms
+
+  if (interaction) {
+    interaction_result <- add_interaction_terms(data, Z)
+    data <- interaction_result$data
+    interaction_terms <- interaction_result$interaction_terms
+  } else {
+    interaction_terms <- NULL
+  }
+
+  formula <- build_formula(formula, poly_terms, interaction_terms)
 
   tuneGrid <- NULL
   dots <- list(...)
@@ -173,15 +210,22 @@ CCI.pretuner <- function(formula,
                          stop("Unsupported method"))
 
 
-  ctrl <- caret::trainControl(method = 'cv',
+  ctrl <- caret::trainControl(method = validation_method,
+                              p = training_share,
                               number = folds,
                               search = search,
+                              repeats = 2,
                               verboseIter = verboseIter,
                               allowParallel = TRUE,
                               summaryFunction = if (data_type == "continuous") {
                                 function(data, lev = NULL, model = NULL) {
                                   obs <- data$obs
                                   pred <- data$pred
+                                  if (verbose) {
+                                    cat("Summary function called. Variance of predictions:", var(pred), "\n")
+                                    cat("Variance of observed:", var(obs), "\n")
+                                    cat("Correlation:", cor(obs, pred, use = "pairwise.complete.obs"), "\n")
+                                  }
                                   if (stats::var(pred) < 1e-10 || stats::var(obs) < 1e-10) {
                                     return(c(RMSE = sqrt(mean((obs - pred)^2)), Rsquared = NA, MAE = mean(abs(obs - pred))))
                                   }

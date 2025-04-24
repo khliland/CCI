@@ -89,18 +89,26 @@ CCI.pretuner(
 \item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
 }
 \value{
-Returns tuned parameters values for the predictive function
+A list containing:
+\itemize{
+\item \code{best_param}: A data frame with the best parameters and their performance metric.
+\item \code{tuning_result}: A data frame with all tested parameter combinations and their performance metrics.
+\item \code{warnings}: A character vector of warnings issued during tuning.
+}
 }
 \description{
 The \code{CCI.tuner} function performs a grid search over parameters for a conditional independence test using machine learning model supported by CCI.test. The tuner use the caret package for tuning.
 }
 \examples{
 set.seed(123)
-
-
-data <- data.frame(x1 = rnorm(500), x2 = rnorm(500), y = rnorm(500))
-
-CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 100,method = 'xgboost')
+data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+# Tune random forest parameters
+result <- CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 5, folds = 3, method = "rf")
+# Returns a list with best parameters and tuning results
+if (requireNamespace("xgboost", quietly = TRUE)) {
+  # Tune xgboost parameters
+  result_xgb <- CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 5, folds = 3, method = "xgboost")
+}
 }
 \seealso{
 \code{\link{CCI.test} \link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
