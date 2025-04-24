@@ -14,6 +14,7 @@
 #' @param data_type Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
+#' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 10.
 #' @param seed Integer. The seed for random number generation. Default is 1984.
 #' @param metric Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.
@@ -75,6 +76,7 @@ CCI.pretuner <- function(formula,
                          data_type = "continuous",
                          poly = TRUE,
                          degree = 3,
+                         interaction = TRUE,
                          verboseIter = FALSE,
                          trace = FALSE,
                          include_explanatory = TRUE,
