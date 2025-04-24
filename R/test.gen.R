@@ -169,7 +169,6 @@ test.gen <- function(formula,
                                         train_indices,
                                         test_indices,
                                         data_type,
-                                        num.trees = nrounds,
                                         metricfunc = metricfunc,
                                         ...)
     } else if (method %in% "svm") {
