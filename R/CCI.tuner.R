@@ -12,7 +12,7 @@
 #' @param data_type Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 10.
 #' @param seed Integer. The seed for random number generation. Default is 1984.
-#' @param metric Character. The performance metric to optimize during tuning. Default is 'RMSE'.
+#' @param metric Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param trace Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param include_explanatory Logical. If TRUE, the function will include explanatory variable in the model. Default is TRUE.
@@ -30,13 +30,17 @@
 #' @param C Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).
 #' @param ... Additional arguments to pass to the \code{CCI.tuner} function.
 #'
-#' @importFrom caret train trainControl
+#' @importFrom caret train trainControl nearZeroVar
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
-#' @importFrom stats model.matrix
-#' @importFrom lattice levelplot
+#' @importFrom stats model.matrix var scale
 #'
-#' @return Returns tuned parameters values for the predictive function
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{best_param}: A data frame with the best parameters and their performance metric.
+#'   \item \code{tuning_result}: A data frame with all tested parameter combinations and their performance metrics.
+#'   \item \code{warnings}: A character vector of warnings issued during tuning.
+#' }
 #' @aliases tuner
 #' @export
 #'
@@ -44,17 +48,20 @@
 #'
 #' @examples
 #' set.seed(123)
-#'
-#'
-#' data <- data.frame(x1 = rnorm(500), x2 = rnorm(500), y = rnorm(500))
-#'
-#' CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 100,method = 'xgboost')
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+#' # Tune random forest parameters
+#' result <- CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 5, folds = 3, method = "rf")
+#' # Returns a list with best parameters and tuning results
+#' if (requireNamespace("xgboost", quietly = TRUE)) {
+#'   # Tune xgboost parameters
+#'   result_xgb <- CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 5, folds = 3, method = "xgboost")
+#' }
 
 CCI.pretuner <- function(formula,
                          data,
                          method = "rf",
                          folds = 5,
-                         tune_length = 10,
+                         tune_length = 3,
                          seed = 1984,
                          metric = 'RMSE',
                          random_grid = TRUE,
@@ -63,6 +70,7 @@ CCI.pretuner <- function(formula,
                          verboseIter = FALSE,
                          trace = FALSE,
                          include_explanatory = TRUE,
+                         verbose = FALSE,
 
                          size = 1:5,
                          decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
@@ -91,10 +99,35 @@ CCI.pretuner <- function(formula,
   if (!data_type %in% c("continuous", "binary", "categorical")) {
     stop("data_type must be one of 'continuous', 'binary', or 'categorical'.")
   }
-  org_formula <- formula # Store the original formula for later use
-  if (!is.null(list(...)$tuneGrid)) {
-    tuneGrid <- list(...)$tuneGrid
+  formula_vars <- all.vars(formula)
+  if (any(sapply(data[formula_vars], function(x) !is.numeric(x) && !is.factor(x)))) {
+    stop("All formula variables must be numeric or factors.")
   }
+
+  if (data_type == "continuous" && stats::var(data[[formula_vars[1]]]) < 1e-10) {
+    warning("Response variable has near-zero variance (", stats::var(data[[formula_vars[1]]]), "). R-squared may be unreliable.")
+  }
+  n_predictors <- length(all.vars(formula[[3]]))
+  if (n_predictors > 9) {
+    warning("Formula includes ", n_predictors, " predictors. Tuning may be slow. Consider reducing folds or samples.")
+  }
+
+  if (method == "rf") {
+    mtry <- seq(1, min(n_predictors, max(5, ceiling(n_predictors / 2))), by = 1)
+  }
+
+  org_formula <- formula # Store the original formula for later use
+
+  tuneGrid <- NULL
+  dots <- list(...)
+
+  if (!is.null(dots$tuneGrid)) {
+    tuneGrid <- dots$tuneGrid
+    if (!is.data.frame(tuneGrid) && !is.matrix(tuneGrid)) {
+      stop("Custom tuneGrid must be a data frame or matrix.")
+    }
+  }
+
 
   if (random_grid) {
     search <- "random"
@@ -104,20 +137,32 @@ CCI.pretuner <- function(formula,
 
   outcome_name <- all.vars(formula)[1]
 
+  if (data_type %in% c("binary", "categorical") && metric != "Accuracy") {
+    warning("For binary or categorical data, metric is set to 'Accuracy'.")
+    metric <- "Accuracy"
+  }
+
   if (data_type %in% c("categorical", "binary")) {
     Y <- as.factor(data[[outcome_name]])
     metric <- "Accuracy"
   } else {
     Y <- data[[outcome_name]]
   }
+
+  formula <- clean_formula(formula)
+
   if (include_explanatory) {
     formula <- formula
   } else {
     formula <- as.formula(paste(all.vars(formula)[1], "~", paste(all.vars(formula[[3]])[-1], collapse = " + ")))  # Building new formula, keeping "X" out
   }
+
   check_formula(formula, data)
   X <- model.matrix(formula, data = data)[, -1, drop = FALSE]
 
+  if (ncol(X) == 0) {
+    stop("The formula produced an empty design matrix. Check variable types and formula specification.")
+  }
 
   caret_method <- switch(method,
                          rf = "rf",
@@ -128,7 +173,27 @@ CCI.pretuner <- function(formula,
                          stop("Unsupported method"))
 
 
-  ctrl <- caret::trainControl(method = 'cv', number = folds, search = search, verboseIter = verboseIter)
+  ctrl <- caret::trainControl(method = 'cv',
+                              number = folds,
+                              search = search,
+                              verboseIter = verboseIter,
+                              allowParallel = TRUE,
+                              summaryFunction = if (data_type == "continuous") {
+                                function(data, lev = NULL, model = NULL) {
+                                  obs <- data$obs
+                                  pred <- data$pred
+                                  if (stats::var(pred) < 1e-10 || stats::var(obs) < 1e-10) {
+                                    return(c(RMSE = sqrt(mean((obs - pred)^2)), Rsquared = NA, MAE = mean(abs(obs - pred))))
+                                  }
+                                  out <- caret::defaultSummary(data, lev, model)
+                                  if (is.nan(out["Rsquared"]) || is.na(out["Rsquared"])) {
+                                    out["Rsquared"] <- NA
+                                  }
+                                  out
+                                }
+                              } else caret::defaultSummary
+  )
+
 
   tuneGrid <- switch(method,
                      nnet = expand.grid(size = size, decay = decay),
@@ -156,37 +221,102 @@ CCI.pretuner <- function(formula,
     tuneGrid <- tuneGrid[sample(seq_len(total), sample_n), , drop = FALSE]
   }
 
-  # Create progress bar loop for grid search
-  if (method == "nnet") {
-    results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
+  warning_log <- character()
+
+  # Progress bar with pbapply
+  if (!requireNamespace("pbapply", quietly = TRUE)) {
+    warning("The 'pbapply' package is not installed. Progress bars will not be shown.")
+    warning_log <- c(warning_log, "The 'pbapply' package is not installed. Progress bars will not be shown.")
+
+    results <- lapply(seq_len(nrow(tuneGrid)), function(i) {
       row <- tuneGrid[i, , drop = FALSE]
-      model <- train(
-        x = X,
-        y = Y,
-        method = caret_method,
-        trControl = ctrl,
-        tuneGrid = row,
-        metric = metric,
-        trace = F,
-        ...
+      if (verbose) {
+        cat("Training model with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
+      }
+      model <- tryCatch(
+        {
+          withCallingHandlers(
+            caret::train(
+              x = X,
+              y = Y,
+              method = caret_method,
+              trControl = ctrl,
+              tuneGrid = row,
+              metric = metric,
+              trace = trace
+            ),
+            warning = function(w) {
+              warning_log <<- c(warning_log, paste("Warning for parameters ",
+                                                   paste(names(row), row, sep = "=", collapse = ", "),
+                                                   ": ", conditionMessage(w)))
+              invokeRestart("muffleWarning")
+            }
+          )
+        },
+        error = function(e) {
+          warning_log <<- c(warning_log, paste("Error for parameters ",
+                                               paste(names(row), row, sep = "=", collapse = ", "),
+                                               ": ", conditionMessage(e)))
+          NULL
+        }
       )
-      cbind(row, model$results[1, ])
+      if (is.null(model)) return(NULL)
+      res <- model$results[1, ]
+      res[] <- lapply(res, function(x) if (is.numeric(x)) replace(x, is.nan(x), NA) else x)
+      if (verbose) {
+        cat("Results for parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
+        # print(res)
+      }
+      cbind(row, res)
     })
   } else {
-  results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
-    row <- tuneGrid[i, , drop = FALSE]
-    model <- train(
-      x = X,
-      y = Y,
-      method = caret_method,
-      trControl = ctrl,
-      tuneGrid = row,
-      metric = metric,
-      ...
-    )
-    cbind(row, model$results[1, ])
-  })
-}
+    results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
+      row <- tuneGrid[i, , drop = FALSE]
+      if (verbose) {
+        cat("Training model with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
+      }
+      model <- tryCatch(
+        {
+          withCallingHandlers(
+            caret::train(
+              x = X,
+              y = Y,
+              method = caret_method,
+              trControl = ctrl,
+              tuneGrid = row,
+              metric = metric,
+              trace = trace
+            ),
+            warning = function(w) {
+              warning_log <<- c(warning_log, paste("Warning for parameters ",
+                                                   paste(names(row), row, sep = "=", collapse = ", "),
+                                                   ": ", conditionMessage(w)))
+              invokeRestart("muffleWarning")
+            }
+          )
+        },
+        error = function(e) {
+          warning_log <<- c(warning_log, paste("Error for parameters ",
+                                               paste(names(row), row, sep = "=", collapse = ", "),
+                                               ": ", conditionMessage(e)))
+          NULL
+        }
+      )
+      if (is.null(model)) return(NULL)
+      res <- model$results[1, ]
+      res[] <- lapply(res, function(x) if (is.numeric(x)) replace(x, is.nan(x), NA) else x)
+      if (verbose) {
+        cat("Results for parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
+        print(res)
+      }
+      cbind(row, res)
+    })
+  }
+
+  results <- results[!sapply(results, is.null)]
+  if (length(results) == 0) {
+    stop("No models were successfully trained. Check parameter ranges and data.")
+  }
   # Combine results
   results_df <- do.call(rbind, results)
 
@@ -195,6 +325,11 @@ CCI.pretuner <- function(formula,
   best <- results_df[best_idx, ]
   best$method <- method
   formula <- org_formula # Restore the original formula
+
+  if (length(warning_log) > 0) {
+    warning("Tuning completed with ", length(warning_log), " warnings. Check result$warnings for details.")
+  }
+
   cat("\n Tuning complete. Best model found.\n")
   return(list(best_param = best, tuning_result = results_df))
 }

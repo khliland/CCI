@@ -245,8 +245,8 @@ NonLinNormal10 <- function(N) {
   colnames(Z) <- paste0("Z", 1:10)
   Z_df <- as.data.frame(Z)
 
-  X <- exp(Z[,1] * Z[,2]) + sin(Z[,3] * Z[,4]) + log(abs(Z[,5]) + 1) + rnorm(N, 0, 1)
-  Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - sqrt(abs(Z[,8])) + rnorm(N, 0, 1)
+  X <- Z[,1] * Z[,2] + sin(Z[,3] * Z[,4]) + abs(Z[,5]) + rnorm(N, 0, 1)
+  Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - abs(Z[,8]) + rnorm(N, 0, 1)
 
   df <- cbind(Z_df, X = X, Y = Y)
   return(df)

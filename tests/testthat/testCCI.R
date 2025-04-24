@@ -10,47 +10,13 @@ devtools::load_all()
 library(CCI)
 
 #-------------------------------------------------------------------------------
-test_that("clean_formula outputs correct formula", {
-  clean_formula <- clean_formula(y ~ x | z + v)
-  expect_true(class(clean_formula) == "formula")
-  expect_equal(clean_formula, y ~ x | z + v)
-})
-#-------------------------------------------------------------------------------
-test_that("clean_formula outputs correct formula", {
-  clean_formula <- clean_formula(y ~ x + z + v)
-  expect_true(class(clean_formula) == "formula")
-  expect_equal(clean_formula, y ~ x | z + v)
-})
-#-------------------------------------------------------------------------------
-# Get pvalues
-test_that("get_pvalues outputs p-values", {
-  dist <- rnorm(100)
-  test_statistic <- rnorm(1)
-  p_value <- get_pvalues(dist = dist, test_statistic = test_statistic, tail = "right")
-  p_value
-  expect_lt(p_value,1)
-  expect_gt(p_value, 0)
-})
-
-#-------------------------------------------------------------------------------
-test_that("get_pvalues outputs p-values", {
-  dist <- rnorm(100)
-  test_statistic <- rnorm(1)
-  p_value <- get_pvalues(dist = dist, test_statistic = test_statistic, parametric = TRUE, tail = "right")
-  expect_lt(p_value,1)
-  expect_gt(p_value, 0)
-})
-
-
-#-------------------------------------------------------------------------------
 # Testing the tuning function
 #-------------------------------------------------------------------------------
 
 test_that("Tuning using 'rf' (default)", {
-  dat <- NonLinNormal10(500)
-  parameters_rf <- CCI.pretuner(formula = Y ~ X + Z1 + Z2 + Z3 + Z4 + Z5 + Z6 + Z7 + Z8 + Z9 + Z10,
-                                data = dat,
-                                seed = 19)
+  dat <- NormalData(500)
+  # undebug(CCI.pretuner)
+  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, verbose = T)
 
 
   # expect_true(is.numeric(parameters_rf$best_param.mtry))
@@ -119,10 +85,10 @@ test_that("Tuning using 'rf' and categorical data", {
   data$Y <- data$Y - 1
 
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
-                                 data = data,
-                                 seed = 192,
-                                 data_type = 'categorical',
-                                 method = 'rf')
+                            data = data,
+                            seed = 192,
+                            data_type = 'categorical',
+                            method = 'rf')
 
 
   expect_true(is.numeric(parameter$mtry))
@@ -194,6 +160,40 @@ test_that("Testing utils get_tuned_params ", {
   tuned_params <- get_tuned_params(tuned_model)
   expect_true(is.numeric(tuned_params$gamma))
 })
+
+
+#-------------------------------------------------------------------------------
+test_that("clean_formula outputs correct formula", {
+  clean_formula <- clean_formula(y ~ x | z + v)
+  expect_true(class(clean_formula) == "formula")
+  expect_equal(clean_formula, y ~ x | z + v)
+})
+#-------------------------------------------------------------------------------
+test_that("clean_formula outputs correct formula", {
+  clean_formula <- clean_formula(y ~ x + z + v)
+  expect_true(class(clean_formula) == "formula")
+  expect_equal(clean_formula, y ~ x | z + v)
+})
+#-------------------------------------------------------------------------------
+# Get pvalues
+test_that("get_pvalues outputs p-values", {
+  dist <- rnorm(100)
+  test_statistic <- rnorm(1)
+  p_value <- get_pvalues(dist = dist, test_statistic = test_statistic, tail = "right")
+  p_value
+  expect_lt(p_value,1)
+  expect_gt(p_value, 0)
+})
+
+#-------------------------------------------------------------------------------
+test_that("get_pvalues outputs p-values", {
+  dist <- rnorm(100)
+  test_statistic <- rnorm(1)
+  p_value <- get_pvalues(dist = dist, test_statistic = test_statistic, parametric = TRUE, tail = "right")
+  expect_lt(p_value,1)
+  expect_gt(p_value, 0)
+})
+
 
 
 

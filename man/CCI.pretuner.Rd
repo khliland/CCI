@@ -10,7 +10,7 @@ CCI.pretuner(
   data,
   method = "rf",
   folds = 5,
-  tune_length = 10,
+  tune_length = 3,
   seed = 1984,
   metric = "RMSE",
   random_grid = TRUE,
@@ -19,6 +19,7 @@ CCI.pretuner(
   verboseIter = FALSE,
   trace = FALSE,
   include_explanatory = TRUE,
+  verbose = FALSE,
   size = 1:5,
   decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
   mtry = 1:5,
@@ -47,7 +48,7 @@ CCI.pretuner(
 
 \item{seed}{Integer. The seed for random number generation. Default is 1984.}
 
-\item{metric}{Character. The performance metric to optimize during tuning. Default is 'RMSE'.}
+\item{metric}{Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.}
 
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 
