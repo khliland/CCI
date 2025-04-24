@@ -168,8 +168,11 @@ get_tuned_params <- function(tuned_model) {
 #' @param poly Logical. If TRUE, polynomial terms will be created. If FALSE, no polynomial terms will be created. Default is TRUE.
 #'
 #' @importFrom dplyr mutate across
-#' @return list
-#'
+#' @return A list with two components:
+#' \itemize{
+#'   \item \code{data}: The modified data frame with added polynomial terms.
+#'   \item \code{new_terms}: A character vector of the names of the added polynomial terms (e.g., \code{Z1_d_2}).
+#' }#'
 #' @export
 #'
 #' @examples
@@ -195,7 +198,9 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
     warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
     return(list(data = data, new_terms = character(0), poly = FALSE))
   }
-
+  if (length(Z) * degree > 10) {
+    warning("Creating ", length(Z) * degree, " polynomial terms may be computationally expensive.")
+  }
   transformations <- lapply(2:degree, function(d) {
     function(x) x^d
   })
@@ -208,7 +213,7 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
     sapply(2:degree, function(d) paste0(var, "_d_", d))
   }))
 
-  return(list(data = data, new_terms = new_terms, poly = TRUE))
+  return(list(data = data, new_terms = new_terms))
 }
 
 #' Creates interaction terms for specified variables in a data frame
@@ -217,7 +222,11 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
 #' @param data Data frame. The data frame containing the variables for which interaction terms are to be created.
 #' @param Z Character vector. The names of the variables for which interaction terms are to be created.
 #'
-#' @return list
+#' @return A list with two components:
+#' \itemize{
+#'   \item \code{data}: The modified data frame with added interaction terms.
+#'   \item \code{new_terms}: A character vector of the names of the added interaction terms (e.g., \code{Z1_int_2}).
+#' }
 #' @export
 #'
 #' @examples
