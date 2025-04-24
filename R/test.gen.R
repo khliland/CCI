@@ -63,7 +63,7 @@ test.gen <- function(formula,
                      poly = TRUE,
                      interaction = TRUE,
                      degree = 3,
-                     nrounds = 120,
+                     nrounds = 500,
                      family,
                      num_class = NULL,
                      nthread = 1,
@@ -160,6 +160,7 @@ test.gen <- function(formula,
                                          data_type,
                                          num_class,
                                          metricfunc = metricfunc,
+                                         nrounds = nrounds,
                                          ...)
     }
     else if (method %in% "rf") { # Random Forest with continuous outcome
