@@ -158,7 +158,6 @@ test.gen <- function(formula,
                                          train_indices,
                                          test_indices,
                                          data_type,
-                                         nrounds = nrounds,
                                          num_class,
                                          metricfunc = metricfunc,
                                          ...)
