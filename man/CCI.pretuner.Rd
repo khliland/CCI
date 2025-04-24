@@ -9,16 +9,21 @@ CCI.pretuner(
   formula,
   data,
   method = "rf",
+  validation_method = "cv",
   folds = 5,
+  training_share = 0.7,
   tune_length = 3,
   seed = 1984,
   metric = "RMSE",
   random_grid = TRUE,
   samples = 30,
   data_type = "continuous",
+  poly = TRUE,
+  degree = 3,
+  interaction = TRUE,
   verboseIter = FALSE,
   trace = FALSE,
-  include_explanatory = TRUE,
+  include_explanatory = FALSE,
   verbose = FALSE,
   size = 1:5,
   decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
@@ -42,7 +47,11 @@ CCI.pretuner(
 
 \item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".}
 
+\item{validation_method}{Character. Specifies the resampling method. Default is "cv".}
+
 \item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 10.}
+
+\item{training_share}{Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.}
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
 
@@ -56,11 +65,17 @@ CCI.pretuner(
 
 \item{data_type}{Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".}
 
+\item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
+
+\item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+
+\item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
+
 \item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
 
 \item{trace}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
 
-\item{include_explanatory}{Logical. If TRUE, the function will include explanatory variable in the model. Default is TRUE.}
+\item{include_explanatory}{Logical. If TRUE, given the condition Y \emph{||} X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE}
 
 \item{size}{Integer. The size of the neural network. Default is 1:5.}
 

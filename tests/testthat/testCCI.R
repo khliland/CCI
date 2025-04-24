@@ -17,7 +17,7 @@ test_that("Tuning using 'rf' (default)", {
   dat <- NormalData(1000)
   # undebug(CCI.pretuner)
   CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, ntree = 1000)
-  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, verbose = F, method = 'xgboost')
+  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost')
 
 
   # expect_true(is.numeric(parameters_rf$best_param.mtry))
@@ -30,7 +30,6 @@ test_that("Tuning using 'xgboost'", {
                                      data = dat,
                                      seed = 192,
                                      samples = 100,
-                                     include_explanatory = FALSE,
                                      method = 'xgboost')
   args <- get_tuned_params(parameters_xgboost$best_param)
 
@@ -77,7 +76,7 @@ test_that("Tuning using 'gpr'", {
                                  method = 'gpr')
 
 
-  # expect_true(is.numeric(parameters_gpr$sigma))
+  expect_true(is.numeric(parameters_gpr$sigma))
 })
 
 test_that("Tuning using 'rf' and categorical data", {
@@ -113,16 +112,14 @@ test_that("Tuning using 'xgboost' and categorical data", {
 
 test_that("Tuning using 'svm' and categorical data", {
 
-  data <- TrigData(700)
+  data <- TrigData(400)
   data$Y <- data$Y - 1
 
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                             data = data,
-                            seed = 1,
                             tune_length = 10,
                             data_type = 'categorical',
-                            method = 'svm',
-                            verboseIter = F)
+                            method = 'svm')
 
 
   expect_true(is.numeric(parameter$mtry))

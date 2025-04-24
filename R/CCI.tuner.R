@@ -20,7 +20,7 @@
 #' @param metric Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param trace Logical. If TRUE, the function will print the tuning process. Default is FALSE.
-#' @param include_explanatory Logical. If TRUE, the function will include explanatory variable in the model. Default is TRUE.
+#' @param include_explanatory Logical. If TRUE, given the condition Y _||_ X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE
 #' @param size Integer. The size of the neural network. Default is 1:5.
 #' @param decay Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).
 #' @param mtry Integer. The number of variables randomly sampled as candidates at each split for random forest. Default is 1:5.
@@ -79,7 +79,7 @@ CCI.pretuner <- function(formula,
                          interaction = TRUE,
                          verboseIter = FALSE,
                          trace = FALSE,
-                         include_explanatory = TRUE,
+                         include_explanatory = FALSE,
                          verbose = FALSE,
 
                          size = 1:5,
@@ -133,8 +133,14 @@ CCI.pretuner <- function(formula,
   if (method == "rf") {
     mtry <- seq(1, min(n_predictors, max(5, ceiling(n_predictors / 2))), by = 1)
   }
+  if (method == "nnet") {
+    trace <- trace
+  } else {
+    trace <- NULL
+  }
 
   org_formula <- formula # Store the original formula for later use
+  formula <- clean_formula(formula)
 
   Y = formula[[2]]
   X = formula[[3]][[2]]
@@ -187,8 +193,6 @@ CCI.pretuner <- function(formula,
   } else {
     Y <- data[[outcome_name]]
   }
-
-  formula <- clean_formula(formula)
 
   if (include_explanatory) {
     formula <- formula
@@ -279,18 +283,22 @@ CCI.pretuner <- function(formula,
       if (verbose) {
         cat("Training model with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
       }
+      train_args <- list(
+        x = X,
+        y = Y,
+        method = caret_method,
+        trControl = ctrl,
+        tuneGrid = row,
+        metric = metric,
+        ...
+      )
+      if (caret_method == "nnet") {
+        train_args$trace <- trace
+      }
       model <- tryCatch(
         {
           withCallingHandlers(
-            caret::train(
-              x = X,
-              y = Y,
-              method = caret_method,
-              trControl = ctrl,
-              tuneGrid = row,
-              metric = metric,
-              trace = trace
-            ),
+            do.call(caret::train, train_args),
             warning = function(w) {
               warning_log <<- c(warning_log, paste("Warning for parameters ",
                                                    paste(names(row), row, sep = "=", collapse = ", "),
@@ -321,18 +329,22 @@ CCI.pretuner <- function(formula,
       if (verbose) {
         cat("Training model with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
       }
+      train_args <- list(
+        x = X,
+        y = Y,
+        method = caret_method,
+        trControl = ctrl,
+        tuneGrid = row,
+        metric = metric,
+        ...
+      )
+      if (caret_method == "nnet") {
+        train_args$trace <- trace
+      }
       model <- tryCatch(
         {
           withCallingHandlers(
-            caret::train(
-              x = X,
-              y = Y,
-              method = caret_method,
-              trControl = ctrl,
-              tuneGrid = row,
-              metric = metric,
-              trace = trace
-            ),
+            do.call(caret::train, train_args),
             warning = function(w) {
               warning_log <<- c(warning_log, paste("Warning for parameters ",
                                                    paste(names(row), row, sep = "=", collapse = ", "),
