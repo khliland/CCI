@@ -211,7 +211,7 @@ test.gen <- function(formula,
     if (iteration %% ceiling(nperm / 10) == 0) {
       percentage <- (iteration / nperm) * 100
       cat(sprintf("%s: %d%% complete\r",
-                  if (permutation) "Creating null distribution" else "Creating test distribution",
+                  if (permutation) "Creating null distribution" else if (!permutation && nperm > 1) "Creating test distribution" else "Creating test statistic",
                   round(percentage)))
       flush.console()
     }
