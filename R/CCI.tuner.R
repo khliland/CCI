@@ -35,9 +35,14 @@
 #' @param min_child_weight Integer. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1:5.
 #' @param sigma Numeric. The standard deviation of the Gaussian kernel for Gaussian Process Regression. Default is seq(0.1, 2, by = 0.3).
 #' @param C Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).
+#' @param num_leaves Integer. The number of leaves in the tree for LightGBM. Default is c(20, 31, 40).
+#' @param learning_rate Numeric. The learning rate for LightGBM. Default is c(0.01, 0.1, 0.3).
+#' @param feature_fraction Numeric. The fraction of features to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).
+#' @param bagging_fraction Numeric. The fraction of data to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).
 #' @param ... Additional arguments to pass to the \code{CCI.tuner} function.
 #'
 #' @importFrom caret train trainControl nearZeroVar
+#' @importFrom lightgbm lgb.Dataset lgb.cv
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
 #' @importFrom stats model.matrix var
@@ -83,12 +88,11 @@ CCI.pretuner <- function(formula,
                          trace = FALSE,
                          include_explanatory = FALSE,
                          verbose = FALSE,
-                         parallel = TRUE,
-
+                         parallel = FALSE,
                          size = 1:5,
                          decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
                          mtry = 1:10,
-                         nrounds = seq(50, 200, by = 25),
+                         nrounds = seq(50, 500, by = 50),
                          eta = seq(0.01, 0.3, by = 0.05),
                          max_depth = 1:6,
                          subsample = seq(0.5, 1, by = 0.1),
@@ -97,6 +101,11 @@ CCI.pretuner <- function(formula,
                          min_child_weight = 1:5,
                          sigma = seq(0.1, 2, by = 0.3),
                          C = seq(0.1, 2, by = 0.5),
+                         num_leaves = c(20, 31, 40),
+                         learning_rate = c(0.01, 0.1, 0.3),
+                         feature_fraction =  seq(0.1, 1, by = 0.1),
+                         bagging_fraction = seq(0.1, 1, by = 0.1),
+                         min_data_in_leaf = c(5, 10, 20, 30),
                          ...) {
 
   set.seed(seed)
@@ -212,6 +221,89 @@ CCI.pretuner <- function(formula,
     stop("The formula produced an empty design matrix. Check variable types and formula specification.")
   }
 
+
+  if (method == "lightgbm") {
+    if (!requireNamespace("lightgbm", quietly = TRUE)) {
+      stop("Package 'lightgbm' is required for method 'lightgbm'")
+    }
+    tuneGrid <- expand.grid(
+      num_leaves = num_leaves,
+      learning_rate = learning_rate,
+      feature_fraction = feature_fraction,
+      bagging_fraction = bagging_fraction,,
+      min_data_in_leaf = min_data_in_leaf
+    )
+    if (random_grid) {
+      total <- nrow(tuneGrid)
+      sample_n <- min(samples, total)
+      cat("Total combinations in grid:", total, "\n")
+      cat("Randomly sampling", sample_n, "combinations...\n\n")
+      tuneGrid <- tuneGrid[sample(seq_len(total), sample_n), , drop = FALSE]
+    }
+
+    warning_log <- character()
+    results <- lapply(seq_len(nrow(tuneGrid)), function(i) {
+      row <- tuneGrid[i, , drop = FALSE]
+      if (verbose) {
+        cat("Training LightGBM with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
+      }
+      dtrain <- lightgbm::lgb.Dataset(data = X, label = as.numeric(Y))
+      cv_result <- tryCatch({
+        lightgbm::lgb.cv(
+          params = list(
+            objective = switch(data_type,
+                               continuous = "regression",
+                               binary = "binary",
+                               categorical = "multiclass"),
+            num_leaves = row$num_leaves,
+            learning_rate = row$learning_rate,
+            feature_fraction = row$feature_fraction,
+            bagging_fraction = row$bagging_fraction,
+            min_data_in_leaf = row$min_data_in_leaf,
+            num_threads = if (parallel) max(1, parallel::detectCores() - 1) else 1,
+            ...
+          ),
+          data = dtrain,
+          nfold = folds,
+          nrounds = max(nrounds),
+          early_stopping_rounds = 10,
+          verbose = if (verbose) 1 else -1
+        )
+      }, error = function(e) {
+        warning_log <<- c(warning_log, paste("Error for parameters ",
+                                             paste(names(row), row, sep = "=", collapse = ", "),
+                                             ": ", conditionMessage(e)))
+        NULL
+      })
+      if (is.null(cv_result)) return(NULL)
+      metric_value <- if (data_type == "continuous") {
+        cv_result$best_score  # RMSE
+      } else {
+        cv_result$best_score  # Accuracy for binary/categorical
+      }
+      res <- data.frame(
+        RMSE = if (data_type == "continuous") metric_value else NA,
+        Accuracy = if (data_type %in% c("binary", "categorical")) metric_value else NA,
+        nrounds = cv_result$best_iter
+      )
+      cbind(row, res)
+    })
+
+    results <- results[!sapply(results, is.null)]
+    if (length(results) == 0) {
+      stop("No LightGBM models were successfully trained. Check parameter ranges and data.")
+    }
+    results_df <- do.call(rbind, results)
+    best_idx <- if (metric == "RMSE") which.min(results_df$RMSE) else which.max(results_df$Accuracy)
+    best <- results_df[best_idx, ]
+    best$method <- method
+    if (length(warning_log) > 0) {
+      warning("Tuning completed with ", length(warning_log), " warnings. Check result$warnings for details.")
+    }
+    cat("\n Tuning complete. Best model found.\n")
+    return(list(best_param = best, tuning_result = results_df))
+  }
+
   caret_method <- switch(method,
                          rf = "rf",
                          xgboost = "xgbTree",
@@ -225,7 +317,6 @@ CCI.pretuner <- function(formula,
                               p = training_share,
                               number = folds,
                               search = search,
-                              repeats = 2,
                               verboseIter = verboseIter,
                               allowParallel = parallel,
                               summaryFunction = if (data_type == "continuous") {
@@ -384,10 +475,9 @@ CCI.pretuner <- function(formula,
   if (length(results) == 0) {
     stop("No models were successfully trained. Check parameter ranges and data.")
   }
-  # Combine results
+
   results_df <- do.call(rbind, results)
 
-  # Pick best by metric
   best_idx <- if (metric == "RMSE") which.min(results_df$RMSE) else which.max(results_df[[metric]])
   best <- results_df[best_idx, ]
   best$method <- method

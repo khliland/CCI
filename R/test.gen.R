@@ -210,14 +210,12 @@ test.gen <- function(formula,
     # Progress update (every 10%)
     if (iteration %% ceiling(nperm / 10) == 0) {
       percentage <- (iteration / nperm) * 100
-      cat(sprintf("%s: %d%% complete\r",
-                  if (permutation) "Creating null distribution" else if (!permutation && nperm > 1) "Creating test distribution" else "Creating test statistic",
-                  round(percentage)))
+      cat(sprintf("%s: %d%% complete\r", "Creating null distribution", round(percentage)))
       flush.console()
     }
   }
 
-  cat("\n")  # Newline after progress
+  cat("\n")
   null_object <- list(distribution = null)
   return(null_object)
 }
