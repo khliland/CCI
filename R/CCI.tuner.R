@@ -102,7 +102,7 @@ CCI.pretuner <- function(formula,
                          sigma = seq(0.1, 2, by = 0.3),
                          C = seq(0.1, 2, by = 0.5),
                          num_leaves = c(20, 31, 40),
-                         learning_rate = c(0.01, 0.1, 0.3),
+                         learning_rate = seq(0.1, 0.9, by = 0.1),
                          feature_fraction =  seq(0.1, 1, by = 0.1),
                          bagging_fraction = seq(0.1, 1, by = 0.1),
                          min_data_in_leaf = c(5, 10, 20, 30),
@@ -115,8 +115,8 @@ CCI.pretuner <- function(formula,
   if (!is.numeric(tune_length) || tune_length < 1) {
     stop("tune_length must be a positive integer.")
   }
-  if (!method %in% c("rf", "xgboost", "nnet", "gpr", "svm")) {
-    stop("method must be one of 'rf', 'xgboost', 'nnet', 'gpr', or 'svm'.")
+  if (!method %in% c("rf", "xgboost", "lightgbm", "nnet", "gpr", "svm")) {
+    stop("method must be one of 'rf', 'xgboost', 'lightgbm', 'nnet', 'gpr', or 'svm'.")
   }
   if (!data_type %in% c("continuous", "binary", "categorical")) {
     stop("data_type must be one of 'continuous', 'binary', or 'categorical'.")
@@ -230,7 +230,7 @@ CCI.pretuner <- function(formula,
       num_leaves = num_leaves,
       learning_rate = learning_rate,
       feature_fraction = feature_fraction,
-      bagging_fraction = bagging_fraction,,
+      bagging_fraction = bagging_fraction,
       min_data_in_leaf = min_data_in_leaf
     )
     if (random_grid) {

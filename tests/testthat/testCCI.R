@@ -15,9 +15,9 @@ library(CCI)
 
 test_that("Tuning using 'rf' (default)", {
   dat <- NormalData(200)
-  # undebug(CCI.pretuner)
-  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, ntree = 500)
+    CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf', tune = F)
   CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost')
+  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, samples = 100, method = 'lightgbm')
 
 
   # expect_true(is.numeric(parameters_rf$best_param.mtry))

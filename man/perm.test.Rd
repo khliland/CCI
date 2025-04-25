@@ -18,7 +18,6 @@ perm.test(
   poly = TRUE,
   interaction = TRUE,
   degree = 3,
-  family = gaussian(),
   tail = NA,
   metricfunc = NULL,
   mlfunc = NULL,
@@ -52,8 +51,6 @@ perm.test(
 \item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
 
 \item{degree}{The degree of polynomial terms to include if poly is TRUE. Default is 3.}
-
-\item{family}{The family object for glm, specifying the distribution and link function to use. Default is gaussian().}
 
 \item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
 

@@ -25,11 +25,11 @@ CCI.pretuner(
   trace = FALSE,
   include_explanatory = FALSE,
   verbose = FALSE,
-  parallel = TRUE,
+  parallel = FALSE,
   size = 1:5,
   decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
-  mtry = 1:5,
-  nrounds = seq(50, 200, by = 25),
+  mtry = 1:10,
+  nrounds = seq(50, 500, by = 50),
   eta = seq(0.01, 0.3, by = 0.05),
   max_depth = 1:6,
   subsample = seq(0.5, 1, by = 0.1),
@@ -38,6 +38,11 @@ CCI.pretuner(
   min_child_weight = 1:5,
   sigma = seq(0.1, 2, by = 0.3),
   C = seq(0.1, 2, by = 0.5),
+  num_leaves = c(20, 31, 40),
+  learning_rate = c(0.01, 0.1, 0.3),
+  feature_fraction = seq(0.1, 1, by = 0.1),
+  bagging_fraction = seq(0.1, 1, by = 0.1),
+  min_data_in_leaf = c(5, 10, 20, 30),
   ...
 )
 }
@@ -105,6 +110,14 @@ CCI.pretuner(
 \item{sigma}{Numeric. The standard deviation of the Gaussian kernel for Gaussian Process Regression. Default is seq(0.1, 2, by = 0.3).}
 
 \item{C}{Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).}
+
+\item{num_leaves}{Integer. The number of leaves in the tree for LightGBM. Default is c(20, 31, 40).}
+
+\item{learning_rate}{Numeric. The learning rate for LightGBM. Default is c(0.01, 0.1, 0.3).}
+
+\item{feature_fraction}{Numeric. The fraction of features to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).}
+
+\item{bagging_fraction}{Numeric. The fraction of data to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).}
 
 \item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
 }
