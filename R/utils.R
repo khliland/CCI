@@ -131,7 +131,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #'
 
 get_tuned_params <- function(tuned_model) {
-  supported_methods <- c("rf", "xgboost", "nnet", "svm", "gpr")
+  supported_methods <- c("rf", "xgboost", "nnet", "svm", "gpr", 'lightgbm')
   if (!tuned_model$method %in% supported_methods) {
     warning("Unsupported method '", tuned_model$method, "'. Returning NULL.")
     return(NULL)
