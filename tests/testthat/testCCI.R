@@ -1189,7 +1189,7 @@ test_that("CCI.test works categorical data with xgboost", {
 })
 #-------------------------------------------------------------------------------
 test_that("CCI.test works basic with lightgbm", {
-  data <- NormalData(500)
+  data <- NormalData(5000)
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
                      p = 0.7,

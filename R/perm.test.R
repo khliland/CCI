@@ -13,7 +13,6 @@
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree The degree of polynomial terms to include if poly is TRUE. Default is 3.
-#' @param family The family object for glm, specifying the distribution and link function to use. Default is gaussian().
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
@@ -51,7 +50,6 @@ perm.test <- function(formula,
                       poly = TRUE,
                       interaction = TRUE,
                       degree = 3,
-                      family = gaussian(),
                       tail = NA,
                       metricfunc = NULL,
                       mlfunc = NULL,
