@@ -154,7 +154,12 @@ get_tuned_params <- function(tuned_model) {
                 cost = tuned_model$C))
   } else if (tuned_model$method == 'gpr'){
     return(list(kpar = list(sigma = tuned_model$sigma)))
-  } else {
+  } else if (tuned_model$method == 'lightgbm') {
+    return(list(learning_rate = tuned_model$learning_rate,
+                feature_fraction = tuned_model$feature_fraction,
+                bagging_fraction = tuned_model$bagging_fraction,
+                num_leaves = tuned_model$num_leaves,
+                min_data_in_leaf = tuned_model$min_data_in_leaf))
     return(NULL)
   }
 }
