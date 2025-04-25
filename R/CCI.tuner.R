@@ -21,6 +21,8 @@
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param trace Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param include_explanatory Logical. If TRUE, given the condition Y _||_ X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE
+#' @param verbose Logical. If TRUE, the function will print the tuning process. Default is FALSE.
+#' @param parallel Logical. If TRUE, the function will use parallel processing. Default is TRUE.
 #' @param size Integer. The size of the neural network. Default is 1:5.
 #' @param decay Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).
 #' @param mtry Integer. The number of variables randomly sampled as candidates at each split for random forest. Default is 1:5.
@@ -81,6 +83,7 @@ CCI.pretuner <- function(formula,
                          trace = FALSE,
                          include_explanatory = FALSE,
                          verbose = FALSE,
+                         parallel = TRUE,
 
                          size = 1:5,
                          decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
@@ -222,7 +225,7 @@ CCI.pretuner <- function(formula,
                               search = search,
                               repeats = 2,
                               verboseIter = verboseIter,
-                              allowParallel = TRUE,
+                              allowParallel = parallel,
                               summaryFunction = if (data_type == "continuous") {
                                 function(data, lev = NULL, model = NULL) {
                                   obs <- data$obs

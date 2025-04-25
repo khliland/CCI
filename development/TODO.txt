@@ -3,7 +3,6 @@ HVa som artikkelen skal inneholde (fleksibilitet, robusthet og fart)
 Programmer
 =======
 # TO do programmering
-- Legge inn pretuner funksjon som en generell funksjon som kan brukes til å tune prediksjonsmodellen.
 - Legge inn flere tester av funksjoner, test scriptet (testCCI.R) mangler en del tester særlig med svm, nnet og gpr
 >>>>>>> 67d8055975ba1d160fb28903cd94d0d90968ca9b
 
