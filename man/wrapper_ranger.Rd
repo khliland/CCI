@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{wrapper_ranger}
 \alias{wrapper_ranger}
-\title{Wrapper function for Ranger model training and evaluation}
+\title{Random Forest wrapper for CCI}
 \usage{
 wrapper_ranger(
   formula,
@@ -36,5 +36,5 @@ wrapper_ranger(
 A numeric value representing the performance metric of the model on the test set.
 }
 \description{
-Wrapper function for Ranger model training and evaluation
+Random Forest wrapper for CCI
 }

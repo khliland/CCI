@@ -1,83 +1,98 @@
-#' Wrapper function for GLM model training and evaluation
+#' Light Gradient Boosting Machine Wrapper for CCI
 #'
-#' @param formula Model formula
-#' @param data Data frame
-#' @param train_indices Indices for training data
-#' @param test_indices Indices for testing data
-#' @param family Family for GLM
-#' @param data_type Type of data (continuous or binary)
-#' @param metricfunc A user-specified function which calculates a metric
-#' @param ... Additional arguments passed to glm
+#' Fits a LightGBM model and computes a performance metric for conditional independence testing.
 #'
-#' @importFrom stats glm predict
+#' @param formula Model formula (e.g., Y ~ X + Z1 + Z2).
+#' @param data Data frame containing the variables in the formula.
+#' @param train_indices Indices for training data.
+#' @param test_indices Indices for testing data.
+#' @param data_type Character. Type of response: "continuous", "binary", or "categorical".
+#' @param num_class Integer. Number of classes for categorical data (default is 2).
+#' @param metricfunc A user-specified function to calculate a metric (optional).
+#' @param ... Additional arguments passed to lightgbm::lgb.train.
+#'
+#' @return Numeric. Performance metric (RMSE for continuous, Kappa for binary/categorical, or custom metric).
+#' @importFrom lightgbm lgb.Dataset lgb.train
+#' @importFrom stats model.matrix predict
 #' @importFrom caret confusionMatrix
-#' @return Performance metric (defaults are RMSE for continuous, Kappa for binary)
 #' @export
-
-wrapper_glm <- function(formula,
-                        data,
-                        train_indices,
-                        test_indices,
-                        family,
-                        data_type,
-                        metricfunc = NULL,
-                        ...) {
-  model <- stats::glm(formula = formula, data = data, family = family, subset = train_indices, ...)
-
-    if (!is.null(metricfunc)) {
-    data_type <- "custom"
-    metric <- metricfunc(data, model, test_indices)
-  } else if (data_type %in% "continuous") {
-    pred <- stats::predict.glm(model, newdata = data[test_indices,])
-    actual <- data[test_indices,][[all.vars(formula)[1]]]
-    metric <- sqrt(mean((pred - actual)^2))
-  } else if (data_type %in% "binary") {
-    levels <- levels(factor(data[[all.vars(formula)[1]]]))
-    pred <- predict.glm(model, newdata = data[test_indices,], type = "response")
-    actual <- data[test_indices, ][[all.vars(formula)[1]]]
-    pred_class <- ifelse(pred > 0.5, 1, 0)
-    cm <- caret::confusionMatrix(factor(pred_class, levels = levels), factor(actual, levels = levels))
-    metric <- cm$overall["Kappa"]
-  }
-  return(metric)
-}
-
-#' Wrapper function for multinomial regression model training and evaluation
-#'
-#' @param formula Model formula
-#' @param data Data frame
-#' @param train_indices Indices for training data
-#' @param test_indices Indices for testing data
-#' @param metricfunc A user-specified metric function which has the arguments data, model, and test_indices, and returns a numeric value
-#' @param ... Additional arguments passed to \code{nnet::multinom}
-#'
-#' @importFrom nnet multinom
-#' @importFrom stats predict
-#' @importFrom caret confusionMatrix
-#' @return Performance metric (Kappa for classification tasks)
-#' @export
-wrapper_multinom <- function(formula,
+wrapper_lightgbm <- function(formula,
                              data,
                              train_indices,
                              test_indices,
+                             data_type,
+                             num_class = 2,
                              metricfunc = NULL,
                              ...) {
-  model <- nnet::multinom(formula = formula, data = data, subset = train_indices, trace = FALSE, ...)
-
-  if (!is.null(metricfunc)) {
-    data_type <- "custom"
-    metric <- metricfunc(data, model, test_indices)
-  } else {
-    pred <- predict(model, newdata = data[test_indices,])
-    actual <- data[test_indices,][[all.vars(formula)[1]]]
-    pred <- as.factor(pred)
-    cm <- caret::confusionMatrix(pred, factor(actual))
-    metric <- cm$overall["Kappa"]
+  if (!requireNamespace("lightgbm", quietly = TRUE)) {
+    stop("Package 'lightgbm' is required for method 'lightgbm'")
   }
+
+  # Extract variables from formula
+  independent <- all.vars(formula)[-1]
+  dependent <- all.vars(formula)[1]
+  training <- data[train_indices, ]
+  testing <- data[test_indices, ]
+
+  # Prepare features and labels
+  if (any(sapply(training[independent], is.factor))) {
+    train_features <- model.matrix(~ . - 1, data = training[independent])
+    test_features <- model.matrix(~ . - 1, data = testing[independent])
+  } else {
+    train_features <- as.matrix(training[independent])
+    test_features <- as.matrix(testing[independent])
+  }
+  train_label <- training[[dependent]]
+  test_label <- testing[[dependent]]
+
+  # Create LightGBM datasets
+  train_matrix <- lightgbm::lgb.Dataset(data = train_features, label = as.numeric(train_label))
+  test_matrix <- test_features  # For prediction, use matrix directly
+
+  # Set objective based on data_type
+  objective <- switch(data_type,
+                      continuous = "regression",
+                      binary = "binary",
+                      categorical = "multiclass")
+
+  # Train model
+  model <- lightgbm::lgb.train(
+    params = list(objective = objective, num_class = if (data_type == "categorical") num_class else 1, ...),
+    data = train_matrix,
+    verbose = -1
+  )
+
+  # Predict on test data
+  pred <- predict(model, test_matrix)
+
+  # Compute metric
+  if (!is.null(metricfunc)) {
+    metric <- metricfunc(data, model, test_indices)
+  } else if (data_type == "continuous") {
+    actual <- test_label
+    metric <- sqrt(mean((pred - actual)^2))  # RMSE
+  } else if (data_type %in% c("binary", "categorical")) {
+    if (data_type == "binary") {
+      pred_class <- ifelse(pred > 0.5, levels(factor(train_label))[2], levels(factor(train_label))[1])
+    } else {
+      pred <- matrix(pred, ncol = num_class, byrow = TRUE)
+      pred_class <- levels(factor(train_label))[max.col(pred)]
+    }
+    conf_matrix <- tryCatch(
+      caret::confusionMatrix(
+        factor(pred_class, levels = levels(factor(train_label))),
+        factor(test_label, levels = levels(factor(train_label)))
+      ),
+      error = function(e) NULL
+    )
+    metric <- if (!is.null(conf_matrix)) conf_matrix$overall["Kappa"] else NA
+  } else {
+    stop("Unsupported data_type: ", data_type)
+  }
+
   return(metric)
 }
-
-#' Wrapper function for XGBoost model training and evaluation
+#' Extreme Gradient Boosting wrapper for CCI
 #'
 #' @param formula Model formula
 #' @param data Data frame
@@ -157,7 +172,7 @@ wrapper_xgboost <- function(formula,
   pred <- predict(model, newdata = test_matrix)
   if (!is.null(metricfunc)) {
     data_type <- "custom"
-    metric <- metricfunc(data, model, test_indices, test_matrix)
+    metric <- metricfunc(data, model, test_indices)
   } else if (args$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     actual <- testing[[dependent]]
     metric <- sqrt(mean((pred - actual)^2))
@@ -177,7 +192,7 @@ wrapper_xgboost <- function(formula,
   return(metric)
 }
 
-#' Wrapper function for Ranger model training and evaluation
+#' Random Forest wrapper for CCI
 #'
 #' @param formula Model formula specifying the dependent and independent variables.
 #' @param data Data frame containing the dataset to be used for training and testing the model.
@@ -232,7 +247,7 @@ wrapper_ranger <- function(formula,
   return(metric)
 }
 
-#' Wrapper function for SVM model training and evaluation
+#' SVM wrapper for CCI
 #'
 #' @param formula Model formula
 #' @param data Data frame
@@ -283,7 +298,7 @@ wrapper_svm <- function(formula,
 }
 
 
-#' Gaussian Process Regression Wrapper for CCI
+#' Gaussian Process Regression wrapper for CCI
 #'
 #' Trains and evaluates a Gaussian Process Regression (GPR) model using kernlab::gausspr
 #' and returns a performance metric on the test set.

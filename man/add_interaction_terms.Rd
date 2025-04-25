@@ -13,7 +13,11 @@ add_interaction_terms(data, Z)
 \item{Z}{Character vector. The names of the variables for which interaction terms are to be created.}
 }
 \value{
-list
+A list with two components:
+\itemize{
+\item \code{data}: The modified data frame with added interaction terms.
+\item \code{new_terms}: A character vector of the names of the added interaction terms (e.g., \code{Z1_int_2}).
+}
 }
 \description{
 Creates interaction terms for specified variables in a data frame

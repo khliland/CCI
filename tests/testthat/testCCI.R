@@ -14,9 +14,9 @@ library(CCI)
 #-------------------------------------------------------------------------------
 
 test_that("Tuning using 'rf' (default)", {
-  dat <- NormalData(1000)
+  dat <- NormalData(200)
   # undebug(CCI.pretuner)
-  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, ntree = 1000)
+  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, ntree = 500)
   CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost')
 
 
@@ -200,7 +200,7 @@ test_that("get_pvalues outputs p-values", {
 # The machine learning wrapper functions takes formula, data and indices for training and test data.
 # estimates the ML model with training data, and evaluates on testing data. The different ML-wrapper takes
 # different parameters depending on the ML model used. The default ML in the test is ranger (random forest).
-test_that("wrapper_glm outputs a metric score (basic use)", {
+test_that("wrapper_lightgbm outputs a metric score (basic use)", {
   dat <- data.frame(
     x1 = rnorm(100),
     x2 = rnorm(100),
@@ -210,16 +210,16 @@ test_that("wrapper_glm outputs a metric score (basic use)", {
   )
   train_indices <- c(1:80)
   test_indices <- c(81:100)
-  metric <- wrapper_glm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous", family = gaussian(link = "identity"))
+  metric <- wrapper_lightgbm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous")
 
   expect_true(is.numeric(metric))
   expect_false(is.nan(metric))
 })
 #-------------------------------------------------------------------------------
-test_that("wrapper_glm outputs a custom metric score (advance use)", {
+test_that("wrapper_lightgbm outputs a custom metric score (advance use)", {
   rSquared <- function(data, model, test_indices) {
     actual <- data[test_indices,][['Y']]
-    pred <- predict.glm(model, newdata = data[test_indices,])
+    pred <- predict(model, newdata = data[test_indices,], type = "response")
     sst <- sum((actual - mean(actual))^2)
     ssr <- sum((actual - pred)^2)
     metric <- 1 - (ssr / sst)
@@ -230,12 +230,11 @@ test_that("wrapper_glm outputs a custom metric score (advance use)", {
   inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(dat), inTraining)
-  metric <- wrapper_glm(formula = Y ~ X + Z1 + Z2,
+  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
                         data = dat,
                         train_indices = train_indices,
                         test_indices = test_indices,
                         data_type = "continuous",
-                        family = gaussian(link = "identity"),
                         metricfunc = rSquared)
 
   expect_true(is.numeric(metric))
@@ -1185,6 +1184,18 @@ test_that("CCI.test works categorical data with xgboost", {
                      data_type = 'categorical',
                      num_class = 3,
                      parametric = F
+  )
+  expect_is(result, "CCI")
+})
+#-------------------------------------------------------------------------------
+test_that("CCI.test works basic with lightgbm", {
+  data <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+                     data = data,
+                     p = 0.7,
+                     method = "lightgbm",
+                     nperm = 100,
+                     parametric = T
   )
   expect_is(result, "CCI")
 })

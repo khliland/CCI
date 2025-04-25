@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{wrapper_gpr}
 \alias{wrapper_gpr}
-\title{Gaussian Process Regression Wrapper for CCI}
+\title{Gaussian Process Regression wrapper for CCI}
 \usage{
 wrapper_gpr(
   formula,

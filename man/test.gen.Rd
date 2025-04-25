@@ -15,8 +15,7 @@ test.gen(
   poly = TRUE,
   interaction = TRUE,
   degree = 3,
-  nrounds = 120,
-  family,
+  nrounds = 500,
   num_class = NULL,
   nthread = 1,
   permutation = FALSE,
@@ -30,13 +29,13 @@ test.gen(
 
 \item{data}{Data frame. The data containing the variables used in the analysis.}
 
-\item{data_type}{Character. The type of data of the Y parameter: can be "continuous", "binary", or "multinomial".}
+\item{data_type}{Character. The type of data of the Y parameter: can be "continuous", "binary", or "categorical".}
 
-\item{method}{Character. The modeling method to be used. Options include "lm" for linear models, "xgboost" for gradient boosting, or "rf" for random forests.}
+\item{method}{Character. The modeling method to be used. Options include "lightgbm" for LightGBM, "xgboost" for gradient boosting, or "rf" for random forests.}
 
 \item{nperm}{Integer. The number of generated samples or permutations. Default is 100.}
 
-\item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.85.}
+\item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.}
 
 \item{N}{Integer. The total number of observations in the data. Default is the number of rows in the data frame.}
 
@@ -46,11 +45,9 @@ test.gen(
 
 \item{degree}{Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.}
 
-\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost and ranger. Default is 120.}
+\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 500.}
 
-\item{family}{Family object. The family parameter for generalized linear models (e.g., \code{gaussian()} for linear regression).}
-
-\item{num_class}{Integer. The number of classes for multinomial classification (used in xgboost with \code{objective = "multi:softprob"}). Default is NULL.}
+\item{num_class}{Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
@@ -60,14 +57,14 @@ test.gen(
 
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
-\item{...}{Additional arguments to pass to the machine learning wrapper functions \code{glm_wrapper}, \code{multinom_wrapper}, \code{xgboost_wrapper}, \code{ranger_wrapper}, or to a custom-built wrapper function.}
+\item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
 }
 \value{
 A list containing the test distribution.
 }
 \description{
 This function generates the test statistic or a null distribution through permutation for conditional independence testing.
-It supports various machine learning methods, including linear models, random forests, and gradient boosting, and allows for custom metric functions and model fitting functions.
+It supports various machine learning methods, including random forests, gradient boosting, and LightGBM, and allows for custom metric functions and model fitting functions.
 }
 \examples{
 set.seed(123)
@@ -76,16 +73,14 @@ x2 = rnorm(100),
 x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
-result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, degree = 4)
+result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, method = "lightgbm", degree = 4)
 data <- BinaryData(400)
-
-test.gen(formula = Y ~ X | Z1 + Z2,
-         data = data,
-         nperm = 40,
-         method = "lm",
-         data_type = "binary",
-         family = binomial(link = "logit"),
-         permutation = FALSE,
-         poly = T,
-         degree = 4)
+result <- test.gen(formula = Y ~ X | Z1 + Z2,
+                   data = data,
+                   nperm = 40,
+                   method = "lightgbm",
+                   data_type = "binary",
+                   permutation = FALSE,
+                   poly = TRUE,
+                   degree = 4)
 }

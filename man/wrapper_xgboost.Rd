@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{wrapper_xgboost}
 \alias{wrapper_xgboost}
-\title{Wrapper function for XGBoost model training and evaluation}
+\title{Extreme Gradient Boosting wrapper for CCI}
 \usage{
 wrapper_xgboost(
   formula,
@@ -42,5 +42,5 @@ wrapper_xgboost(
 Performance metric
 }
 \description{
-Wrapper function for XGBoost model training and evaluation
+Extreme Gradient Boosting wrapper for CCI
 }

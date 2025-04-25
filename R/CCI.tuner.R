@@ -247,7 +247,6 @@ CCI.pretuner <- function(formula,
                               } else caret::defaultSummary
   )
 
-
   tuneGrid <- switch(method,
                      nnet = expand.grid(size = size, decay = decay),
                      rf   = expand.grid(mtry = mtry),
@@ -262,6 +261,11 @@ CCI.pretuner <- function(formula,
                      ),
                      gpr = expand.grid(sigma = sigma),
                      svm = expand.grid(sigma = sigma, C = C),
+                     lightgbm = expand.grid(
+                       num_leaves = c(20, 31, 40),
+                       learning_rate = c(0.01, 0.1, 0.3),
+                       feature_fraction = c(0.6, 0.8, 1.0)
+                     ),
                      stop("Unsupported method.")
   )
 

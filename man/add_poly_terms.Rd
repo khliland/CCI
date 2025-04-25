@@ -17,7 +17,11 @@ add_poly_terms(data, Z, degree = 3, poly = TRUE)
 \item{poly}{Logical. If TRUE, polynomial terms will be created. If FALSE, no polynomial terms will be created. Default is TRUE.}
 }
 \value{
-list
+A list with two components:
+\itemize{
+\item \code{data}: The modified data frame with added polynomial terms.
+\item \code{new_terms}: A character vector of the names of the added polynomial terms (e.g., \code{Z1_d_2}).
+}#'
 }
 \description{
 Creates polynomial terms for specified variables in a data frame

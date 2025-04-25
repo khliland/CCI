@@ -25,6 +25,7 @@ CCI.pretuner(
   trace = FALSE,
   include_explanatory = FALSE,
   verbose = FALSE,
+  parallel = TRUE,
   size = 1:5,
   decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
   mtry = 1:5,
@@ -76,6 +77,10 @@ CCI.pretuner(
 \item{trace}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
 
 \item{include_explanatory}{Logical. If TRUE, given the condition Y \emph{||} X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE}
+
+\item{verbose}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
+
+\item{parallel}{Logical. If TRUE, the function will use parallel processing. Default is TRUE.}
 
 \item{size}{Integer. The size of the neural network. Default is 1:5.}
 

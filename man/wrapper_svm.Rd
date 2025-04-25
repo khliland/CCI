@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{wrapper_svm}
 \alias{wrapper_svm}
-\title{Wrapper function for SVM model training and evaluation}
+\title{SVM wrapper for CCI}
 \usage{
 wrapper_svm(
   formula,
@@ -33,5 +33,5 @@ wrapper_svm(
 Performance metric (RMSE for continuous, Kappa for classification)
 }
 \description{
-Wrapper function for SVM model training and evaluation
+SVM wrapper for CCI
 }
