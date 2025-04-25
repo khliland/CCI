@@ -87,7 +87,7 @@ CCI.pretuner <- function(formula,
 
                          size = 1:5,
                          decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
-                         mtry = 1:5,
+                         mtry = 1:10,
                          nrounds = seq(50, 200, by = 25),
                          eta = seq(0.01, 0.3, by = 0.05),
                          max_depth = 1:6,
@@ -128,14 +128,7 @@ CCI.pretuner <- function(formula,
     warning("Predictors with near-zero variance detected: ",
             paste(names(data)[formula_vars[-1]][nzv$nzv], collapse = ", "))
   }
-  n_predictors <- length(all.vars(formula[[3]]))
-  if (n_predictors > 9) {
-    warning("Formula includes ", n_predictors, " predictors. Tuning may be slow. Consider reducing folds or samples.")
-  }
 
-  if (method == "rf") {
-    mtry <- seq(1, min(n_predictors, max(5, ceiling(n_predictors / 2))), by = 1)
-  }
   if (method == "nnet") {
     trace <- trace
   } else {
@@ -166,6 +159,15 @@ CCI.pretuner <- function(formula,
 
   formula <- build_formula(formula, poly_terms, interaction_terms)
 
+  n_predictors <- length(all.vars(formula[[3]]))
+
+  if (n_predictors > 100) {
+    warning("Formula includes ", n_predictors, " predictors including polynomials and interactions. Tuning may be slow. Consider reducing folds or samples.")
+  }
+
+  if (method == "rf") {
+    mtry <- seq(1, min(n_predictors, max(5, ceiling(n_predictors / 2))), by = 1)
+  }
   tuneGrid <- NULL
   dots <- list(...)
 
