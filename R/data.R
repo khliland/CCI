@@ -57,7 +57,7 @@ NonLinearCategorization <- function(N, d = 0) {
       Y[i] <- 0
     }
   }
-  return(data.frame(Z, X = X, Y = as.factor(Y)))
+  return(data.frame(Z, X = X, Y = Y))
 }
 
 BivNonLinearCategorization <- function(N) {

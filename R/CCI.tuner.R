@@ -6,7 +6,7 @@
 #' @param formula Model formula specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
-#' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".
+#' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost" and Support Vector Machine "svm".
 #' @param validation_method Character. Specifies the resampling method. Default is "cv".
 #' @param training_share Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
@@ -115,8 +115,8 @@ CCI.pretuner <- function(formula,
   if (!is.numeric(tune_length) || tune_length < 1) {
     stop("tune_length must be a positive integer.")
   }
-  if (!method %in% c("rf", "xgboost", "lightgbm", "nnet", "gpr", "svm")) {
-    stop("method must be one of 'rf', 'xgboost', 'lightgbm', 'nnet', 'gpr', or 'svm'.")
+  if (!method %in% c("rf", "xgboost", "lightgbm", "svm")) {
+    stop("method must be one of 'rf', 'xgboost', 'lightgbm' or 'svm'.")
   }
   if (!data_type %in% c("continuous", "binary", "categorical")) {
     stop("data_type must be one of 'continuous', 'binary', or 'categorical'.")
@@ -307,8 +307,6 @@ CCI.pretuner <- function(formula,
   caret_method <- switch(method,
                          rf = "rf",
                          xgboost = "xgbTree",
-                         nnet = "nnet",
-                         gpr = "gaussprRadial",
                          svm = "svmRadial",
                          stop("Unsupported method"))
 
@@ -341,7 +339,6 @@ CCI.pretuner <- function(formula,
   )
 
   tuneGrid <- switch(method,
-                     nnet = expand.grid(size = size, decay = decay),
                      rf   = expand.grid(mtry = mtry),
                      xgboost = expand.grid(
                        nrounds = nrounds,
@@ -352,7 +349,6 @@ CCI.pretuner <- function(formula,
                        colsample_bytree = colsample_bytree,
                        min_child_weight = min_child_weight
                      ),
-                     gpr = expand.grid(sigma = sigma),
                      svm = expand.grid(sigma = sigma, C = C),
                      lightgbm = expand.grid(
                        num_leaves = c(20, 31, 40),
@@ -438,9 +434,6 @@ CCI.pretuner <- function(formula,
         metric = metric,
         ...
       )
-      if (caret_method == "nnet") {
-        train_args$trace <- trace
-      }
       model <- tryCatch(
         {
           withCallingHandlers(
@@ -484,9 +477,9 @@ CCI.pretuner <- function(formula,
   formula <- org_formula # Restore the original formula
 
   if (length(warning_log) > 0) {
-    warning("Tuning completed with ", length(warning_log), " warnings. Check result$warnings for details.")
+    warning("Tuning completed with ", length(warning_log), " warnings. Check $warnings for details.")
   }
 
   cat("\n Tuning complete. Best model found.\n")
-  return(list(best_param = best, tuning_result = results_df))
+  return(list(best_param = best, tuning_result = results_df, warnings = warning_log))
 }

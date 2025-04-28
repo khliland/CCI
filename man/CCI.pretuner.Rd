@@ -51,7 +51,7 @@ CCI.pretuner(
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
-\item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", neural-net "nnet, Gaussian Process Regression "gpr" and Support Vector Machine "svm".}
+\item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost" and Support Vector Machine "svm".}
 
 \item{validation_method}{Character. Specifies the resampling method. Default is "cv".}
 

@@ -40,32 +40,24 @@
 #' @examples
 #' set.seed(123)
 #'
-#' # Example 1: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
+#' # Example: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 #' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 500)
 #'
-#' # Example 2: Using a binary outcome (y) with logistic regression (method = "lm")
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rbinom(100, 1, 0.5))
-#' result <- CCI.test(y ~ x1 | x2, data = data, method = "lm", nperm = 500,
-#'                    data_type = "binary", family = binomial(link = "logit"))
 #'
-#' # Example 3: The same test can be done by switching x1 and y,
-#' # using linear regression (method = "lm")
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rbinom(100, 1, 0.5))
-#' result <- CCI.test(x1 ~ y | x2, data = data, method = "lm", nperm = 500,  family = gaussian())
-#'
-#' # Example 4: Using xgboost when y is categorical
+#' # Example: Using xgboost when y is categorical
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
+
 #' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
 #'                    data_type = "categorical", nperm = 50, num_class = 3)
 #'
-#' # Example 5: Again we can switch y and x1 (still using xgboost)
+#' # Example: Again we can switch y and x1 (still using xgboost)
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
 #' result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 200, seed = 1)
 #'
-#' # Example 4:
+#' # Example:
 #' custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {
 #'   model <- lm(formula, data = data[train_indices, ])
 #'   predictions <- predict(model, newdata = data[test_indices, ])
@@ -77,7 +69,7 @@
 #' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000,
 #'                    mlfunc = custom_ml_func, tail = "right")
 #'
-#' # Example 5: Using a custom performance metric function
+#' # Example: Using a custom performance metric function
 #' data_generator <-  function(N){
 #' Z1 <- rnorm(N,0,1)
 #' Z2 <- rnorm(N,0,1)
@@ -105,7 +97,7 @@ CCI.test <- function(formula = NA,
                      data,
                      plot = TRUE,
                      p = 0.7,
-                     nperm = 100,
+                     nperm = 60,
                      nrounds = 120,
                      dag = NA,
                      dag_n = 1,
@@ -119,6 +111,7 @@ CCI.test <- function(formula = NA,
                      mlfunc = NULL,
                      tail = NA,
                      tune = FALSE,
+                     samples = 30,
                      folds = 5,
                      tune_length = 10,
                      seed = 1984,
@@ -158,14 +151,20 @@ CCI.test <- function(formula = NA,
                                 metric = metric,
                                 random_grid = random_grid,
                                 data_type = data_type,
+                                interaction = interaction,
+                                poly = poly,
+                                degree = degree,
+                                samples = samples,
                                 ...)
     params <- get_tuned_params(best_params$best_param)
+    tune_warning <- best_params$warnings
   } else if (tune && !is.null(mlfunc)) {
     stop("Tuning parameters is not available when using a custom ML function.")
   } else {
     params <- list()
   }
 
+  samples <- NULL
 
   method <- if (!is.null(mlfunc)) {
     deparse(substitute(mlfunc))
@@ -193,7 +192,10 @@ CCI.test <- function(formula = NA,
     params,
     ...
   )
-  result$metric <- metric
+  if (tune) {
+    result$warnings <- tune_warning
+  }
+
   print.summary.CCI(result)
 
   if (plot) {

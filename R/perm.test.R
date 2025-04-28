@@ -7,7 +7,7 @@
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG). Default is NA.
 #' @param dag_n If a DAGitty object is provided, specifies which conditional independence test to perform. Default is NA.
 #' @param data_type Type of data: "continuous", "binary", or "categorical". Default is "continuous".
-#' @param method The machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".
+#' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
 #' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param parametric Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
@@ -115,7 +115,7 @@ perm.test <- function(formula,
               if (data_type == "continuous") {
                 "RMSE"
               } else {
-                "Kappa Score"
+                "Accuracy"
               }
   }
 

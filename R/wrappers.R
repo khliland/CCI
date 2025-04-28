@@ -44,8 +44,8 @@ wrapper_lightgbm <- function(formula,
   test_label <- testing[[dependent]]
 
   # Create LightGBM datasets
-  train_matrix <- lightgbm::lgb.Dataset(data = train_features, label = as.numeric(train_label))
-  test_matrix <- test_features
+  dtrain <- lightgbm::lgb.Dataset(data = train_features, label = as.numeric(train_label))
+  dtest <- test_features
 
   # Set objective based on data_type
   objective <- switch(data_type,
@@ -53,15 +53,15 @@ wrapper_lightgbm <- function(formula,
                       binary = "binary",
                       categorical = "multiclass")
 
-  # Train model
+
   model <- lightgbm::lgb.train(
     params = list(objective = objective, num_class = if (data_type == "categorical") num_class else 1, ...),
-    data = train_matrix,
+    data = dtrain,
     verbose = -1
   )
 
-  # Predict on test data
-  pred <- predict(model, test_matrix)
+
+  pred <- predict(model, dtest)
 
   # Compute metric
   if (!is.null(metricfunc)) {
@@ -122,21 +122,28 @@ wrapper_xgboost <- function(formula,
                             nthread = 1,
                             ...) {
 
-  train_data <- data[train_indices, ]
-  test_data <- data[test_indices, ]
 
-  train_label <- train_data[[dependent]]
-  test_label <- test_data[[dependent]]
+  independent <- all.vars(formula)[-1]
+  dependent <- all.vars(formula)[1]
+  training <- data[train_indices, ]
+  testing <- data[test_indices, ]
 
-  response <- all.vars(formula)[1]
-  predictors <- all.vars(formula)[-1]
+  if (any(sapply(training[independent], is.factor))) {
+    train_features <- model.matrix(~ . - 1, data = training[independent])
+    test_features <- model.matrix(~ . - 1, data = testing[independent])
+  } else {
+    train_features <- as.matrix(training[independent])
+    test_features <- as.matrix(testing[independent])
+  }
 
-  X_train <- as.matrix(train_data[, predictors])
-  y_train <- train_data[[response]]
-  X_test <- as.matrix(test_data[, predictors])
-  y_test <- test_data[[response]]
+  train_label <- training[[dependent]]
+  test_label <- testing[[dependent]]
 
-  dtrain <- xgb.DMatrix(data = X_train, label = y_train)
+  # Create LightGBM datasets
+  dtrain <- xgboost::xgb.DMatrix(data = train_features, label = as.numeric(train_label))
+  dtest <- test_features
+
+  y_test <- as.matrix(testing[dependent])
 
   params <- list(
     objective = switch(data_type,
@@ -147,7 +154,7 @@ wrapper_xgboost <- function(formula,
                          continuous = "rmse",
                          binary = "error",
                          categorical = "merror"),
-    num_class = if (data_type == "categorical") length(unique(y_train)) else NULL
+    num_class = if (data_type == "categorical") length(unique(train_label)) else NULL
   )
 
   dots <- list(...)
@@ -162,7 +169,7 @@ wrapper_xgboost <- function(formula,
                               nrounds = nrounds,
                               verbose = 0)
 
-  pred <- predict(model, newdata = X_test)
+  pred <- predict(model, newdata = dtest)
 
   if (!is.null(metricfunc)) {
     data_type <- "custom"
@@ -291,109 +298,3 @@ wrapper_svm <- function(formula,
   return(metric)
 }
 
-
-#' Gaussian Process Regression wrapper for CCI
-#'
-#' Trains and evaluates a Gaussian Process Regression (GPR) model using kernlab::gausspr
-#' and returns a performance metric on the test set.
-#'
-#' @param formula A formula describing the model to be fitted.
-#' @param data A data frame containing the variables in the model.
-#' @param train_indices Integer vector of training set indices.
-#' @param test_indices Integer vector of test set indices.
-#' @param data_type Type of data ("continuous" only supported for GPR).
-#' @param metricfunc Optional custom metric function. Should accept (data, model, test_indices, test_matrix).
-#' @param ... Additional arguments passed to `gausspr()`.
-#'
-#' @importFrom kernlab gausspr
-#' @return A numeric value representing the test set performance (e.g. RMSE or R²).
-#' @export
-#'
-wrapper_gpr <- function(formula,
-                        data,
-                        train_indices,
-                        test_indices,
-                        data_type = "continuous",
-                        metricfunc = NULL,
-                        ...) {
-
-  y_name <- all.vars(formula)[1]
-
-  if (data_type %in% c("binary", "categorical")) {
-    data[[y_name]] <- as.factor(data[[y_name]])
-  }
-
-  model <- suppressMessages(kernlab::gausspr(formula, data = data[train_indices, ], ...))
-
-  predictions <- kernlab::predict(model, newdata = data[test_indices, ])
-  actual <- data[test_indices, all.vars(formula)[1]]
-
-
-  if (!is.null(metricfunc)) {
-    metric <- metricfunc(data = data, model = model, test_indices = test_indices)
-  } else if (data_type == "continuous") {
-    metric <- sqrt(mean((actual - predictions)^2))
-
-  } else if (data_type %in% c("binary", "categorical")) {
-    pred_class <- factor(predictions, levels = levels(factor(actual)))
-    cm <- caret::confusionMatrix(pred_class, factor(actual))
-    metric <- cm$overall["Kappa"]
-  }
-  return(metric)
-}
-
-#' Neural Network Wrapper for CCI
-#'
-#' Trains and evaluates a neural network model using `nnet::nnet` and returns a performance metric on the test set.
-#'
-#' @param formula A formula describing the model to be fitted.
-#' @param data A data frame containing the variables in the model.
-#' @param train_indices Integer vector of training set indices.
-#' @param test_indices Integer vector of test set indices.
-#' @param data_type Type of data: "continuous" or "binary".
-#' @param metricfunc Optional custom metric function. Should accept (data, model, test_indices, test_matrix).
-#' @param ... Additional arguments passed to `nnet::nnet()`, such as `size`, `decay`, `maxit`, etc.
-#'
-#'@importFrom nnet nnet
-#' @return A numeric value representing model performance (e.g. RMSE or misclassification error).
-#' @export
-
-wrapper_nnet <- function(formula,
-                         data,
-                         train_indices,
-                         test_indices,
-                         data_type = "continuous",
-                         metricfunc = NULL,
-                         ...) {
-
-  y_name <- all.vars(formula)[1]
-
-  if (data_type %in% c("categorical")) {
-    data[[y_name]] <- as.factor(data[[y_name]])
-  } else if (data_type %in% c("binary")) {
-    data[[y_name]] <- as.numeric(data[[y_name]]) - 1
-  } else if (data_type %in% c("continuous")) {
-    data[[y_name]] <- as.numeric(data[[y_name]])
-  }
-
-  model <- nnet::nnet(formula = formula, data = data[train_indices, ],trace = FALSE, ...)
-
-  predictions <- predict(model, newdata = data[test_indices, ])
-  actual <-  data[test_indices, ][[y_name]]
-
-  if (!is.null(metricfunc)) {
-    metric <- metricfunc(data = data, model = model, test_indices = test_indices)
-  } else if (data_type == "continuous") {
-    metric <- sqrt(mean((actual - predictions)^2))
-  } else if (data_type == "binary") {
-    pred_class <- ifelse(predictions > 0.5, 1, 0)
-    cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
-    metric <- cm$overall["Kappa"]
-  } else if (data_type == "categorical") {
-    pred_class <- apply(predictions, 1, which.max)
-    pred_class <- factor(pred_class, levels = levels(factor(actual)))
-    cm <- caret::confusionMatrix(pred_class, factor(actual))
-    metric <- cm$overall["Kappa"]
-  }
-  return(metric)
-}

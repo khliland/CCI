@@ -13,7 +13,7 @@ library(CCI)
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf')
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf')
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
@@ -25,6 +25,39 @@ test_that("CCI.test outputs a list", {
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
   result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'xgboost')
+  expect_true(is.list(result))
+})
+
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'svm')
+  expect_true(is.list(result))
+})
+
+
+#--------------------
+# With tuning
+#--------------------
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', tune = T, interaction = F)
+  expect_true(is.list(result))
+})
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'lightgbm', tune = T)
+  expect_true(is.list(result))
+})
+
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, samples = 5, nperm = 25, data = dat, method = 'xgboost', tune = T)
+  expect_true(is.list(result))
+})
+
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'svm', tune = T)
   expect_true(is.list(result))
 })
 
@@ -32,21 +65,43 @@ test_that("CCI.test outputs a list", {
 # Basic tests Binary outcome
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf')
+  dat <- BinaryData(500)
+  result <- CCI.test(formula = Y ~ X + Z2, data = dat, method = 'rf', nperm = 100, data_type = 'binary', interaction = F)
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'lightgbm')
+  dat <- BinaryData(500)
+  result <- CCI.test(formula = Y ~ X + Z2, data = dat, interaction = F, method = 'lightgbm', data_type = 'binary')
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'xgboost')
+  dat <- BinaryData(500)
+  result <- CCI.test(formula = Y ~ X + Z2, interaction = F, data = dat, method = 'xgboost', data_type = 'categorical', num_class = 2)
   expect_true(is.list(result))
 })
+
+
+#-------------------------------------------------------------------------------
+# Basic tests Categorical outcome
+#-------------------------------------------------------------------------------
+test_that("CCI.test outputs a list", {
+  dat <- NonLinearCategorization(800, d = 2)
+  result <- CCI.test(formula = Y ~ X + Z, data = dat, method = 'rf', data_type = 'categorical', interaction = F)
+  expect_true(is.list(result))
+})
+test_that("CCI.test outputs a list", {
+  dat <- NonLinearCategorization(800, d = 2)
+  result <- CCI.test(formula = Y ~ X + Z, data = dat, interaction = F, method = 'lightgbm', data_type = 'categorical', num_class = 5)
+  expect_true(is.list(result))
+})
+
+test_that("CCI.test outputs a list", {
+  dat <- NonLinearCategorization(800, d = 2)
+  result <- CCI.test(formula = Y ~ X + Z, interaction = F, data = dat, method = 'xgboost', data_type = 'categorical', num_class = 4)
+  expect_true(is.list(result))
+})
+
 
 #-------------------------------------------------------------------------------
 # Testing ML-wrapper functions

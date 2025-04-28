@@ -40,7 +40,7 @@ perm.test(
 
 \item{data_type}{Type of data: "continuous", "binary", or "categorical". Default is "continuous".}
 
-\item{method}{The machine learning method to use. Supported methods include "lm", "rf", "xgboost", etc. Default is "rf".}
+\item{method}{The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".}
 
 \item{nrounds}{Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
 
