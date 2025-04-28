@@ -8,6 +8,580 @@ devtools::document()
 # devtools::install()
 devtools::load_all()
 library(CCI)
+#-------------------------------------------------------------------------------
+# Basic tests
+#-------------------------------------------------------------------------------
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf')
+  expect_true(is.list(result))
+})
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'lightgbm')
+  expect_true(is.list(result))
+})
+
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'xgboost')
+  expect_true(is.list(result))
+})
+
+#-------------------------------------------------------------------------------
+# Basic tests Binary outcome
+#-------------------------------------------------------------------------------
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf')
+  expect_true(is.list(result))
+})
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'lightgbm')
+  expect_true(is.list(result))
+})
+
+test_that("CCI.test outputs a list", {
+  dat <- NormalData(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'xgboost')
+  expect_true(is.list(result))
+})
+
+#-------------------------------------------------------------------------------
+# Testing ML-wrapper functions
+# The machine learning wrapper functions takes formula, data and indices for training and test data.
+# estimates the ML model with training data, and evaluates on testing data. The different ML-wrapper takes
+# different parameters depending on the ML model used. The default ML in the test is ranger (random forest).
+test_that("wrapper_lightgbm outputs a metric score (basic use)", {
+  dat <- data.frame(
+    x1 = rnorm(100),
+    x2 = rnorm(100),
+    x3 = rnorm(100),
+    x4 = rnorm(100),
+    y = rnorm(100)
+  )
+  train_indices <- c(1:80)
+  test_indices <- c(81:100)
+  metric <- wrapper_lightgbm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous")
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+#-------------------------------------------------------------------------------
+test_that("wrapper_lightgbm outputs a custom metric score (advance use)", {
+  rSquared <- function(data, model, test_indices) {
+    actual <- data[test_indices,][['Y']]
+    independent <- c('X', 'Z1', 'Z2')
+    testing <- data[test_indices, ]
+    test_matrix <- as.matrix(testing[independent])
+    pred <- predict(model, newdata = test_matrix, type = "response")
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+  }
+
+  dat <- NormalData(200)
+  inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(dat), inTraining)
+  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
+                             data = dat,
+                             train_indices = train_indices,
+                             test_indices = test_indices,
+                             data_type = "continuous",
+                             metricfunc = rSquared)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+#-------------------------------------------------------------------------------
+test_that("wrapper_lightgbm outputs a metric score (binary var)", {
+  data <- BinaryData(400)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
+                             data = data,
+                             train_indices = train_indices,
+                             test_indices = test_indices,
+                             data_type = "binary")
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+#-------------------------------------------------------------------------------
+test_that("wrapper_lightgbm outputs a metric score (binary var)", {
+  data <- BivMultinominal(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
+                             data = data,
+                             train_indices = train_indices,
+                             test_indices = test_indices,
+                             data_type = "categorical",
+                             num_class = 4)
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+
+#-------------------------------------------------------------------------------
+# Example of a custom function for calculating log loss with categorical outcome
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_multinom outputs a custom log loss metric score", {
+  multi_class_log_loss <- function(data, model, test_indices) {
+    eps = 0.001
+    pred <- predict(model, newdata = data[test_indices,], type = "probs")
+    actual <- data[test_indices,][['Y']]
+    actual <- factor(actual, levels = levels(data$Y))
+    actual_matrix <- model.matrix(~ actual - 1)
+    predicted <- pmax(pmin(pred, 1 - eps), eps)
+    log_loss <- -sum(actual_matrix * log(predicted)) / nrow(predicted)
+    return(log_loss)
+  }
+
+  data <- Multinominal(1000)
+  data$X <- as.factor(data$X)
+  data$Y <- as.factor(data$Y)
+
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
+                             data = data,
+                             train_indices = train_indices,
+                             test_indices = test_indices,
+                             metricfunc = multi_class_log_loss)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+test_that("wrapper_xgboost rmse output", {
+
+  data <- UniformNoise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            data_type = "continuous",
+                            nrounds = 400)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+#-------------------------------------------------------------------------------
+test_that("wrapper_xgboost rmse output", {
+
+  data <- UniformNoise(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            nrounds = 500,
+                            objective = "reg:squarederror")
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+test_that("wrapper_xgboost rmse output using a different objective", {
+
+  data <- UniformNoise(1000)
+  data$Y <- abs(data$Y)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            objective = "reg:squaredlogerror",
+                            nrounds = 120)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+test_that("wrapper_xgboost rmse output with reg:pseudohubererror and various parameter settings", {
+
+  data <- UniformNoise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            objective = "reg:pseudohubererror",
+                            nrounds = 120,
+                            eta = 0.1,
+                            max_depth = 4,
+                            lambda = 0.5)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_xgboost rmse output with reg:squarederror, various parameter settings and custom performance metric (R-squared)", {
+  rSquared <- function(data, model, test_indices, test_matrix) {
+    actual <- data[test_indices,][['Y']]
+    pred <- predict(model, newdata = test_matrix)
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+  }
+
+  data <- UniformNoise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            objective = "reg:squarederror",
+                            nrounds = 90,
+                            eta = 0.1,
+                            max_depth = 4,
+                            lambda = 0.5,
+                            metricfunc = rSquared)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+test_that("wrapper_xgboost Kappa score output", {
+
+  data <- BinaryData(200)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            data_type = "binary",
+                            nrounds = 120)
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+#-------------------------------------------------------------------------------
+test_that("wrapper_xgboost Kappa score output", {
+
+  data <- BinaryData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            data_type = "binary",
+                            nrounds = 120)
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_xgboost log loss score output", {
+  multi_class_log_loss <- function(data, model, test_indices, test_matrix) {
+    eps = 0.001
+    pred <- predict(model, newdata = test_matrix)
+    actual <- data[test_indices,][['Y']] #Hard coded, must change if you have a different formula
+    actual_matrix <- model.matrix(~ factor(actual) - 1)
+    num_classes <- length(unique(actual))
+    pred_matrix <- matrix(pred, ncol = num_classes, byrow = TRUE)
+
+    pred_matrix <- pmax(pmin(pred_matrix, 1 - eps), eps)
+    log_loss <- -sum(actual_matrix * log(pred_matrix)) / nrow(pred_matrix)
+    return(log_loss)
+  }
+
+  data <- Multinominal(200)
+  data$Y <- as.numeric(as.factor(data$Y))-1
+  data$X <- as.numeric(as.factor(data$X))-1
+
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            objective = "multi:softprob",
+                            nrounds = 120,
+                            num_class = 3,
+                            eta = 0.1,
+                            lambda = 0.5,
+                            alpha = 0.5,
+                            metricfunc = multi_class_log_loss)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_xgboost Kappa score output", {
+
+  data <- ComplexCategorization(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
+                            data = data,
+                            train_indices = train_indices,
+                            test_indices = test_indices,
+                            objective = "multi:softprob",
+                            num_class = 4,
+                            nrounds = 120,
+                            eta = 0.1,
+                            lambda = 0.5,
+                            alpha = 0.5)
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_ranger basic use ", {
+
+  data <- ExponentialNoise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           train_indices = train_indices,
+                           test_indices = test_indices,
+                           data_type = "continuous")
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_ranger basic use with added parameters", {
+
+  data <- ExponentialNoise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           num.trees = 600,
+                           max.depth = 4,
+                           min.node.size = 3,
+                           data_type = "continuous",
+                           train_indices = train_indices,
+                           test_indices = test_indices)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_ranger basic use with binary Y", {
+
+  data <- BinaryData(100)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           num.trees = 600,
+                           train_indices = train_indices,
+                           test_indices = test_indices,
+                           data_type = "binary")
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_ranger basic use with categorical Y", {
+
+  data <- ComplexCategorization(100)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           num.trees = 600,
+                           max.depth = 4,
+                           min.node.size = 3,
+                           train_indices = train_indices,
+                           test_indices = test_indices,
+                           data_type = "categorical"
+  )
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_svm basic use with contionous Y", {
+
+  data <- NormalData(100)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
+                        data = data,
+                        data_type = "continuous",
+                        train_indices = train_indices,
+                        test_indices = test_indices
+  )
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_svm basic use with binary Y", {
+
+  data <- BinaryData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
+                        data = data,
+                        data_type = "binary",
+                        train_indices = train_indices,
+                        test_indices = test_indices
+  )
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_svm basic use with categorical Y", {
+
+  data <- ComplexCategorization(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
+                        data = data,
+                        data_type = "categorical",
+                        train_indices = train_indices,
+                        test_indices = test_indices
+  )
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_ranger basic use with custom metric function ", {
+  rSquared <- function(data, model, test_indices) {
+    actual <- data[test_indices,][['Y']]
+    pred <- predict(model, data = data[test_indices,])$predictions
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+  }
+  data <- ExponentialNoise(1000)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
+                           data = data,
+                           train_indices = train_indices,
+                           test_indices = test_indices,
+                           data_type = "continuous",
+                           metricfunc = rSquared)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+#-------------------------------------------------------------------------------
+
+test_that("wrapper_nnet basic use", {
+
+  data <- NormalData(500)
+  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
+                         data = data,
+                         train_indices = train_indices,
+                         test_indices = test_indices,
+                         data_type = "continuous",
+                         size = 3)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+
+test_that("wrapper_nnet categorical data", {
+
+  data <- ComplexCategorization(1000)
+  data$Y <- as.factor(data$Y)
+  inTraining <- sample(1:nrow(data), size = floor(0.7 * nrow(data)), replace = FALSE)
+  train_indices  <- inTraining
+  test_indices <- setdiff(1:nrow(data), inTraining)
+
+  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
+                         data = data,
+                         train_indices = train_indices,
+                         test_indices = test_indices,
+                         data_type = "categorical",
+                         size = 3)
+
+  expect_true(is.numeric(metric))
+  expect_false(is.nan(metric))
+})
+
+
 
 #-------------------------------------------------------------------------------
 # Testing the tuning function
@@ -193,538 +767,6 @@ test_that("get_pvalues outputs p-values", {
 })
 
 
-
-
-#-------------------------------------------------------------------------------
-# Testing ML-wrapper functions
-# The machine learning wrapper functions takes formula, data and indices for training and test data.
-# estimates the ML model with training data, and evaluates on testing data. The different ML-wrapper takes
-# different parameters depending on the ML model used. The default ML in the test is ranger (random forest).
-test_that("wrapper_lightgbm outputs a metric score (basic use)", {
-  dat <- data.frame(
-    x1 = rnorm(100),
-    x2 = rnorm(100),
-    x3 = rnorm(100),
-    x4 = rnorm(100),
-    y = rnorm(100)
-  )
-  train_indices <- c(1:80)
-  test_indices <- c(81:100)
-  metric <- wrapper_lightgbm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous")
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_lightgbm outputs a custom metric score (advance use)", {
-  rSquared <- function(data, model, test_indices) {
-    actual <- data[test_indices,][['Y']]
-    pred <- predict(model, newdata = data[test_indices,], type = "response")
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
-  }
-
-  dat <- NormalData(200)
-  inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(dat), inTraining)
-  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
-                        data = dat,
-                        train_indices = train_indices,
-                        test_indices = test_indices,
-                        data_type = "continuous",
-                        metricfunc = rSquared)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_glm outputs a metric score (binary var)", {
-  data <- BinaryData(100)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-  metric <- wrapper_glm(formula = Y ~ X + Z1 + Z2,
-                        data = data,
-                        train_indices = train_indices,
-                        test_indices = test_indices,
-                        data_type = "binary",
-                        family = binomial(link = "logit"))
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-test_that("wrapper_multinom", {
-  data <- InteractiondData(100)
-
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_multinom(formula = Y ~ X + Z1 + Z2,
-                             data = data,
-                             train_indices = train_indices,
-                             test_indices = test_indices)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-# Example of a custom function for calculating log loss with categorical outcome
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_multinom outputs a custom log loss metric score", {
-  multi_class_log_loss <- function(data, model, test_indices) {
-    eps = 0.001
-    pred <- predict(model, newdata = data[test_indices,], type = "probs")
-    actual <- data[test_indices,][['Y']]
-    actual <- factor(actual, levels = levels(data$Y))
-    actual_matrix <- model.matrix(~ actual - 1)
-    predicted <- pmax(pmin(pred, 1 - eps), eps)
-    log_loss <- -sum(actual_matrix * log(predicted)) / nrow(predicted)
-    return(log_loss)
-  }
-
-  data <- Multinominal(1000)
-  data$X <- as.factor(data$X)
-  data$Y <- as.factor(data$Y)
-
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_multinom(formula = Y ~ X + Z1 + Z2,
-                        data = data,
-                        train_indices = train_indices,
-                        test_indices = test_indices,
-                        metricfunc = multi_class_log_loss)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost rmse output", {
-
-  data <- UniformNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            data_type = "continuous",
-                            nrounds = 120)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost rmse output", {
-
-  data <- UniformNoise(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            nrounds = 100,
-                            objective = "reg:squarederror")
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost rmse output using a different objective", {
-
-  data <- UniformNoise(1000)
-  data$Y <- abs(data$Y)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "reg:squaredlogerror",
-                            nrounds = 120)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost rmse output with reg:pseudohubererror and various parameter settings", {
-
-  data <- UniformNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "reg:pseudohubererror",
-                            nrounds = 120,
-                            eta = 0.1,
-                            max_depth = 4,
-                            lambda = 0.5)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_xgboost rmse output with reg:squarederror, various parameter settings and custom performance metric (R-squared)", {
-  rSquared <- function(data, model, test_indices, test_matrix) {
-    actual <- data[test_indices,][['Y']]
-    pred <- predict(model, newdata = test_matrix)
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
-  }
-
-  data <- UniformNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "reg:squarederror",
-                            nrounds = 90,
-                            eta = 0.1,
-                            max_depth = 4,
-                            lambda = 0.5,
-                            metricfunc = rSquared)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost Kappa score output", {
-
-  data <- BinaryData(200)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "binary:logistic",
-                            nrounds = 120)
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost Kappa score output", {
-
-  data <- BinaryData(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            data_type = "binary",
-                            nrounds = 120)
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_xgboost log loss score output", {
-  multi_class_log_loss <- function(data, model, test_indices, test_matrix) {
-    eps = 0.001
-    pred <- predict(model, newdata = test_matrix)
-    actual <- data[test_indices,][['Y']] #Hard coded, must change if you have a different formula
-    actual_matrix <- model.matrix(~ factor(actual) - 1)
-    num_classes <- length(unique(actual))
-    pred_matrix <- matrix(pred, ncol = num_classes, byrow = TRUE)
-
-    pred_matrix <- pmax(pmin(pred_matrix, 1 - eps), eps)
-    log_loss <- -sum(actual_matrix * log(pred_matrix)) / nrow(pred_matrix)
-    return(log_loss)
-  }
-
-  data <- Multinominal(200)
-  data$Y <- as.numeric(as.factor(data$Y))-1
-  data$X <- as.numeric(as.factor(data$X))-1
-
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "multi:softprob",
-                            nrounds = 120,
-                            num_class = 3,
-                            eta = 0.1,
-                            lambda = 0.5,
-                            alpha = 0.5,
-                            metricfunc = multi_class_log_loss)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_xgboost Kappa score output", {
-
-  data <- ComplexCategorization(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "multi:softprob",
-                            num_class = 4,
-                            nrounds = 120,
-                            eta = 0.1,
-                            lambda = 0.5,
-                            alpha = 0.5)
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_ranger basic use ", {
-
-  data <- ExponentialNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
-                           data = data,
-                           train_indices = train_indices,
-                           test_indices = test_indices,
-                           data_type = "continuous")
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_ranger basic use with added parameters", {
-
-  data <- ExponentialNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
-                           data = data,
-                           num.trees = 600,
-                           max.depth = 4,
-                           min.node.size = 3,
-                           data_type = "continuous",
-                           train_indices = train_indices,
-                           test_indices = test_indices)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_ranger basic use with binary Y", {
-
-  data <- BinaryData(100)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
-                           data = data,
-                           num.trees = 600,
-                           train_indices = train_indices,
-                           test_indices = test_indices,
-                           data_type = "binary")
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_ranger basic use with categorical Y", {
-
-  data <- ComplexCategorization(100)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
-                           data = data,
-                           num.trees = 600,
-                           max.depth = 4,
-                           min.node.size = 3,
-                           train_indices = train_indices,
-                           test_indices = test_indices,
-                           data_type = "categorical"
-  )
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_svm basic use with contionous Y", {
-
-  data <- NormalData(100)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
-                           data = data,
-                           data_type = "continuous",
-                           train_indices = train_indices,
-                           test_indices = test_indices
-                        )
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_svm basic use with binary Y", {
-
-  data <- BinaryData(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
-                        data = data,
-                        data_type = "binary",
-                        train_indices = train_indices,
-                        test_indices = test_indices
-  )
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_svm basic use with categorical Y", {
-
-  data <- ComplexCategorization(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_svm(formula = Y ~ X + Z1 + Z2,
-                        data = data,
-                        data_type = "categorical",
-                        train_indices = train_indices,
-                        test_indices = test_indices
-  )
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_ranger basic use with custom metric function ", {
-  rSquared <- function(data, model, test_indices) {
-    actual <- data[test_indices,][['Y']]
-    pred <- predict(model, data = data[test_indices,])$predictions
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
-  }
-  data <- ExponentialNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_ranger(formula = Y ~ X + Z1 + Z2,
-                           data = data,
-                           train_indices = train_indices,
-                           test_indices = test_indices,
-                           data_type = "continuous",
-                           metricfunc = rSquared)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_nnet basic use", {
-
-  data <- NormalData(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
-                         data = data,
-                         train_indices = train_indices,
-                         test_indices = test_indices,
-                         data_type = "continuous",
-                         size = 3)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-
-test_that("wrapper_nnet categorical data", {
-
-  data <- ComplexCategorization(1000)
-  data$Y <- as.factor(data$Y)
-  inTraining <- sample(1:nrow(data), size = floor(0.7 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
-                         data = data,
-                         train_indices = train_indices,
-                         test_indices = test_indices,
-                         data_type = "categorical",
-                         size = 3)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
 
 
 

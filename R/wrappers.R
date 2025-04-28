@@ -28,13 +28,11 @@ wrapper_lightgbm <- function(formula,
     stop("Package 'lightgbm' is required for method 'lightgbm'")
   }
 
-  # Extract variables from formula
   independent <- all.vars(formula)[-1]
   dependent <- all.vars(formula)[1]
   training <- data[train_indices, ]
   testing <- data[test_indices, ]
 
-  # Prepare features and labels
   if (any(sapply(training[independent], is.factor))) {
     train_features <- model.matrix(~ . - 1, data = training[independent])
     test_features <- model.matrix(~ . - 1, data = testing[independent])
@@ -47,7 +45,7 @@ wrapper_lightgbm <- function(formula,
 
   # Create LightGBM datasets
   train_matrix <- lightgbm::lgb.Dataset(data = train_features, label = as.numeric(train_label))
-  test_matrix <- test_features  # For prediction, use matrix directly
+  test_matrix <- test_features
 
   # Set objective based on data_type
   objective <- switch(data_type,
@@ -73,15 +71,15 @@ wrapper_lightgbm <- function(formula,
     metric <- sqrt(mean((pred - actual)^2))  # RMSE
   } else if (data_type %in% c("binary", "categorical")) {
     if (data_type == "binary") {
-      pred_class <- ifelse(pred > 0.5, levels(factor(train_label))[2], levels(factor(train_label))[1])
+      pred_class <- ifelse(pred > 0.5, levels(factor(test_label))[2], levels(factor(test_label))[1])
     } else {
       pred <- matrix(pred, ncol = num_class, byrow = TRUE)
-      pred_class <- levels(factor(train_label))[max.col(pred)]
+      pred_class <- levels(factor(test_label))[max.col(pred)]
     }
     conf_matrix <- tryCatch(
       caret::confusionMatrix(
-        factor(pred_class, levels = levels(factor(train_label))),
-        factor(test_label, levels = levels(factor(train_label)))
+        factor(pred_class, levels = levels(factor(test_label))),
+        factor(test_label, levels = levels(factor(test_label)))
       ),
       error = function(e) NULL
     )
@@ -92,6 +90,7 @@ wrapper_lightgbm <- function(formula,
 
   return(metric)
 }
+
 #' Extreme Gradient Boosting wrapper for CCI
 #'
 #' @param formula Model formula
@@ -108,6 +107,7 @@ wrapper_lightgbm <- function(formula,
 #' @importFrom xgboost xgb.DMatrix xgb.train
 #' @importFrom stats model.matrix predict
 #' @importFrom caret confusionMatrix
+#' @importFrom rlang %||%
 #' @return Performance metric
 #' @export
 
@@ -116,71 +116,65 @@ wrapper_xgboost <- function(formula,
                             train_indices,
                             test_indices,
                             data_type,
-                            nrounds,
+                            nrounds = 150,
                             num_class = NULL,
                             metricfunc = NULL,
                             nthread = 1,
                             ...) {
-  args <- list(...)
-  if (!("objective" %in% names(args))) {
-    if (data_type == "continuous") {
-      args$objective <- "reg:squarederror"
-    } else if (data_type %in% "binary") {
-      args$objective <- "binary:logistic"
-    } else if (data_type %in% "categorical") {
-      args$objective <- "multi:softprob"
-    }
-  } else {
-    args$objective <- args$objective
-  }
-  independent <- all.vars(formula)[-1]
-  dependent <- update(formula, . ~ .)[[2]]
-  training <- data[train_indices,]
-  testing <- data[test_indices,]
 
-  if (any(sapply(training, is.factor))) { # Only check if training data contains factor variables, assuming that testing contains the same
-    train_features <- model.matrix(~ . - 1, data = training[independent])
-    train_label <- training[[dependent]]
+  train_data <- data[train_indices, ]
+  test_data <- data[test_indices, ]
 
-    test_features <- model.matrix(~ . - 1, data = testing[independent])
-    test_label <- testing[[dependent]]
+  train_label <- train_data[[dependent]]
+  test_label <- test_data[[dependent]]
 
-    train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-    test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-  } else {
-    train_features <- training[independent]
-    train_label <- training[[dependent]]
+  response <- all.vars(formula)[1]
+  predictors <- all.vars(formula)[-1]
 
-    test_features <- testing[independent]
-    test_label <- testing[[dependent]]
+  X_train <- as.matrix(train_data[, predictors])
+  y_train <- train_data[[response]]
+  X_test <- as.matrix(test_data[, predictors])
+  y_test <- test_data[[response]]
 
-    train_matrix <- xgboost::xgb.DMatrix(data = as.matrix(train_features), label = as.matrix(train_label))
-    test_matrix <- xgboost::xgb.DMatrix(data = as.matrix(test_features), label = as.matrix(test_label))
-  }
+  dtrain <- xgb.DMatrix(data = X_train, label = y_train)
+
+  params <- list(
+    objective = switch(data_type,
+                       continuous = "reg:squarederror",
+                       binary = "binary:logistic",
+                       categorical = "multi:softprob"),
+    eval_metric = switch(data_type,
+                         continuous = "rmse",
+                         binary = "error",
+                         categorical = "merror"),
+    num_class = if (data_type == "categorical") length(unique(y_train)) else NULL
+  )
+
+  dots <- list(...)
+  params <- modifyList(params, dots)
+
+  params <- params[!sapply(params, is.null)]
 
 
-  if (!is.null(num_class) && args$objective == "multi:softprob") {
-    args$num_class <- num_class
-  }
-
-  model <- xgboost::xgb.train(data = train_matrix,
-                              nrounds = nrounds,
-                              params = args,
+  model <- xgboost::xgb.train(data = dtrain,
+                              params = params,
                               nthread = nthread,
+                              nrounds = nrounds,
                               verbose = 0)
 
-  pred <- predict(model, newdata = test_matrix)
+  pred <- predict(model, newdata = X_test)
+
   if (!is.null(metricfunc)) {
     data_type <- "custom"
     metric <- metricfunc(data, model, test_indices)
-  } else if (args$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
-    actual <- testing[[dependent]]
+  } else if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
+    actual <- y_test
     metric <- sqrt(mean((pred - actual)^2))
-  } else if (args$objective %in% "binary:logistic") {
+  } else if (params$objective %in% "binary:logistic") {
     pred_class <- ifelse(pred > 0.5, 1, 0)
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
     metric <- conf_matrix$overall[2]
-  } else if (args$objective %in% "multi:softprob") {
+  } else if (params$objective %in% "multi:softprob") {
     levels <- levels(factor(train_label))
     pred <- matrix(pred, ncol=num_class, byrow=TRUE)
     pred_class <- max.col(pred) - 1

@@ -1,4 +1,130 @@
 
+########## Continuous Multivariate Functions ###########
+
+NormalData <- function(N, d = 0){
+  Z1 <- rnorm(N,0,1)
+  Z2 <- rnorm(N,0,1)
+  X <- rnorm(N, Z1 + Z2, 1)
+  Y <- rnorm(N, Z1 + Z2 + d*X, 1)
+  df <- data.frame(Z1, Z2, X, Y)
+  return(df)
+}
+
+sineGaussian <- function(N, a = 1, d = 0){
+  Z = rnorm(N,0,1)
+  X = exp(-(Z)^2 / 2) * sin(a * (Z)) + 0.3*rnorm(N,0,0.1)
+  Y = exp(-(Z)^2 / 2) * sin(a * (Z)) +  d*X + 0.3*rnorm(N,0,0.1)
+  df <- data.frame(Z,X,Y)
+  return(df)
+}
+
+sineGaussian_biv <- function(N, a = 1, d = 0){
+  Z1 = rnorm(N,0,1)
+  Z2 = rnorm(N,0,1)
+  X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
+  Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + d*X + 0.3*rnorm(N,0,0.1)
+  df <- data.frame(Z1,Z2,X,Y)
+  return(df)
+}
+
+sineGaussian_noise <- function(N, a = 1, d = 0){
+  Z = rnorm(N,0,1)
+  X = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1)
+  Y = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1) + d*X
+
+  df <- data.frame(Z,X,Y)
+  return(df)
+}
+
+########## Categorical Multivariate Functions ###########
+
+NonLinearCategorization <- function(N, d = 0) {
+  Z <- runif(N, -1, 1)
+  X <- rnorm(Z,0,1)
+  Y <- numeric(N)
+
+
+  for (i in 1:N) {
+    score_y <- cos(Z[i] * pi) + Z[i] + d * X[i] #Breaking independence by setting d not equal 0
+
+    if (score_y > 1) {
+      Y[i] <- 3
+    } else if (score_y > 0.5) {
+      Y[i] <- 2
+    } else if (score_y > 0) {
+      Y[i] <- 1
+    } else {
+      Y[i] <- 0
+    }
+  }
+  return(data.frame(Z, X = X, Y = as.factor(Y)))
+}
+
+BivNonLinearCategorization <- function(N) {
+  Z1 <- runif(N, -2, 2)
+  Z2 <- runif(N, -2,2)
+  X <- character(N)
+  Y <- character(N)
+
+  for (i in 1:N) {
+    score_x <- sin(Z2[i] * pi) + Z1[i]
+    if (score_x > 1) {
+      X[i] <- "Category 1"
+    } else if (score_x > 0.5) {
+      X[i] <- "Category 2"
+    } else if (score_x > 0) {
+      X[i] <- "Category 4"
+    } else {
+      X[i] <- "Category 3"
+    }
+  }
+
+  for (i in 1:N) {
+    score_y <- cos(Z1[i] * pi) + Z2[i]
+
+    if (score_y > 1) {
+      Y[i] <- "Category 3"
+    } else if (score_y > 0.5) {
+      Y[i] <- "Category 1"
+    } else if (score_y > 0) {
+      Y[i] <- "Category 2"
+    } else {
+      Y[i] <- "Category 4"
+    }
+  }
+  return(data.frame(Z1 = Z1, Z2 = Z2, X = as.factor(X), Y = as.factor(Y)))
+}
+
+
+BivMultinominal <- function(N, zeta = 1.5, d = 0) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+
+  xb1 <- Z2 + zeta*Z1*Z2 + zeta*Z1
+  xb2 <- Z2 - zeta*Z1
+
+  xp1 <- 1/(1+exp(xb1) + exp(xb2))
+  xp2 <- exp(xb1) /(1+exp(xb1) + exp(xb2))
+
+  random <- runif(N,0, 1)
+
+  X <- ifelse(random < xp1, 0, ifelse(random < xp1 + xp2,1,2))
+
+  yb1 = zeta*Z1*Z2
+  yb2 <- exp(Z2) +  zeta*Z1
+
+  yp1 <- 1/(1+exp(yb1) + exp(yb2))
+  yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
+
+  random <- runif(N,0, 1)
+
+  Y <- ifelse(random < yp1, 0, ifelse(random < yp1 + yp2,1,2))
+
+  df <- data.frame(Z1 = Z1,Z2 = Z2, X = as.factor(X),Y = as.factor(Y))
+
+  return(df)
+}
+
 InteractiondData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)

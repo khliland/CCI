@@ -215,7 +215,7 @@ test.gen <- function(formula,
     }
   }
 
-  cat("\n")
+
   null_object <- list(distribution = null)
   return(null_object)
 }

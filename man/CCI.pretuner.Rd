@@ -39,7 +39,7 @@ CCI.pretuner(
   sigma = seq(0.1, 2, by = 0.3),
   C = seq(0.1, 2, by = 0.5),
   num_leaves = c(20, 31, 40),
-  learning_rate = c(0.01, 0.1, 0.3),
+  learning_rate = seq(0.1, 0.9, by = 0.1),
   feature_fraction = seq(0.1, 1, by = 0.1),
   bagging_fraction = seq(0.1, 1, by = 0.1),
   min_data_in_leaf = c(5, 10, 20, 30),

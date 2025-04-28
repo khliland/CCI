@@ -99,9 +99,9 @@ perm.test <- function(formula,
   check_formula(formula, data)
 
   # Creating the null distribution
-  dist <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  dist <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, family = family, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  test_statistic <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 

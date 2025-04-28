@@ -10,7 +10,7 @@ wrapper_xgboost(
   train_indices,
   test_indices,
   data_type,
-  nrounds,
+  nrounds = 150,
   num_class = NULL,
   metricfunc = NULL,
   nthread = 1,
