@@ -12,7 +12,7 @@
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
 #' @param data_type Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".
-#' @param result_print Logical. If TRUE, the function will print the result of the test. Default is TRUE.
+#' @param print_result Logical. If TRUE, the function will print the result of the test. Default is TRUE.
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
@@ -103,7 +103,7 @@ CCI.test <- function(formula = NA,
                      dag = NA,
                      dag_n = 1,
                      data_type = "continuous",
-                     result_print = TRUE,
+                     print_result = TRUE,
                      method = 'rf',
                      parametric = FALSE,
                      poly = TRUE,
