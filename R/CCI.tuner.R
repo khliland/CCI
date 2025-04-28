@@ -21,7 +21,7 @@
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param trace Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param include_explanatory Logical. If TRUE, given the condition Y _||_ X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE
-#' @param verbose Logical. If TRUE, the function will print the tuning process. Default is FALSE.
+#' @param verbose Logical. If TRUE, the function will print the tuning process. Default is FALSE..
 #' @param parallel Logical. If TRUE, the function will use parallel processing. Default is TRUE.
 #' @param size Integer. The size of the neural network. Default is 1:5.
 #' @param decay Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).
