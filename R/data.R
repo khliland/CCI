@@ -1,6 +1,12 @@
-
-########## Continuous Multivariate Functions ###########
-
+#' Generate Normal Data for Conditional Independence Testing
+#'
+#' This function generates continuous data where X and Y are both functions of Z1 and Z2 with added normal noise.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
 NormalData <- function(N, d = 0){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
@@ -9,7 +15,16 @@ NormalData <- function(N, d = 0){
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
-
+#' Generate Sine-Gaussian Data (Univariate)
+#'
+#' This function generates data with a nonlinear sinusoidal dependency based on a Gaussian density envelope.
+#'
+#' @param N Integer. Sample size.
+#' @param a Numeric. Frequency parameter of the sine function. Default is 1.
+#' @param d Numeric. Strength of dependency between X and Y. Default is 0.
+#'
+#' @return A data frame with columns Z, X, and Y.
+#' @export
 sineGaussian <- function(N, a = 1, d = 0){
   Z = rnorm(N,0,1)
   X = exp(-(Z)^2 / 2) * sin(a * (Z)) + 0.3*rnorm(N,0,0.1)
@@ -17,7 +32,16 @@ sineGaussian <- function(N, a = 1, d = 0){
   df <- data.frame(Z,X,Y)
   return(df)
 }
-
+#' Generate Sine-Gaussian Data (Bivariate)
+#'
+#' This function generates bivariate data with nonlinear dependencies based on a Gaussian density envelope and sinusoidal functions.
+#'
+#' @param N Integer. Sample size.
+#' @param a Numeric. Frequency parameter for the sine function. Default is 1.
+#' @param d Numeric. Strength of dependency between X and Y. Default is 0.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 sineGaussian_biv <- function(N, a = 1, d = 0){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
@@ -27,6 +51,16 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
   return(df)
 }
 
+#' Generate Sine-Gaussian Data (Bivariate)
+#'
+#' This function generates bivariate data with nonlinear dependencies based on a Gaussian density envelope and sinusoidal functions.
+#'
+#' @param N Integer. Sample size.
+#' @param a Numeric. Frequency parameter for the sine function. Default is 1.
+#' @param d Numeric. Strength of dependency between X and Y. Default is 0.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 sineGaussian_noise <- function(N, a = 1, d = 0){
   Z = rnorm(N,0,1)
   X = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1)
@@ -36,8 +70,15 @@ sineGaussian_noise <- function(N, a = 1, d = 0){
   return(df)
 }
 
-########## Categorical Multivariate Functions ###########
-
+#' Generate Nonlinear Categorical Data (Univariate)
+#'
+#' Generates a dataset with a single Z influencing categorical X and Y.
+#'
+#' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
+#'
+#' @return A data frame with columns Z, X, and Y.
+#' @export
 NonLinearCategorization <- function(N, d = 0) {
   Z <- runif(N, -1, 1)
   X <- rnorm(Z,0,1)
@@ -59,7 +100,15 @@ NonLinearCategorization <- function(N, d = 0) {
   }
   return(data.frame(Z, X = X, Y = Y))
 }
-
+#' Generate Bivariate Nonlinear Categorical Data
+#'
+#' Generates categorical variables X and Y based on nonlinear combinations of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
 BivNonLinearCategorization <- function(N) {
   Z1 <- runif(N, -2, 2)
   Z2 <- runif(N, -2,2)
@@ -95,7 +144,16 @@ BivNonLinearCategorization <- function(N) {
   return(data.frame(Z1 = Z1, Z2 = Z2, X = as.factor(X), Y = as.factor(Y)))
 }
 
-
+#' Generate Bivariate Multinomial Categorical Data
+#'
+#' Creates a multinomial dataset where the probabilities are nonlinear functions of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#' @param zeta Numeric. Strength of interaction. Default is 1.5.
+#' @param d Numeric. Dependency strength between X and Y. Default is 0.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y (both factors).
+#' @export
 BivMultinominal <- function(N, zeta = 1.5, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -124,7 +182,14 @@ BivMultinominal <- function(N, zeta = 1.5, d = 0) {
 
   return(df)
 }
-
+#' Generate Categorical Data Based on Interactions
+#'
+#' Creates categorical X and Y variables based on the interaction of signs and sums of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 InteractiondData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -157,7 +222,14 @@ InteractiondData <- function(N) {
 
   return(data_frame)
 }
-
+#' Generate Categorical Data Based on Exponential and Logarithmic Functions
+#'
+#' Categorizes based on thresholds of exponential and logarithmic transformations of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 ExpLogData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -175,7 +247,14 @@ ExpLogData <- function(N) {
 
   return(data.frame(Z1, Z2, X, Y))
 }
-
+#' Generate Categorical Trigonometric Data
+#'
+#' Uses sine and cosine functions of Z1 and Z2 to generate categorical outcomes.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 TrigData <- function(N) {
   Z1 <- runif(N, -pi, pi)
   Z2 <- rnorm(N)
@@ -194,7 +273,14 @@ TrigData <- function(N) {
 
   return(data.frame(Z1, Z2, X, Y))
 }
-
+#' Generate Categorical Polynomial Data
+#'
+#' Generates X and Y categories based on polynomial combinations of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 PolyData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -214,6 +300,14 @@ PolyData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
+#' Generate Nonlinear Categorical Data (Bivariate)
+#'
+#' Creates categorical X and Y variables based on sinusoidal and cosine functions of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 NonLinearData <- function(N) {
   Z1 <- runif(N, -1, 1)
   Z2 <- runif(N, -1, 1)
@@ -248,6 +342,14 @@ NonLinearData <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
+#' Generate Complex Categorical Data
+#'
+#' A more intricate categorization based on combinations of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 ComplexCategorization <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -265,6 +367,16 @@ ComplexCategorization <- function(N) {
 
   return(data.frame(Z1, Z2, X, Y))
 }
+
+#' Generate Multinomial Categorical Data
+#'
+#' Multinomial categorical variables X and Y generated via nonlinear logits of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#' @param zeta Numeric. Strength of interaction. Default is 1.5.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 
 Multinominal <- function(N, zeta = 1.5) {
   Z1 <- rnorm(N)
@@ -308,17 +420,15 @@ BinaryData <- function(N, threshold = 0) {
   return(df)
 }
 
-########## Continuous Multivariate Functions ###########
 
-NormalData <- function(N){
-  Z1 <- rnorm(N,0,1)
-  Z2 <- rnorm(N,0,1)
-  X <- rnorm(N, Z1 + Z2, 1)
-  Y <- rnorm(N, Z1 + Z2, 1)
-  df <- data.frame(Z1, Z2, X, Y)
-  return(df)
-}
-
+#' Generate Nonlinear Normal Data
+#'
+#' Creates nonlinear continuous data based on an exponential interaction of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 NonLinNormal <- function(N){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
@@ -328,6 +438,14 @@ NonLinNormal <- function(N){
   return(df)
 }
 
+#' Generate Data with Uniform Noise
+#'
+#' Adds uniform noise to a nonlinear combination of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 UniformNoise <- function(N) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
@@ -337,6 +455,15 @@ UniformNoise <- function(N) {
   return(df)
 }
 
+#' Generate Data with Exponential Noise
+#'
+#' Adds exponential noise to a nonlinear combination of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#' @param rate_param Numeric. Rate parameter for the exponential distribution. Default is 1.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 ExponentialNoise <- function(N, rate_param = 1) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
@@ -346,7 +473,14 @@ ExponentialNoise <- function(N, rate_param = 1) {
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
-
+#' Generate Data with Poisson Noise
+#'
+#' Adds Poisson noise to a nonlinear combination of Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
 PoissonNoise <- function(N){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
@@ -356,16 +490,14 @@ PoissonNoise <- function(N){
   return(df)
 }
 
-SinusoidalData <- function(N, a = 1){
-  Z1 = rnorm(N,0,1)
-  Z2 = rnorm(N,0,1)
-  Z <- Z1 + Z2
-  X = exp(-(Z)^2 / 2) * sin(a * (2*Z1 + 0.1*Z2)) + rnorm(N,0,0.1)
-  Y = exp(-(Z)^2 / 2) * sin(a * (2*Z2 + 0.1*Z1)) + rnorm(N,0,0.1)
-  df <- data.frame(Z1,Z2,X,Y)
-  return(df)
-}
-
+#' Generate High-dimensional Nonlinear Normal Data
+#'
+#' Creates a 10-dimensional nonlinear dataset with complex dependencies between features and targets.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1-Z10, X, and Y.
+#' @export
 NonLinNormal10 <- function(N) {
   Z <- replicate(10, rnorm(N, 0, 1))
   colnames(Z) <- paste0("Z", 1:10)

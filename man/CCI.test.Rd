@@ -10,11 +10,12 @@ CCI.test(
   data,
   plot = TRUE,
   p = 0.7,
-  nperm = 100,
+  nperm = 60,
   nrounds = 120,
   dag = NA,
   dag_n = 1,
   data_type = "continuous",
+  print_result = TRUE,
   method = "rf",
   parametric = FALSE,
   poly = TRUE,
@@ -24,6 +25,7 @@ CCI.test(
   mlfunc = NULL,
   tail = NA,
   tune = FALSE,
+  samples = 30,
   folds = 5,
   tune_length = 10,
   seed = 1984,
@@ -50,6 +52,8 @@ CCI.test(
 \item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
 \item{data_type}{Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".}
+
+\item{print_result}{Logical. If TRUE, the function will print the result of the test. Default is TRUE.}
 
 \item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
 

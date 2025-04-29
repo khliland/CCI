@@ -83,7 +83,7 @@ CCI.pretuner(
 
 \item{include_explanatory}{Logical. If TRUE, given the condition Y \emph{||} X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE}
 
-\item{verbose}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
+\item{verbose}{Logical. If TRUE, the function will print the tuning process. Default is FALSE..}
 
 \item{parallel}{Logical. If TRUE, the function will use parallel processing. Default is TRUE.}
 
