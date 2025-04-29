@@ -17,3 +17,7 @@ A data frame with columns Z1, Z2, X, and Y.
 \description{
 Adds uniform noise to a nonlinear combination of Z1 and Z2.
 }
+\examples{
+head(UniformNoise(100))
+
+}

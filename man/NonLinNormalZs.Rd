@@ -19,3 +19,7 @@ A data frame with columns Z1-Z10, X, and Y.
 \description{
 Creates a Z-dimensional nonlinear dataset with complex dependencies between features and targets.
 }
+\examples{
+head(NonLinNormalZs(N = 100, Zs  = 20))
+
+}
