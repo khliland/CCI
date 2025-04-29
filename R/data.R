@@ -432,10 +432,10 @@ BinaryData <- function(N, threshold = 0, d = 0) {
 #' head(NonLinNormal(N = 100, d = 1))
 #'
 NonLinNormal <- function(N, d = 0){
-  Z1 = rnorm(N,0,1)
-  Z2 = rnorm(N,0,1)
-  X = exp(Z1*Z2) + rnorm(N,0,0.3)
-  Y <- Z1 + Z2 + rnorm(N,0,0.3) + d*X
+  Z1 <- rnorm(N,0,1)
+  Z2 <- rnorm(N,0,1)
+  X <- Z1*Z2 + rnorm(N,0,1)
+  Y <- exp(Z1*Z2) + rnorm(N,0,1) + d*X
 
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
