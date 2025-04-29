@@ -4,7 +4,7 @@
 \alias{ExpLogData}
 \title{Generate Categorical Data Based on Exponential and Logarithmic Functions}
 \usage{
-ExpLogData(N)
+ExpLogData(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

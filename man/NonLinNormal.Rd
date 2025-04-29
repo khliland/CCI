@@ -4,10 +4,12 @@
 \alias{NonLinNormal}
 \title{Generate Nonlinear Normal Data}
 \usage{
-NonLinNormal(N)
+NonLinNormal(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
+
+\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.

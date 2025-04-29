@@ -4,10 +4,14 @@
 \alias{PoissonNoise}
 \title{Generate Data with Poisson Noise}
 \usage{
-PoissonNoise(N)
+PoissonNoise(N, lambda = 1, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
+
+\item{lambda}{Numeric. Rate parameter for the Poisson distribution. Default is 1.}
+
+\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.

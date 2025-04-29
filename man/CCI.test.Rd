@@ -9,7 +9,7 @@ CCI.test(
   formula = NA,
   data,
   plot = TRUE,
-  p = 0.7,
+  p = 0.5,
   nperm = 60,
   nrounds = 120,
   dag = NA,
@@ -42,7 +42,7 @@ CCI.test(
 
 \item{plot}{Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.}
 
-\item{p}{Numeric. Proportion of data used for training the model. Default is 0.8.}
+\item{p}{Numeric. Proportion of data used for training the model. Default is 0.5.}
 
 \item{nperm}{Integer. The number of permutations to perform. Default is 500.}
 

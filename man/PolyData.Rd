@@ -4,7 +4,7 @@
 \alias{PolyData}
 \title{Generate Categorical Polynomial Data}
 \usage{
-PolyData(N)
+PolyData(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

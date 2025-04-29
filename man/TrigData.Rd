@@ -4,7 +4,7 @@
 \alias{TrigData}
 \title{Generate Categorical Trigonometric Data}
 \usage{
-TrigData(N)
+TrigData(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

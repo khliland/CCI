@@ -4,7 +4,7 @@
 \alias{ComplexCategorization}
 \title{Generate Complex Categorical Data}
 \usage{
-ComplexCategorization(N)
+ComplexCategorization(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

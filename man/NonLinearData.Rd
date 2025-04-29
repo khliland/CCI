@@ -4,7 +4,7 @@
 \alias{NonLinearData}
 \title{Generate Nonlinear Categorical Data (Bivariate)}
 \usage{
-NonLinearData(N)
+NonLinearData(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

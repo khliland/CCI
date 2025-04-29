@@ -4,12 +4,14 @@
 \alias{ExponentialNoise}
 \title{Generate Data with Exponential Noise}
 \usage{
-ExponentialNoise(N, rate_param = 1)
+ExponentialNoise(N, rate_param = 1, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
 
 \item{rate_param}{Numeric. Rate parameter for the exponential distribution. Default is 1.}
+
+\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.

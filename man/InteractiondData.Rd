@@ -4,7 +4,7 @@
 \alias{InteractiondData}
 \title{Generate Categorical Data Based on Interactions}
 \usage{
-InteractiondData(N)
+InteractiondData(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
