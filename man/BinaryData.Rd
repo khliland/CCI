@@ -13,6 +13,9 @@ BinaryData(N, threshold = 0, d = 0)
 
 \item{d}{Numeric. Dependency strength. Default is 0.}
 }
+\value{
+A data frame with columns Z1, Z2, X, and Y.
+}
 \description{
 Creates binary data based on a nonlinear interaction of Z1 and Z2.
 }

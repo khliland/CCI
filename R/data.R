@@ -400,7 +400,7 @@ ComplexCategorization <- function(N, d = 0) {
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-#' examples
+#' @examples
 #' head(BinaryData(100))
 #'
 BinaryData <- function(N, threshold = 0, d = 0) {
@@ -428,7 +428,7 @@ BinaryData <- function(N, threshold = 0, d = 0) {
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-#' examples
+#' @examples
 #' head(NonLinNormal(N = 100, d = 1))
 #'
 NonLinNormal <- function(N, d = 0){
@@ -450,7 +450,7 @@ NonLinNormal <- function(N, d = 0){
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-#' examples
+#' @examples
 #' head(UniformNoise(100))
 #'
 UniformNoise <- function(N, d = 0) {
@@ -473,7 +473,7 @@ UniformNoise <- function(N, d = 0) {
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-#' examples
+#' @examples
 #' head(ExponentialNoise(100))
 ExponentialNoise <- function(N, rate_param = 1, d = 0) {
   Z1 = rnorm(N, 0, 1)
@@ -497,7 +497,7 @@ ExponentialNoise <- function(N, rate_param = 1, d = 0) {
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-#' examples
+#' @examples
 #' head(PoissonNoise(100))
 #'
 PoissonNoise <- function(N, lambda = 1, d = 0){
@@ -521,7 +521,7 @@ PoissonNoise <- function(N, lambda = 1, d = 0){
 #' @return A data frame with columns Z1-Z10, X, and Y.
 #' @export
 #'
-#' examples
+#' @examples
 #' head(NonLinNormalZs(N = 100, Zs  = 20))
 #'
 NonLinNormalZs <- function(N, d = 0, Zs = 20) {

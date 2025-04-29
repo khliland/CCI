@@ -8,10 +8,16 @@ ComplexCategorization(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
+
+\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.
 }
 \description{
 A more intricate categorization based on combinations of Z1 and Z2.
+}
+\examples{
+head(ComplexCategorization(100))
+
 }
