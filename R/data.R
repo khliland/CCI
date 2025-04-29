@@ -11,9 +11,8 @@ NormalData <- function(N, d = 0){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
   X <- rnorm(N, Z1 + Z2, 1)
-  Y <- rnorm(N, Z1 + Z2, 1)
-  X = X + d*Y
-  Y = Y + d*X
+  Y <- rnorm(N, Z1 + Z2 + d*X, 1)
+
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -50,7 +49,6 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
   X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
   Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
   Y = Y + d*X
-  X = X + d*Y
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
 }
@@ -90,7 +88,7 @@ NonLinearCategorization <- function(N, d = 0) {
 
 
   for (i in 1:N) {
-    score_y <- cos(Z[i] * pi) + Z[i] + d * X[i] #Breaking independence by setting d not equal 0
+    score_y <- cos(Z[i] * pi) + Z[i] + d * X[i]
 
     if (score_y > 1) {
       Y[i] <- 3
@@ -146,7 +144,7 @@ BivNonLinearCategorization <- function(N, d = 0) {
     }
   }
   Y = as.integer(Y + d*X)
-  X = as.integer(X + d*Y)
+
   return(data.frame(Z1 = Z1, Z2 = Z2, X = as.factor(X), Y = as.factor(Y)))
 }
 
@@ -193,6 +191,7 @@ BivMultinominal <- function(N, zeta = 1.5, d = 0) {
 #' Creates categorical X and Y variables based on the interaction of signs and sums of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -224,7 +223,7 @@ InteractiondData <- function(N, d = 0) {
     }
   }
   Y <- as.integer(Y + d*X)
-  X <- as.integer(X + d*Y)
+
 
   data_frame <- data.frame(Z1, Z2, X, Y)
 
@@ -235,6 +234,7 @@ InteractiondData <- function(N, d = 0) {
 #' Categorizes based on thresholds of exponential and logarithmic transformations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -253,7 +253,7 @@ ExpLogData <- function(N, d = 0) {
                           ifelse(log(abs(Z1[i]) + 1) > -0.5, 1, 0)))
   }
   Y <- as.integer(Y + d*X)
-  X <- as.integer(X + d*Y)
+
   return(data.frame(Z1, Z2, X, Y))
 }
 #' Generate Categorical Trigonometric Data
@@ -261,6 +261,7 @@ ExpLogData <- function(N, d = 0) {
 #' Uses sine and cosine functions of Z1 and Z2 to generate categorical outcomes.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -280,7 +281,7 @@ TrigData <- function(N, d = 0) {
                           ifelse(cos(Z1[i]) > -1, 1, 0)))
   }
   Y <- as.integer(Y + d*X)
-  X <- as.integer(X - d*Y)
+
   return(data.frame(Z1, Z2, X, Y))
 }
 #' Generate Categorical Polynomial Data
@@ -288,6 +289,7 @@ TrigData <- function(N, d = 0) {
 #' Generates X and Y categories based on polynomial combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -307,7 +309,6 @@ PolyData <- function(N, d = 0) {
                           ifelse(Z1[i] - Z2[i]^3 > -1, 1, 0)))
   }
   Y <- as.integer(Y + d*X)
-  X <- as.integer(X - d*Y)
   return(data.frame(Z1, Z2, X, Y))
 }
 
@@ -316,9 +317,11 @@ PolyData <- function(N, d = 0) {
 #' Creates categorical X and Y variables based on sinusoidal and cosine functions of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
+#'
 NonLinearData <- function(N, d = 0) {
   Z1 <- runif(N, -1, 1)
   Z2 <- runif(N, -1, 1)
@@ -350,8 +353,6 @@ NonLinearData <- function(N, d = 0) {
     }
   }
   Y <- as.integer(Y + d*X)
-  X <- as.integer(X - d*Y)
-
   return(data.frame(Z1, Z2, X, Y))
 }
 
@@ -360,9 +361,14 @@ NonLinearData <- function(N, d = 0) {
 #' A more intricate categorization based on combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
+#'
+#' @examples
+#' head(ComplexCategorization(100))
+#'
 ComplexCategorization <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -378,7 +384,7 @@ ComplexCategorization <- function(N, d = 0) {
                           ifelse(Z1[i] + Z2[i] > -1, 1, 0)))
   }
   Y <- as.integer(Y + d*X)
-  X <- as.integer(X - d*Y)
+
 
   return(data.frame(Z1, Z2, X, Y))
 }
@@ -390,6 +396,13 @@ ComplexCategorization <- function(N, d = 0) {
 #' @param N Integer. Sample size.
 #' @param threshold Numeric. Threshold for binary classification. Default is 0.
 #' @param d Numeric. Dependency strength. Default is 0.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
+#' examples
+#' head(BinaryData(100))
+#'
 BinaryData <- function(N, threshold = 0, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -414,14 +427,15 @@ BinaryData <- function(N, threshold = 0, d = 0) {
 #' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
+#'
+#' examples
+#' head(NonLinNormal(N = 100, d = 1))
+#'
 NonLinNormal <- function(N, d = 0){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = exp(Z1*Z2) + rnorm(N,0,1)
-  Y <- Z1*Z2 + rnorm(N,0,1)
-
-  X = X + d*Y
-  Y = Y + d*X
+  Y <- Z1*Z2 + rnorm(N,0,1) + d*X
 
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
@@ -436,13 +450,15 @@ NonLinNormal <- function(N, d = 0){
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
+#' examples
+#' head(UniformNoise(100))
+#'
 UniformNoise <- function(N, d = 0) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
-  X = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
-  Y = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
-  X = X + d*Y
-  Y = Y + d*X
+  X = Z2 - Z1 - Z2 * Z1 + runif(N, min=-2, max=2)
+  Y = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2) + d*X
+
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -456,15 +472,17 @@ UniformNoise <- function(N, d = 0) {
 #' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
+#'
+#' examples
+#' head(ExponentialNoise(100))
 ExponentialNoise <- function(N, rate_param = 1, d = 0) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   rate_param = rate_param
-  X = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
-  Y = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
+  X = Z2 - Z1 - Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
+  Y = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param) + d*X
 
-  X = X + d*Y
-  Y = Y + d*X
+
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -478,36 +496,40 @@ ExponentialNoise <- function(N, rate_param = 1, d = 0) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
+#'
+#' examples
+#' head(PoissonNoise(100))
+#'
 PoissonNoise <- function(N, lambda = 1, d = 0){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = Z2*Z1 + (rpois(N, lambda = lambda)-1)
-  Y = Z2*Z1  + (rpois(N, lambda = lambda)-1)
+  Y = Z2*Z1  + (rpois(N, lambda = lambda)-1) + d*X
 
-  X = X + d*Y
-  Y = Y + d*X
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
 }
 
 #' Generate High-dimensional Nonlinear Normal Data
 #'
-#' Creates a 10-dimensional nonlinear dataset with complex dependencies between features and targets.
+#' Creates a Z-dimensional nonlinear dataset with complex dependencies between features and targets.
 #'
 #' @param N Integer. Sample size.
 #' @param d Numeric. Dependency strength. Default is 0.
+#' @param Zs Integer. Number of Z variables. Default is 10.
 #'
 #' @return A data frame with columns Z1-Z10, X, and Y.
 #' @export
-NonLinNormal10 <- function(N, d = 0) {
-  Z <- replicate(10, rnorm(N, 0, 1))
-  colnames(Z) <- paste0("Z", 1:10)
+#'
+NonLinNormal10 <- function(N, d = 0, Zs = 10) {
+  Z <- replicate(Zs, rnorm(N, 0, 1))
+  colnames(Z) <- paste0("Z", 1:length(Zs))
   Z_df <- as.data.frame(Z)
 
   X <- Z[,1] * Z[,2] + sin(Z[,3] * Z[,4]) + abs(Z[,5]) + rnorm(N, 0, 1)
-  Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - abs(Z[,8]) + rnorm(N, 0, 1)
-  X = X + d*Y
-  Y = Y + d*X
+  Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - abs(Z[,8]) + rnorm(N, 0, 1) + d*X
+
+
   df <- cbind(Z_df, X = X, Y = Y)
   return(df)
 }
