@@ -73,13 +73,12 @@ CCI.pretuner <- function(formula,
                          data,
                          method = "rf",
                          validation_method = 'cv',
-                         folds = 5,
+                         folds = 4,
                          training_share = 0.7,
-                         tune_length = 3,
-                         seed = 1984,
+                         tune_length = 4,
                          metric = 'RMSE',
                          random_grid = TRUE,
-                         samples = 30,
+                         samples = 35,
                          data_type = "continuous",
                          poly = TRUE,
                          degree = 3,
@@ -92,7 +91,7 @@ CCI.pretuner <- function(formula,
                          size = 1:5,
                          decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
                          mtry = 1:10,
-                         nrounds = seq(50, 500, by = 50),
+                         nrounds = seq(50, 400, by = 50),
                          eta = seq(0.01, 0.3, by = 0.05),
                          max_depth = 1:6,
                          subsample = seq(0.5, 1, by = 0.1),
@@ -108,7 +107,7 @@ CCI.pretuner <- function(formula,
                          min_data_in_leaf = c(5, 10, 20, 30),
                          ...) {
 
-  set.seed(seed)
+
   if (!is.data.frame(data) || nrow(data) == 0) {
     stop("The 'data' argument must be a non-empty data frame.")
   }
