@@ -15,6 +15,7 @@ CCI.test(
   dag = NA,
   dag_n = 1,
   data_type = "continuous",
+  choose_direction = FALSE,
   print_result = TRUE,
   method = "rf",
   parametric = FALSE,
@@ -28,7 +29,7 @@ CCI.test(
   samples = 30,
   folds = 5,
   tune_length = 10,
-  seed = 1984,
+  seed = NA,
   random_grid = TRUE,
   nthread = 1,
   ...
@@ -52,6 +53,8 @@ CCI.test(
 \item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
 \item{data_type}{Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".}
+
+\item{choose_direction}{Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.}
 
 \item{print_result}{Logical. If TRUE, the function will print the result of the test. Default is TRUE.}
 
@@ -77,7 +80,7 @@ CCI.test(
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
 
-\item{seed}{Integer. The seed for tuning. Default is 1984.}
+\item{seed}{Integer. The seed for tuning. Default is NA.}
 
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 

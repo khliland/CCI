@@ -79,7 +79,7 @@ test.gen <- function(formula,
     stop("num_class needs to be set for lightgbm with categorical data")
   }
 
-  # Parse formula dynamically
+  # Parse formula
   Y <- all.vars(formula)[1]
   X <- all.vars(formula[[3]])[1]
   Z <- all.vars(formula[[3]])[-1]

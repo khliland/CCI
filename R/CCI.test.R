@@ -12,6 +12,7 @@
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
 #' @param data_type Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".
+#' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
 #' @param print_result Logical. If TRUE, the function will print the result of the test. Default is TRUE.
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
@@ -24,7 +25,7 @@
 #' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
-#' @param seed Integer. The seed for tuning. Default is 1984.
+#' @param seed Integer. The seed for tuning. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
@@ -103,6 +104,7 @@ CCI.test <- function(formula = NA,
                      dag = NA,
                      dag_n = 1,
                      data_type = "continuous",
+                     choose_direction = FALSE,
                      print_result = TRUE,
                      method = 'rf',
                      parametric = FALSE,
@@ -116,11 +118,15 @@ CCI.test <- function(formula = NA,
                      samples = 30,
                      folds = 5,
                      tune_length = 10,
-                     seed = 1984,
+                     seed = NA,
                      random_grid = TRUE,
                      nthread = 1,
                      ...) {
 
+
+  if (!is.na(seed)) {
+    set.seed(seed)
+  }
 
   if (!inherits(formula, "formula") && !inherits(formula, "dagitty")) {
     stop("The 'formula' must be a formula object or a dagitty object.")
@@ -141,7 +147,18 @@ CCI.test <- function(formula = NA,
       "Kappa Score"
     }
   }
-
+  if (choose_direction) {
+    formula <- CCI.direction(
+      formula = formula,
+      data = data,
+      method = method,
+      folds = 4,
+      data_type = data_type,
+      poly = poly,
+      degree = degree,
+      interaction = interaction
+    )
+  }
   if (tune && is.null(mlfunc)) {
 
     best_params <- CCI.pretuner(formula = formula,

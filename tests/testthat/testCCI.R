@@ -102,6 +102,22 @@ test_that("CCI.test outputs a list", {
   expect_true(is.list(result))
 })
 
+#-----------------------------------------------------
+# Direction function
+#-----------------------------------------------------
+
+test_that('CCI.direction', {
+  dat <- sineGaussian_biv(N = 500, a = 2, d = 1)
+  result <- CCI.direction(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost')
+  expect_true(inherits(result, "formula"))
+})
+
+test_that('CCI.direction', {
+  dat <- sineGaussian_biv(N = 500, a = 2, d = 1)
+
+  CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, nperm = 50, method = 'xgboost', choose_direction = TRUE)
+  expect_true(inherits(result, "formula"))
+})
 
 #-------------------------------------------------------------------------------
 # Testing ML-wrapper functions

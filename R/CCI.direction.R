@@ -6,9 +6,8 @@
 #' @param formula A formula object specifying the model to be fitted.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param method A character string specifying the method to be used for model fitting. Options include "rf" (random forest), "xgboost" (XGBoost), "nnet" (neural network), "gpr" (Gaussian process regression), and "svm" (support vector machine).
-#' @param folds An integer specifying the number of folds for cross-validation. Default is 5.
+#' @param folds An integer specifying the number of folds for cross-validation. Default is 4.
 #' @param data_type A character string specifying the type of data. Options include "continuous", "binary", and "categorical". Default is "continuous".
-#' @param seed An integer specifying the seed for random number generation. Default is 1984.
 #' @param poly Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditioning variables are included in the model. Default is TRUE.
@@ -23,7 +22,7 @@
 #'
 #' formula_init <- Y ~ X + Z1 + Z2
 #'
-#' chosen_formula <- choose_direction_CCI(
+#' chosen_formula <- CCI.direction(
 #'  formula = formula_init,
 #'  data = dat,
 #'  method = "xgboost",
@@ -34,17 +33,44 @@
 #'chosen_formula
 
 
-choose_direction_CCI <- function(formula,
+CCI.direction <- function(formula,
                                  data,
                                  method = "rf",
-                                 folds = 5,
+                                 folds = 4,
                                  data_type = "continuous",
-                                 seed = 1984,
                                  poly = TRUE,
                                  degree = 3,
                                  interaction = TRUE,
                                  ...) {
-  set.seed(seed)
+  cat("Deciding best direction, Y ~ X | Z or X ~ Y | Z...\n")
+
+  org_formula <- formula
+  # Parse formula
+  Y <- all.vars(formula)[1]
+  X <- all.vars(formula[[3]])[1]
+  Z <- all.vars(formula[[3]])[-1]
+  if (length(Z) == 0) {
+    Z <- NULL
+  }
+  if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
+    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
+    poly <- FALSE
+  }
+
+  # Add polynomial and interaction terms
+  poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
+  data <- poly_result$data
+  poly_terms <- poly_result$new_terms
+
+  if (interaction && !is.null(Z)) {
+    interaction_result <- add_interaction_terms(data, Z)
+    data <- interaction_result$data
+    interaction_terms <- interaction_result$interaction_terms
+  } else {
+    interaction_terms <- NULL
+  }
+
+  formula <- build_formula(formula, poly_terms, interaction_terms)
 
   formula <- as.formula(formula)
   outcome_var <- all.vars(formula[[2]])
@@ -76,8 +102,8 @@ choose_direction_CCI <- function(formula,
 
   ctrl <-  suppressWarnings(caret::trainControl(method = "cv", number = folds))
 
-  model1 <- suppressWarnings(caret::train(formula_Y_XZ, data = data, method = caret_method, trControl = ctrl, ...))
-  model2 <- suppressWarnings(caret::train(formula_X_YZ, data = data, method = caret_method, trControl = ctrl, ...))
+  model1 <- caret::train(formula_Y_XZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
+  model2 <- caret::train(formula_X_YZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
 
   # Choose based on metric
   if (data_type == "continuous") {
@@ -92,6 +118,11 @@ choose_direction_CCI <- function(formula,
     stop("Unsupported data type: must be 'continuous', 'binary', or 'categorical'.")
   }
 
+  # Using the original formula to present to user
+  outcome_var <- all.vars(org_formula[[2]])
+  rhs_vars <- all.vars(org_formula[[3]])
+  X_var <- rhs_vars[1]
+  Z_vars <- rhs_vars[-1]
   # Return the selected formula
   if (best_direction == "Y ~ X | Z") {
     final_formula <- as.formula(paste(outcome_var, "~", X_var, "|", paste(Z_vars, collapse = "+")))
