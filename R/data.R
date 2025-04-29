@@ -11,7 +11,9 @@ NormalData <- function(N, d = 0){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
   X <- rnorm(N, Z1 + Z2, 1)
-  Y <- rnorm(N, Z1 + Z2 + d*X, 1)
+  Y <- rnorm(N, Z1 + Z2, 1)
+  X = X + d*Y
+  Y = Y + d*X
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -46,7 +48,9 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
-  Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + d*X + 0.3*rnorm(N,0,0.1)
+  Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
+  Y = Y + d*X
+  X = X + d*Y
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
 }
@@ -109,7 +113,7 @@ NonLinearCategorization <- function(N, d = 0) {
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-BivNonLinearCategorization <- function(N) {
+BivNonLinearCategorization <- function(N, d = 0) {
   Z1 <- runif(N, -2, 2)
   Z2 <- runif(N, -2,2)
   X <- character(N)
@@ -141,6 +145,8 @@ BivNonLinearCategorization <- function(N) {
       Y[i] <- "Category 4"
     }
   }
+  Y = as.integer(Y + d*X)
+  X = as.integer(X + d*Y)
   return(data.frame(Z1 = Z1, Z2 = Z2, X = as.factor(X), Y = as.factor(Y)))
 }
 
@@ -168,8 +174,8 @@ BivMultinominal <- function(N, zeta = 1.5, d = 0) {
 
   X <- ifelse(random < xp1, 0, ifelse(random < xp1 + xp2,1,2))
 
-  yb1 = zeta*Z1*Z2
-  yb2 <- exp(Z2) +  zeta*Z1
+  yb1 = zeta*Z1*Z2 + d*X
+  yb2 <- exp(Z2) +  zeta*Z1 + d*X
 
   yp1 <- 1/(1+exp(yb1) + exp(yb2))
   yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
@@ -190,7 +196,7 @@ BivMultinominal <- function(N, zeta = 1.5, d = 0) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-InteractiondData <- function(N) {
+InteractiondData <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -217,6 +223,8 @@ InteractiondData <- function(N) {
       Y[i] <- 3
     }
   }
+  Y <- as.integer(Y + d*X)
+  X <- as.integer(X + d*Y)
 
   data_frame <- data.frame(Z1, Z2, X, Y)
 
@@ -230,7 +238,7 @@ InteractiondData <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-ExpLogData <- function(N) {
+ExpLogData <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -244,7 +252,8 @@ ExpLogData <- function(N) {
                    ifelse(log(abs(Z1[i]) + 1) + Z2[i] > 0, 2,
                           ifelse(log(abs(Z1[i]) + 1) > -0.5, 1, 0)))
   }
-
+  Y <- as.integer(Y + d*X)
+  X <- as.integer(X + d*Y)
   return(data.frame(Z1, Z2, X, Y))
 }
 #' Generate Categorical Trigonometric Data
@@ -255,7 +264,7 @@ ExpLogData <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-TrigData <- function(N) {
+TrigData <- function(N, d = 0) {
   Z1 <- runif(N, -pi, pi)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -270,7 +279,8 @@ TrigData <- function(N) {
                    ifelse(cos(Z1[i]) - sin(Z2[i]) > 0, 2,
                           ifelse(cos(Z1[i]) > -1, 1, 0)))
   }
-
+  Y <- as.integer(Y + d*X)
+  X <- as.integer(X - d*Y)
   return(data.frame(Z1, Z2, X, Y))
 }
 #' Generate Categorical Polynomial Data
@@ -281,7 +291,7 @@ TrigData <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-PolyData <- function(N) {
+PolyData <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -296,7 +306,8 @@ PolyData <- function(N) {
                    ifelse(Z1[i]^2 - Z2[i]^2 > 0, 2,
                           ifelse(Z1[i] - Z2[i]^3 > -1, 1, 0)))
   }
-
+  Y <- as.integer(Y + d*X)
+  X <- as.integer(X - d*Y)
   return(data.frame(Z1, Z2, X, Y))
 }
 
@@ -308,7 +319,7 @@ PolyData <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-NonLinearData <- function(N) {
+NonLinearData <- function(N, d = 0) {
   Z1 <- runif(N, -1, 1)
   Z2 <- runif(N, -1, 1)
   X <- numeric(N)
@@ -338,6 +349,8 @@ NonLinearData <- function(N) {
       Y[i] <- 0
     }
   }
+  Y <- as.integer(Y + d*X)
+  X <- as.integer(X - d*Y)
 
   return(data.frame(Z1, Z2, X, Y))
 }
@@ -350,7 +363,7 @@ NonLinearData <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-ComplexCategorization <- function(N) {
+ComplexCategorization <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- numeric(N)
@@ -364,48 +377,20 @@ ComplexCategorization <- function(N) {
                    ifelse(Z1[i] + Z2[i] > 0, 2,
                           ifelse(Z1[i] + Z2[i] > -1, 1, 0)))
   }
+  Y <- as.integer(Y + d*X)
+  X <- as.integer(X - d*Y)
 
   return(data.frame(Z1, Z2, X, Y))
 }
 
-#' Generate Multinomial Categorical Data
+#' Generate Binary Data
 #'
-#' Multinomial categorical variables X and Y generated via nonlinear logits of Z1 and Z2.
+#' Creates binary data based on a nonlinear interaction of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#' @param zeta Numeric. Strength of interaction. Default is 1.5.
-#'
-#' @return A data frame with columns Z1, Z2, X, and Y.
-#' @export
-
-Multinominal <- function(N, zeta = 1.5) {
-  Z1 <- rnorm(N)
-
-  Z2 <- rnorm(N)
-
-  xb1 <- Z2 + zeta*Z1*Z2 + zeta*Z1
-
-  xb2 <- Z2 - zeta*Z1
-
-  xp1 <- 1/(1+exp(xb1) + exp(xb2))
-  xp2 <- exp(xb1) /(1+exp(xb1) + exp(xb2))
-  random <- runif(N,0, 1)
-  X <- ifelse(random < xp1, "C", ifelse(random < xp1 + xp2,"A","B"))
-
-  yb1 = zeta*Z1*Z2
-  yb2 <- exp(Z2) +  zeta*Z1
-
-  yp1 <- 1/(1+exp(yb1) + exp(yb2))
-  yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
-  random <- runif(N,0, 1)
-  Y <- ifelse(random < yp1, "X", ifelse(random < yp1 + yp2,"Y","Z"))
-
-  df <- data.frame(Z1,Z2,X,Y)
-
-  return(df)
-}
-
-BinaryData <- function(N, threshold = 0) {
+#' @param threshold Numeric. Threshold for binary classification. Default is 0.
+#' @param d Numeric. Dependency strength. Default is 0.
+BinaryData <- function(N, threshold = 0, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
 
@@ -413,7 +398,7 @@ BinaryData <- function(N, threshold = 0) {
 
   X <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
 
-  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
+  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2 + d*X, 1) < threshold, 1, 0)
 
   df <- data.frame(Z1,Z2,X,Y)
 
@@ -426,14 +411,18 @@ BinaryData <- function(N, threshold = 0) {
 #' Creates nonlinear continuous data based on an exponential interaction of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-NonLinNormal <- function(N){
+NonLinNormal <- function(N, d = 0){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = exp(Z1*Z2) + rnorm(N,0,1)
   Y <- Z1*Z2 + rnorm(N,0,1)
+
+  X = X + d*Y
+  Y = Y + d*X
+
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
 }
@@ -443,14 +432,17 @@ NonLinNormal <- function(N){
 #' Adds uniform noise to a nonlinear combination of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-UniformNoise <- function(N) {
+#'
+UniformNoise <- function(N, d = 0) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   X = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
   Y = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
+  X = X + d*Y
+  Y = Y + d*X
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -461,15 +453,18 @@ UniformNoise <- function(N) {
 #'
 #' @param N Integer. Sample size.
 #' @param rate_param Numeric. Rate parameter for the exponential distribution. Default is 1.
-#'
+#' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-ExponentialNoise <- function(N, rate_param = 1) {
+ExponentialNoise <- function(N, rate_param = 1, d = 0) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   rate_param = rate_param
   X = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
   Y = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
+
+  X = X + d*Y
+  Y = Y + d*X
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -478,14 +473,19 @@ ExponentialNoise <- function(N, rate_param = 1) {
 #' Adds Poisson noise to a nonlinear combination of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param lambda Numeric. Rate parameter for the Poisson distribution. Default is 1.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-PoissonNoise <- function(N){
+PoissonNoise <- function(N, lambda = 1, d = 0){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
-  X = Z2*Z1 + (rpois(N, lambda = 1)-1)
-  Y = Z2*Z1  + (rpois(N, lambda = 1)-1)
+  X = Z2*Z1 + (rpois(N, lambda = lambda)-1)
+  Y = Z2*Z1  + (rpois(N, lambda = lambda)-1)
+
+  X = X + d*Y
+  Y = Y + d*X
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
 }
@@ -495,17 +495,19 @@ PoissonNoise <- function(N){
 #' Creates a 10-dimensional nonlinear dataset with complex dependencies between features and targets.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1-Z10, X, and Y.
 #' @export
-NonLinNormal10 <- function(N) {
+NonLinNormal10 <- function(N, d = 0) {
   Z <- replicate(10, rnorm(N, 0, 1))
   colnames(Z) <- paste0("Z", 1:10)
   Z_df <- as.data.frame(Z)
 
   X <- Z[,1] * Z[,2] + sin(Z[,3] * Z[,4]) + abs(Z[,5]) + rnorm(N, 0, 1)
   Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - abs(Z[,8]) + rnorm(N, 0, 1)
-
+  X = X + d*Y
+  Y = Y + d*X
   df <- cbind(Z_df, X = X, Y = Y)
   return(df)
 }
