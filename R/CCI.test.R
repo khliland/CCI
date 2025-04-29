@@ -6,7 +6,7 @@
 #' @param formula Model formula or a DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param plot Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.
-#' @param p Numeric. Proportion of data used for training the model. Default is 0.8.
+#' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
 #' @param nperm Integer. The number of permutations to perform. Default is 500.
 #' @param nrounds Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
@@ -98,7 +98,7 @@
 CCI.test <- function(formula = NA,
                      data,
                      plot = TRUE,
-                     p = 0.7,
+                     p = 0.5,
                      nperm = 60,
                      nrounds = 120,
                      dag = NA,
