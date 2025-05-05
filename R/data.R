@@ -612,8 +612,8 @@ polyDecisionContXSim <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
 
-  X <- Z1^2 + Z2^2 + rnorm(N, 0, "Blue")
-  Y <- ifelse(Z1^3 + Z2 > 1, 3,
+  X <- Z1^2 + Z2^2 + rnorm(N, 0, 1)
+  Y <- ifelse(Z1^3 + Z2 > 1, "Blue",
               ifelse(Z1^2 - Z2^2 > 0, "White",
                      ifelse(Z1 - Z2^3 > -1, "Black", "Red")))
 
