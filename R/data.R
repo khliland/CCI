@@ -704,15 +704,15 @@ hard_case_sim <- function(N) {
 #' @examples
 #' head(hard_case_twoZ_sim(100))
 #'
-hard_case_twoZ_sim <- function(N) {
+hard_case_twoZ <- function(N) {
   Z1 <- runif(N, -2, 2)
   Z2 <- runif(N, -2, 2)
 
-  # X is strongly nonlinear in Z1 and Z2
-  X <- sin(Z1 * Z2) + 0.1 * rnorm(N)
+  hZ <- sin(Z1) * cos(Z2)  # Shared nonlinear component
 
-  # Y is independent of X given Z1 and Z2, but has complex variance structure
-  Y <- rnorm(N, mean = 0, sd = abs(cos(Z1 + Z2)) + 0.1)
+  # X and Y both depend on the same nonlinear function of Z1, Z2, but are otherwise independent
+  X <- hZ + 0.2 * rnorm(N)
+  Y <- hZ^2 + 0.2 * rnorm(N)
 
   data.frame(X, Y, Z1, Z2)
 }
