@@ -4,7 +4,7 @@
 \alias{BivNonLinearCategorization}
 \title{Generate Bivariate Nonlinear Categorical Data}
 \usage{
-BivNonLinearCategorization(N, d = 0)
+BivNonLinearCategorization(N)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

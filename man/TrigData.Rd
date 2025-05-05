@@ -4,12 +4,10 @@
 \alias{TrigData}
 \title{Generate Categorical Trigonometric Data}
 \usage{
-TrigData(N, d = 0)
+TrigData(N)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
-
-\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.

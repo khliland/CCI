@@ -10,13 +10,12 @@ CCI.pretuner(
   data,
   method = "rf",
   validation_method = "cv",
-  folds = 5,
+  folds = 4,
   training_share = 0.7,
-  tune_length = 3,
-  seed = 1984,
+  tune_length = 4,
   metric = "RMSE",
   random_grid = TRUE,
-  samples = 30,
+  samples = 35,
   data_type = "continuous",
   poly = TRUE,
   degree = 3,
@@ -29,7 +28,7 @@ CCI.pretuner(
   size = 1:5,
   decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
   mtry = 1:10,
-  nrounds = seq(50, 500, by = 50),
+  nrounds = seq(50, 400, by = 50),
   eta = seq(0.01, 0.3, by = 0.05),
   max_depth = 1:6,
   subsample = seq(0.5, 1, by = 0.1),
@@ -60,8 +59,6 @@ CCI.pretuner(
 \item{training_share}{Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.}
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
-
-\item{seed}{Integer. The seed for random number generation. Default is 1984.}
 
 \item{metric}{Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.}
 
@@ -120,6 +117,8 @@ CCI.pretuner(
 \item{bagging_fraction}{Numeric. The fraction of data to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).}
 
 \item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
+
+\item{seed}{Integer. The seed for random number generation. Default is 1984.}
 }
 \value{
 A list containing:

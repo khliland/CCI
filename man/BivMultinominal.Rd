@@ -4,14 +4,12 @@
 \alias{BivMultinominal}
 \title{Generate Bivariate Multinomial Categorical Data}
 \usage{
-BivMultinominal(N, zeta = 1.5, d = 0)
+BivMultinominal(N, zeta = 1.5)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
 
 \item{zeta}{Numeric. Strength of interaction. Default is 1.5.}
-
-\item{d}{Numeric. Dependency strength between X and Y. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y (both factors).

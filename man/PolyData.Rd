@@ -4,12 +4,10 @@
 \alias{PolyData}
 \title{Generate Categorical Polynomial Data}
 \usage{
-PolyData(N, d = 0)
+PolyData(N)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
-
-\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.
