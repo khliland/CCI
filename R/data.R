@@ -49,8 +49,8 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
   X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
   Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
   Y = Y + d*X
-  df <- data.frame(Z1,Z2,X,Y)
-  return(df)
+
+  return(data.frame(Z1,Z2,X,Y))
 }
 
 #' Generate Sine-Gaussian Data (Bivariate)
@@ -68,8 +68,7 @@ sineGaussian_noise <- function(N, a = 1, d = 0){
   X = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1)
   Y = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1) + d*X
 
-  df <- data.frame(Z,X,Y)
-  return(df)
+  return(data.frame(Z,X,Y))
 }
 
 #' Generate Nonlinear Categorical Data (Univariate)
@@ -100,7 +99,7 @@ NonLinearCategorization <- function(N, d = 0) {
       Y[i] <- 0
     }
   }
-  return(data.frame(Z, X = X, Y = Y))
+  return(data.frame(Z, X, Y))
 }
 #' Generate Bivariate Nonlinear Categorical Data
 #'
@@ -111,7 +110,7 @@ NonLinearCategorization <- function(N, d = 0) {
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-BivNonLinearCategorization <- function(N, d = 0) {
+BivNonLinearCategorization <- function(N) {
   Z1 <- runif(N, -2, 2)
   Z2 <- runif(N, -2,2)
   X <- character(N)
@@ -120,13 +119,13 @@ BivNonLinearCategorization <- function(N, d = 0) {
   for (i in 1:N) {
     score_x <- sin(Z2[i] * pi) + Z1[i]
     if (score_x > 1) {
-      X[i] <- "Category 1"
+      X[i] <- "Category F"
     } else if (score_x > 0.5) {
-      X[i] <- "Category 2"
+      X[i] <- "Category A"
     } else if (score_x > 0) {
-      X[i] <- "Category 4"
+      X[i] <- "Category X"
     } else {
-      X[i] <- "Category 3"
+      X[i] <- "Category 99"
     }
   }
 
@@ -134,18 +133,18 @@ BivNonLinearCategorization <- function(N, d = 0) {
     score_y <- cos(Z1[i] * pi) + Z2[i]
 
     if (score_y > 1) {
-      Y[i] <- "Category 3"
+      Y[i] <- "Category A"
     } else if (score_y > 0.5) {
-      Y[i] <- "Category 1"
+      Y[i] <- "Category 99"
     } else if (score_y > 0) {
-      Y[i] <- "Category 2"
+      Y[i] <- "Category F"
     } else {
-      Y[i] <- "Category 4"
+      Y[i] <- "Category X"
     }
   }
-  Y = as.integer(Y + d*X)
 
-  return(data.frame(Z1 = Z1, Z2 = Z2, X = as.factor(X), Y = as.factor(Y)))
+
+  return(data.frame(Z1, Z2, X, Y))
 }
 
 #' Generate Bivariate Multinomial Categorical Data
@@ -154,16 +153,15 @@ BivNonLinearCategorization <- function(N, d = 0) {
 #'
 #' @param N Integer. Sample size.
 #' @param zeta Numeric. Strength of interaction. Default is 1.5.
-#' @param d Numeric. Dependency strength between X and Y. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y (both factors).
 #' @export
-BivMultinominal <- function(N, zeta = 1.5, d = 0) {
+BivMultinominal <- function(N, zeta = 1.5) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
 
-  xb1 <- Z2 + zeta*Z1*Z2 + zeta*Z1
-  xb2 <- Z2 - zeta*Z1
+  xb1 <- Z2 + zeta*Z1*Z2 + Z1
+  xb2 <- Z2 - Z1
 
   xp1 <- 1/(1+exp(xb1) + exp(xb2))
   xp2 <- exp(xb1) /(1+exp(xb1) + exp(xb2))
@@ -172,8 +170,8 @@ BivMultinominal <- function(N, zeta = 1.5, d = 0) {
 
   X <- ifelse(random < xp1, 0, ifelse(random < xp1 + xp2,1,2))
 
-  yb1 = zeta*Z1*Z2 + d*X
-  yb2 <- exp(Z2) +  zeta*Z1 + d*X
+  yb1 = zeta*Z1*Z2
+  yb2 <- exp(Z2) +  Z1 + d*X
 
   yp1 <- 1/(1+exp(yb1) + exp(yb2))
   yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
@@ -182,48 +180,44 @@ BivMultinominal <- function(N, zeta = 1.5, d = 0) {
 
   Y <- ifelse(random < yp1, 0, ifelse(random < yp1 + yp2,1,2))
 
-  df <- data.frame(Z1 = Z1,Z2 = Z2, X = as.factor(X),Y = as.factor(Y))
-
-  return(df)
+  return( data.frame(Z1,Z2, X,Y))
 }
 #' Generate Categorical Data Based on Interactions
 #'
 #' Creates categorical X and Y variables based on the interaction of signs and sums of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-InteractiondData <- function(N, d = 0) {
+InteractiondData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
-  X <- numeric(N)
-  Y <- numeric(N)
+  X <- character(N)
+  Y <- character(N)
 
   for (i in 1:N) {
     if (Z1[i] < 0 && Z2[i] < 0) {
-      X[i] <- 0
+      X[i] <- "V"
     } else if (Z1[i] < 0 && Z2[i] >= 0) {
-      X[i] <- 1
+      X[i] <- "W"
     } else if (Z1[i] >= 0 && Z2[i] < 0) {
-      X[i] <- 2
+      X[i] <- "G"
     } else {
-      X[i] <- 3
+      X[i] <- "U"
     }
 
     if (Z1[i] + Z2[i] < -1) {
-      Y[i] <- 0
+      Y[i] <- "W"
     } else if (Z1[i] + Z2[i] < 0) {
-      Y[i] <- 1
+      Y[i] <- "V"
     } else if (Z1[i] + Z2[i] < 1) {
-      Y[i] <- 2
+      Y[i] <- "G"
     } else {
-      Y[i] <- 3
+      Y[i] <- "U"
     }
   }
   Y <- as.integer(Y + d*X)
-
 
   data_frame <- data.frame(Z1, Z2, X, Y)
 
@@ -234,25 +228,24 @@ InteractiondData <- function(N, d = 0) {
 #' Categorizes based on thresholds of exponential and logarithmic transformations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-ExpLogData <- function(N, d = 0) {
+ExpLogData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
-  X <- numeric(N)
-  Y <- numeric(N)
+  X <- character(N)
+  Y <- character(N)
 
   for (i in 1:N) {
-    X[i] <- ifelse(exp(Z1[i]) + Z2[i] > 1.5, 3,
-                   ifelse(exp(Z1[i]) + Z2[i] > 0.5, 2,
-                          ifelse(exp(Z1[i]) > 0, 1, 0)))
-    Y[i] <- ifelse(log(abs(Z1[i]) + 1) + Z2[i] > 0.5, 3,
-                   ifelse(log(abs(Z1[i]) + 1) + Z2[i] > 0, 2,
-                          ifelse(log(abs(Z1[i]) + 1) > -0.5, 1, 0)))
+    X[i] <- ifelse(exp(Z1[i]) + Z2[i] > 1.5, "Category A",
+                   ifelse(exp(Z1[i]) + Z2[i] > 0.5, "Category C",
+                          ifelse(exp(Z1[i]) > 0, "Category S", "Category B")))
+    Y[i] <- ifelse(log(abs(Z1[i]) + 1) + Z2[i] > 0.5, "Category C",
+                   ifelse(log(abs(Z1[i]) + 1) + Z2[i] > 0, "Category A",
+                          ifelse(log(abs(Z1[i]) + 1) > -0.5, "Category S", "Category B")))
   }
-  Y <- as.integer(Y + d*X)
+
 
   return(data.frame(Z1, Z2, X, Y))
 }
@@ -261,24 +254,24 @@ ExpLogData <- function(N, d = 0) {
 #' Uses sine and cosine functions of Z1 and Z2 to generate categorical outcomes.
 #'
 #' @param N Integer. Sample size.
-#' @param d Numeric. Dependency strength. Default is 0.
+
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-TrigData <- function(N, d = 0) {
+TrigData <- function(N) {
   Z1 <- runif(N, -pi, pi)
   Z2 <- rnorm(N)
-  X <- numeric(N)
-  Y <- numeric(N)
+  X <- character(N)
+  Y <- character(N)
 
   for (i in 1:N) {
-    X[i] <- ifelse(sin(Z1[i]) + cos(Z2[i]) > 1, 3,
-                   ifelse(sin(Z1[i]) + cos(Z2[i]) > 0, 2,
-                          ifelse(sin(Z1[i]) > -1, 1, 0)))
+    X[i] <- ifelse(sin(Z1[i]) + cos(Z2[i]) > 1, "Category A",
+                   ifelse(sin(Z1[i]) + cos(Z2[i]) > 0, "Category B",
+                          ifelse(sin(Z1[i]) > -1, "Category D", "Category C")))
 
-    Y[i] <- ifelse(cos(Z1[i]) - sin(Z2[i]) > 1, 3,
-                   ifelse(cos(Z1[i]) - sin(Z2[i]) > 0, 2,
-                          ifelse(cos(Z1[i]) > -1, 1, 0)))
+    Y[i] <- ifelse(cos(Z1[i]) - sin(Z2[i]) > 1, "Blue",
+                   ifelse(cos(Z1[i]) - sin(Z2[i]) > 0, "Green",
+                          ifelse(cos(Z1[i]) > -1, "Yellow", "Red")))
   }
   Y <- as.integer(Y + d*X)
 
@@ -289,24 +282,23 @@ TrigData <- function(N, d = 0) {
 #' Generates X and Y categories based on polynomial combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-PolyData <- function(N, d = 0) {
+PolyData <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
-  X <- numeric(N)
-  Y <- numeric(N)
+  X <- character(N)
+  Y <- character(N)
 
   for (i in 1:N) {
-    X[i] <- ifelse(Z1[i]^2 + Z2[i]^2 > 2, 3,
-                   ifelse(Z1[i]^2 + Z2[i] > 0.5, 2,
-                          ifelse(Z1[i] + Z2[i]^2 > 0, 1, 0)))
+    X[i] <- ifelse(Z1[i]^2 + Z2[i]^2 > 2, "Down",
+                   ifelse(Z1[i]^2 + Z2[i] > 0.5, "Up",
+                          ifelse(Z1[i] + Z2[i]^2 > 0, "Left", "Right")))
 
-    Y[i] <- ifelse(Z1[i]^3 + Z2[i] > 1, 3,
-                   ifelse(Z1[i]^2 - Z2[i]^2 > 0, 2,
-                          ifelse(Z1[i] - Z2[i]^3 > -1, 1, 0)))
+    Y[i] <- ifelse(Z1[i]^3 + Z2[i] > 1, "East",
+                   ifelse(Z1[i]^2 - Z2[i]^2 > 0, "West",
+                          ifelse(Z1[i] - Z2[i]^3 > -1, "North", "South")))
   }
   Y <- as.integer(Y + d*X)
   return(data.frame(Z1, Z2, X, Y))
@@ -317,42 +309,42 @@ PolyData <- function(N, d = 0) {
 #' Creates categorical X and Y variables based on sinusoidal and cosine functions of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-NonLinearData <- function(N, d = 0) {
+NonLinearData <- function(N) {
   Z1 <- runif(N, -1, 1)
   Z2 <- runif(N, -1, 1)
-  X <- numeric(N)
-  Y <- numeric(N)
+  X <- character(N)
+  Y <- character(N)
 
 
   for (i in 1:N) {
-
+    # X depends on sin(pi * Z1) + Z2
     if (sin(Z1[i] * pi) + Z2[i] > 1) {
-      X[i] <- 3
+      X[i] <- "Very High"
     } else if (sin(Z1[i] * pi) + Z2[i] > 0.5) {
-      X[i] <- 2
+      X[i] <- "High"
     } else if (sin(Z1[i] * pi) + Z2[i] > 0) {
-      X[i] <- 1
+      X[i] <- "Medium"
     } else {
-      X[i] <- 0
+      X[i] <- "Low"
     }
 
-
+    # Y depends on cos(pi * Z1) + Z2
     if (cos(Z1[i] * pi) + Z2[i] > 1) {
-      Y[i] <- 3
+      Y[i] <- "Class A"
     } else if (cos(Z1[i] * pi) + Z2[i] > 0.5) {
-      Y[i] <- 2
+      Y[i] <- "Class B"
     } else if (cos(Z1[i] * pi) + Z2[i] > 0) {
-      Y[i] <- 1
+      Y[i] <- "Class C"
     } else {
-      Y[i] <- 0
+      Y[i] <- "Class D"
     }
   }
-  Y <- as.integer(Y + d*X)
+
+
   return(data.frame(Z1, Z2, X, Y))
 }
 
@@ -372,21 +364,34 @@ NonLinearData <- function(N, d = 0) {
 ComplexCategorization <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
-  X <- numeric(N)
-  Y <- numeric(N)
+  X <- character(N)
+  Y <- character(N)
 
   for (i in 1:N) {
-    X[i] <- ifelse(Z1[i] > 0 && Z2[i] > 0, 3,
-                   ifelse(Z1[i] > 0 && Z2[i] <= 0, 2,
-                          ifelse(Z1[i] <= 0 && Z2[i] > 0, 1, 0)))
-    Y[i] <- ifelse(Z1[i] + Z2[i] > 1, 3,
-                   ifelse(Z1[i] + Z2[i] > 0, 2,
-                          ifelse(Z1[i] + Z2[i] > -1, 1, 0)))
+    # Define X categories based on the quadrant
+    X[i] <- if (Z1[i] > 0 && Z2[i] > 0) {
+      "Northeast"
+    } else if (Z1[i] > 0 && Z2[i] <= 0) {
+      "Southeast"
+    } else if (Z1[i] <= 0 && Z2[i] > 0) {
+      "Northwest"
+    } else {
+      "Southwest"
+    }
+
+    Y_score <- Z1[i] + Z2[i]
+
+    Y[i] <- if (Y_score > 1) {
+      "High Risk"
+    } else if (Y_score > 0) {
+      "Moderate Risk"
+    } else if (Y_score > -1) {
+      "Low Risk"
+    } else {
+      "Minimal Risk"
+    }
   }
-  Y <- as.integer(Y + d*X)
-
-
-  return(data.frame(Z1, Z2, X, Y))
+ return(data.frame(Z1, Z2, X, Y))
 }
 
 #' Generate Binary Data
