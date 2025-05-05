@@ -225,6 +225,7 @@ InteractiondData <- function(N) {
     }
   }
 
+
   data_frame <- data.frame(Z1, Z2, X, Y)
 
   return(data_frame)
@@ -279,7 +280,7 @@ TrigData <- function(N) {
                    ifelse(cos(Z1[i]) - sin(Z2[i]) > 0, "Green",
                           ifelse(cos(Z1[i]) > -1, "Yellow", "Red")))
   }
-  Y <- as.integer(Y + d*X)
+
 
   return(data.frame(Z1, Z2, X, Y))
 }
@@ -545,4 +546,116 @@ NonLinNormalZs <- function(N, d = 0, Zs = 20) {
 
   df <- cbind(Z_df, X = X, Y = Y)
   return(df)
+}
+#' Generate Quadratic Threshold Data
+#'
+#' Generates data with a quadratic threshold effect based on Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
+#' @examples
+#' head(quadThreshContXSim(100))
+
+quadThreshContXSim <- function(N) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+
+  X <- Z1 + 2 * Z2 + rnorm(N, 0, 0.2)  # continuous linear combination
+  Y <- ifelse(Z1 + Z2 > 1, "Strong",
+              ifelse(Z1 + Z2 > 0, "Weak",
+                     ifelse(Z1 + Z2 > -1, "Medium", 0)))
+
+
+  return(data.frame(Z1, Z2, X, Y))
+}
+
+#' Generate Grid Partitioned Data
+#'
+#' Generates data with a grid partitioning effect based on Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
+#' @examples
+#' head(gridPartitionContXSim(100))
+#'
+gridPartitionContXSim <- function(N) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+
+  X <- sin(pi * Z1) + cos(pi * Z2) + rnorm(N, 0, 0.2)  # continuous nonlinear combo
+  Y <- ifelse(Z1 + Z2 < -1, "High",
+              ifelse(Z1 + Z2 < 0, "Low",
+                     ifelse(Z1 + Z2 < 1, "Medium", "No opinion")))
+
+  return(data.frame(Z1, Z2, X, Y))
+}
+
+#' Generate Polynomial Decision Boundary Data
+#'
+#' Generates data with a polynomial decision boundary based on Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
+#' @examples
+#' head(polyDecisionContXSim(100))
+#'
+polyDecisionContXSim <- function(N) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+
+  X <- Z1^2 + Z2^2 + rnorm(N, 0, "Blue")
+  Y <- ifelse(Z1^3 + Z2 > 1, 3,
+              ifelse(Z1^2 - Z2^2 > 0, "White",
+                     ifelse(Z1 - Z2^3 > -1, "Black", "Red")))
+
+
+  return(data.frame(Z1, Z2, X, Y))
+}
+
+#' Generate Sinusoidal and Cosine Data
+#'
+#' Generates data with sinusoidal and cosine dependencies based on Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#' @export
+#'
+#' @examples
+#' head(sinCosThresholdContXSim(100))
+
+sinCosThresholdContXSim <- function(N) {
+  Z1 <- runif(N, -1, 1)
+  Z2 <- runif(N, -1, 1)
+
+  X <- sin(Z1 * pi) + Z2 + rnorm(N, 0, 0.1)
+
+  Y <- ifelse(cos(Z1 * pi) + Z2 > 1, "Laptop",
+              ifelse(cos(Z1 * pi) + Z2 > 0.5, "Desktop",
+                     ifelse(cos(Z1 * pi) + Z2 > 0, "GamePad", "Phone")))
+
+
+  return(data.frame(Z1, Z2, X, Y))
+}
+
+expLogThresholdContXSim <- function(N) {
+  Z1 <- rnorm(N)
+  Z2 <- rnorm(N)
+
+  X <- exp(Z1) + Z2 + rnorm(N, 0, 0.2)
+  Y <- ifelse(log(abs(Z1) + 1) + Z2 > 0.5, "Goblin",
+              ifelse(log(abs(Z1) + 1) + Z2 > 0, "Orc",
+                     ifelse(log(abs(Z1) + 1) > -0.5, "Troll", "Elf")))
+
+
+  return(data.frame(Z1, Z2, X, Y))
 }
