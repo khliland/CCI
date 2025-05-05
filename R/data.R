@@ -307,7 +307,7 @@ PolyData <- function(N) {
                    ifelse(Z1[i]^2 - Z2[i]^2 > 0, "West",
                           ifelse(Z1[i] - Z2[i]^3 > -1, "North", "South")))
   }
-  Y <- as.integer(Y + d*X)
+
   return(data.frame(Z1, Z2, X, Y))
 }
 
