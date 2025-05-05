@@ -647,6 +647,19 @@ sinCosThresholdContXSim <- function(N) {
   return(data.frame(Z1, Z2, X, Y))
 }
 
+#' Generate Exponential and Logarithmic Data
+#'
+#' Generates data with exponential and logarithmic dependencies based on Z1 and Z2.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns Z1, Z2, X, and Y.
+#'
+#' @export
+#'
+#' @examples
+#' head(expLogThresholdContXSim(100))
+
 expLogThresholdContXSim <- function(N) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -658,4 +671,48 @@ expLogThresholdContXSim <- function(N) {
 
 
   return(data.frame(Z1, Z2, X, Y))
+}
+#' Generate Hard Case Data
+#'
+#' Generates data with a hard case scenario where X and Y are influenced by Z in a nonlinear manner.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns X, Y, and Z.
+#'
+#' @export
+#'
+#' @examples
+#' head(hard_case_sim(100))
+hard_case_sim <- function(N) {
+  Z <- runif(N, -2, 2)
+  X <- Z^2 + rnorm(N, mean = 0, sd = 0.1)  # Nonlinear in Z, near-deterministic
+  Y <- rnorm(N, mean = 0, sd = exp(-Z^2))  # Y independent of X given Z, but conditional variance depends on Z
+
+  data.frame(X, Y, Z)
+}
+
+#' Generate Hard Case Data with Two Z Variables
+#'
+#' Generates data with a hard case scenario where X and Y are influenced by two Z variables in a nonlinear manner.
+#'
+#' @param N Integer. Sample size.
+#'
+#' @return A data frame with columns X, Y, Z1, and Z2.
+#' @export
+#'
+#' @examples
+#' head(hard_case_twoZ_sim(100))
+#'
+hard_case_twoZ_sim <- function(N) {
+  Z1 <- runif(N, -2, 2)
+  Z2 <- runif(N, -2, 2)
+
+  # X is strongly nonlinear in Z1 and Z2
+  X <- sin(Z1 * Z2) + 0.1 * rnorm(N)
+
+  # Y is independent of X given Z1 and Z2, but has complex variance structure
+  Y <- rnorm(N, mean = 0, sd = abs(cos(Z1 + Z2)) + 0.1)
+
+  data.frame(X, Y, Z1, Z2)
 }
