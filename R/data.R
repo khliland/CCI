@@ -63,6 +63,7 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
+#'
 sineGaussian_noise <- function(N, a = 1, d = 0){
   Z = rnorm(N,0,1)
   X = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1)
@@ -80,27 +81,33 @@ sineGaussian_noise <- function(N, a = 1, d = 0){
 #'
 #' @return A data frame with columns Z, X, and Y.
 #' @export
+#'
 NonLinearCategorization <- function(N, d = 0) {
   Z <- runif(N, -1, 1)
-  X <- rnorm(Z,0,1)
-  Y <- numeric(N)
-
+  X <- rnorm(N, mean = Z, sd = 1)
+  Y <- character(N)
 
   for (i in 1:N) {
     score_y <- cos(Z[i] * pi) + Z[i] + d * X[i]
 
     if (score_y > 1) {
-      Y[i] <- 3
+      Y[i] <- "Very High"
     } else if (score_y > 0.5) {
-      Y[i] <- 2
+      Y[i] <- "High"
     } else if (score_y > 0) {
-      Y[i] <- 1
+      Y[i] <- "Medium"
     } else {
-      Y[i] <- 0
+      Y[i] <- "Low"
     }
   }
-  return(data.frame(Z, X, Y))
+
+  return(data.frame(
+    Z,
+    X,
+    Y = factor(Y, levels = c("Low", "Medium", "High", "Very High"))
+  ))
 }
+
 #' Generate Bivariate Nonlinear Categorical Data
 #'
 #' Generates categorical variables X and Y based on nonlinear combinations of Z1 and Z2.
