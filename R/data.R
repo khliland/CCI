@@ -224,7 +224,6 @@ InteractiondData <- function(N) {
       Y[i] <- "U"
     }
   }
-  Y <- as.integer(Y + d*X)
 
   data_frame <- data.frame(Z1, Z2, X, Y)
 
