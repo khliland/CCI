@@ -7,11 +7,11 @@
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-NormalData <- function(N, d = 0){
+NormalData <- function(N){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
   X <- rnorm(N, Z1 + Z2, 1)
-  Y <- rnorm(N, Z1 + Z2 + d*X, 1)
+  Y <- rnorm(N, Z1 + Z2, 1)
 
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
@@ -43,12 +43,11 @@ sineGaussian <- function(N, a = 1, d = 0){
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-sineGaussian_biv <- function(N, a = 1, d = 0){
+sineGaussian_biv <- function(N, a = 1){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
   Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
-  Y = Y + d*X
 
   return(data.frame(Z1,Z2,X,Y))
 }
@@ -101,10 +100,7 @@ NonLinearCategorization <- function(N, d = 0) {
     }
   }
 
-  return(data.frame(
-    Z,
-    X,
-    Y = factor(Y, levels = c("Low", "Medium", "High", "Very High"))
+  return(data.frame(Z, X, Y = factor(Y, levels = c("Low", "Medium", "High", "Very High"))
   ))
 }
 
@@ -163,6 +159,7 @@ BivNonLinearCategorization <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y (both factors).
 #' @export
+#'
 BivMultinominal <- function(N, zeta = 1.5) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
@@ -328,7 +325,7 @@ NonLinearData <- function(N) {
 
 
   for (i in 1:N) {
-    # X depends on sin(pi * Z1) + Z2
+
     if (sin(Z1[i] * pi) + Z2[i] > 1) {
       X[i] <- "Very High"
     } else if (sin(Z1[i] * pi) + Z2[i] > 0.5) {
@@ -339,7 +336,7 @@ NonLinearData <- function(N) {
       X[i] <- "Low"
     }
 
-    # Y depends on cos(pi * Z1) + Z2
+
     if (cos(Z1[i] * pi) + Z2[i] > 1) {
       Y[i] <- "Class A"
     } else if (cos(Z1[i] * pi) + Z2[i] > 0.5) {
@@ -465,12 +462,11 @@ NonLinNormal <- function(N, d = 0){
 #' @examples
 #' head(UniformNoise(100))
 #'
-UniformNoise <- function(N, d = 0) {
+UniformNoise <- function(N) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   X = Z2 - Z1 - Z2 * Z1 + runif(N, min=-2, max=2)
-  Y = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2) + d*X
-
+  Y = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -487,12 +483,12 @@ UniformNoise <- function(N, d = 0) {
 #'
 #' @examples
 #' head(ExponentialNoise(100))
-ExponentialNoise <- function(N, rate_param = 1, d = 0) {
+ExponentialNoise <- function(N, rate_param = 1) {
   Z1 = rnorm(N, 0, 1)
   Z2 = rnorm(N, 0, 1)
   rate_param = rate_param
   X = Z2 - Z1 - Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
-  Y = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param) + d*X
+  Y = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
 
 
   df <- data.frame(Z1, Z2, X, Y)
@@ -512,11 +508,11 @@ ExponentialNoise <- function(N, rate_param = 1, d = 0) {
 #' @examples
 #' head(PoissonNoise(100))
 #'
-PoissonNoise <- function(N, lambda = 1, d = 0){
+PoissonNoise <- function(N, lambda = 1){
   Z1 = rnorm(N,0,1)
   Z2 = rnorm(N,0,1)
   X = Z2*Z1 + (rpois(N, lambda = lambda)-1)
-  Y = Z2*Z1  + (rpois(N, lambda = lambda)-1) + d*X
+  Y = Z2*Z1  + (rpois(N, lambda = lambda)-1)
 
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
