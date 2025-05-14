@@ -4,7 +4,7 @@
 \alias{UniformNoise}
 \title{Generate Data with Uniform Noise}
 \usage{
-UniformNoise(N, d = 0)
+UniformNoise(N)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

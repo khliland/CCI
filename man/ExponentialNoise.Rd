@@ -4,7 +4,7 @@
 \alias{ExponentialNoise}
 \title{Generate Data with Exponential Noise}
 \usage{
-ExponentialNoise(N, rate_param = 1, d = 0)
+ExponentialNoise(N, rate_param = 1)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

@@ -45,7 +45,7 @@ test_that("CCI.test outputs a list", {
 })
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'lightgbm', tune = T)
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'rf', tune = T, choose_direction = T)
   expect_true(is.list(result))
 })
 

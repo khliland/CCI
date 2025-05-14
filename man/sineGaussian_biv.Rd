@@ -4,7 +4,7 @@
 \alias{sineGaussian_biv}
 \title{Generate Sine-Gaussian Data (Bivariate)}
 \usage{
-sineGaussian_biv(N, a = 1, d = 0)
+sineGaussian_biv(N, a = 1)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

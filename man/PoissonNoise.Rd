@@ -4,7 +4,7 @@
 \alias{PoissonNoise}
 \title{Generate Data with Poisson Noise}
 \usage{
-PoissonNoise(N, lambda = 1, d = 0)
+PoissonNoise(N, lambda = 1)
 }
 \arguments{
 \item{N}{Integer. Sample size.}

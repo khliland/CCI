@@ -4,7 +4,7 @@
 \alias{NormalData}
 \title{Generate Normal Data for Conditional Independence Testing}
 \usage{
-NormalData(N, d = 0)
+NormalData(N)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
