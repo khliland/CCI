@@ -44,21 +44,22 @@ test_that("CCI.test outputs a list", {
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
+  dat <- NonLinNormal(500)
   result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'rf', tune = T, choose_direction = T)
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, samples = 5, nperm = 25, data = dat, method = 'xgboost', tune = T)
+  dat <- NonLinNormal(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, nperm = 60, data = dat, method = 'rf')
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'svm', tune = T)
-  expect_true(is.list(result))
+  dat <- NonLinNormal(500)
+  res <- CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, parametric = TRUE, method = 'rf',  tune = T, choose_direction = T)
+
+  expect_true(is.list(res))
 })
 
 #-------------------------------------------------------------------------------
