@@ -137,22 +137,13 @@ CCI.pretuner <- function(formula,
             paste(names(data)[formula_vars[-1]][nzv$nzv], collapse = ", "))
   }
 
-  if (method == "nnet") {
-    trace <- trace
-  } else {
-    trace <- NULL
-  }
-
   org_formula <- formula # Store the original formula for later use
   formula <- clean_formula(formula)
 
   Y = formula[[2]]
   X = formula[[3]][[2]]
   Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
-  if (any(sapply(data[Z], is.factor))) {
-    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
-    poly <- FALSE
-  }
+
   poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
   data <- poly_result$data
   poly_terms <- poly_result$new_terms
@@ -221,87 +212,7 @@ CCI.pretuner <- function(formula,
   }
 
 
-  if (method == "lightgbm") {
-    if (!requireNamespace("lightgbm", quietly = TRUE)) {
-      stop("Package 'lightgbm' is required for method 'lightgbm'")
-    }
-    tuneGrid <- expand.grid(
-      num_leaves = num_leaves,
-      learning_rate = learning_rate,
-      feature_fraction = feature_fraction,
-      bagging_fraction = bagging_fraction,
-      min_data_in_leaf = min_data_in_leaf
-    )
-    if (random_grid) {
-      total <- nrow(tuneGrid)
-      sample_n <- min(samples, total)
-      cat("Total combinations in grid:", total, "\n")
-      cat("Randomly sampling", sample_n, "combinations...\n\n")
-      tuneGrid <- tuneGrid[sample(seq_len(total), sample_n), , drop = FALSE]
-    }
-
-    warning_log <- character()
-    results <- lapply(seq_len(nrow(tuneGrid)), function(i) {
-      row <- tuneGrid[i, , drop = FALSE]
-      if (verbose) {
-        cat("Training LightGBM with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
-      }
-      dtrain <- lightgbm::lgb.Dataset(data = X, label = as.numeric(Y))
-      cv_result <- tryCatch({
-        lightgbm::lgb.cv(
-          params = list(
-            objective = switch(data_type,
-                               continuous = "regression",
-                               binary = "binary",
-                               categorical = "multiclass"),
-            num_leaves = row$num_leaves,
-            learning_rate = row$learning_rate,
-            feature_fraction = row$feature_fraction,
-            bagging_fraction = row$bagging_fraction,
-            min_data_in_leaf = row$min_data_in_leaf,
-            num_threads = if (parallel) max(1, parallel::detectCores() - 1) else 1,
-            ...
-          ),
-          data = dtrain,
-          nfold = folds,
-          nrounds = max(nrounds),
-          early_stopping_rounds = 10,
-          verbose = if (verbose) 1 else -1
-        )
-      }, error = function(e) {
-        warning_log <<- c(warning_log, paste("Error for parameters ",
-                                             paste(names(row), row, sep = "=", collapse = ", "),
-                                             ": ", conditionMessage(e)))
-        NULL
-      })
-      if (is.null(cv_result)) return(NULL)
-      metric_value <- if (data_type == "continuous") {
-        cv_result$best_score  # RMSE
-      } else {
-        cv_result$best_score  # Accuracy for binary/categorical
-      }
-      res <- data.frame(
-        RMSE = if (data_type == "continuous") metric_value else NA,
-        Accuracy = if (data_type %in% c("binary", "categorical")) metric_value else NA,
-        nrounds = cv_result$best_iter
-      )
-      cbind(row, res)
-    })
-
-    results <- results[!sapply(results, is.null)]
-    if (length(results) == 0) {
-      stop("No LightGBM models were successfully trained. Check parameter ranges and data.")
-    }
-    results_df <- do.call(rbind, results)
-    best_idx <- if (metric == "RMSE") which.min(results_df$RMSE) else which.max(results_df$Accuracy)
-    best <- results_df[best_idx, ]
-    best$method <- method
-    if (length(warning_log) > 0) {
-      warning("Tuning completed with ", length(warning_log), " warnings. Check result$warnings for details.")
-    }
-    cat("\n Tuning complete. Best model found.\n")
-    return(list(best_param = best, tuning_result = results_df))
-  }
+  warning_log <- character()
 
   caret_method <- switch(method,
                          rf = "rf",
@@ -337,6 +248,7 @@ CCI.pretuner <- function(formula,
                               } else caret::defaultSummary
   )
 
+  if (is.null(tuneGrid)) {
   tuneGrid <- switch(method,
                      rf   = expand.grid(mtry = mtry),
                      xgboost = expand.grid(
@@ -349,13 +261,9 @@ CCI.pretuner <- function(formula,
                        min_child_weight = min_child_weight
                      ),
                      svm = expand.grid(sigma = sigma, C = C),
-                     lightgbm = expand.grid(
-                       num_leaves = c(20, 31, 40),
-                       learning_rate = c(0.01, 0.1, 0.3),
-                       feature_fraction = c(0.6, 0.8, 1.0)
-                     ),
-                     stop("Unsupported method.")
+                     stop("Unsupported method for pretuning.")
   )
+  }
 
 
   if (random_grid) {
@@ -387,9 +295,7 @@ CCI.pretuner <- function(formula,
         metric = metric,
         ...
       )
-      if (caret_method == "nnet") {
-        train_args$trace <- trace
-      }
+
       model <- tryCatch(
         {
           withCallingHandlers(

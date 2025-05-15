@@ -129,18 +129,6 @@ test.gen <- function(formula,
     null[iteration] <- tryCatch({
       if (!is.null(mlfunc)) {
         mlfunc(formula, data = resampled_data, train_indices, test_indices, data_type = data_type, num_class = num_class, ...)
-      } else if (method == "lightgbm") {
-        wrapper_lightgbm(
-          formula,
-          resampled_data,
-          train_indices,
-          test_indices,
-          data_type = data_type,
-          num_class = num_class,
-          metricfunc = metricfunc,
-          nrounds = nrounds,
-          ...
-        )
       } else if (method == "xgboost") {
         objective <- switch(data_type,
                             binary = "binary:logistic",
@@ -187,8 +175,8 @@ test.gen <- function(formula,
       NA
     })
 
-    # Progress update (every 10%)
-    if (iteration %% ceiling(nperm / 10) == 0) {
+    step <- max(1, ceiling(nperm / 100))
+    if (iteration %% step == 0) {
       percentage <- (iteration / nperm) * 100
       cat(sprintf("%s: %d%% complete\r", "Creating null distribution", round(percentage)))
       flush.console()

@@ -9,18 +9,14 @@ devtools::document()
 devtools::load_all()
 library(CCI)
 #-------------------------------------------------------------------------------
-# Basic tests
+# Basic tests CCI.test()
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
   result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf')
   expect_true(is.list(result))
 })
-test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'lightgbm')
-  expect_true(is.list(result))
-})
+
 
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
@@ -34,13 +30,21 @@ test_that("CCI.test outputs a list", {
   expect_true(is.list(result))
 })
 
-
+#-------------------------------------------------------------------------------
+# Basic tests CCI.pretuner
+#-------------------------------------------------------------------------------
+test_that("CCI.pretuner outputs a list", {
+  dat <- sineGaussian(500)
+  result <- CCI.pretuner(formula = Y ~ X + Z, data = dat, method = 'xgboost')
+  expect_true(is.list(result))
+})
 #--------------------
 # With tuning
 #--------------------
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', tune = T, interaction = F)
+  dat <- sineGaussian(500)
+
+  result <- CCI.test(formula = Y ~ X + Z, data = dat, method = 'xgboost', tune = T)
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
@@ -56,8 +60,13 @@ test_that("CCI.test outputs a list", {
 })
 
 test_that("CCI.test outputs a list", {
-  dat <- NonLinNormal(500)
-  res <- CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, parametric = TRUE, method = 'rf',  tune = T, choose_direction = T)
+  data <- NonLinNormal(500)
+
+  res <- CCI.test(formula = Y ~ X | Z1,
+                         data = data,
+                         interaction = FALSE,
+                         method = 'xgboost',
+                         tune = T)
 
   expect_true(is.list(res))
 })

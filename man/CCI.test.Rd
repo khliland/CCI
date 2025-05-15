@@ -26,7 +26,7 @@ CCI.test(
   mlfunc = NULL,
   tail = NA,
   tune = FALSE,
-  samples = 30,
+  samples = 35,
   folds = 5,
   tune_length = 10,
   seed = NA,
