@@ -48,7 +48,6 @@ wrapper_xgboost <- function(formula,
   train_label <- training[[dependent]]
   test_label <- testing[[dependent]]
 
-  # Create LightGBM datasets
   dtrain <- xgboost::xgb.DMatrix(data = train_features, label = as.numeric(train_label))
   dtest <- test_features
 

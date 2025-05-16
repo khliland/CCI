@@ -13,7 +13,7 @@ library(CCI)
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf')
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', interaction = F)
   expect_true(is.list(result))
 })
 

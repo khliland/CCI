@@ -6,7 +6,7 @@
 #' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data Data frame. The data containing the variables used in the analysis.
 #' @param data_type Character. The type of data of the Y parameter: can be "continuous", "binary", or "categorical".
-#' @param method Character. The modeling method to be used. Options include "lightgbm" for LightGBM, "xgboost" for gradient boosting, or "rf" for random forests.
+#' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.
 #' @param nperm Integer. The number of generated samples or permutations. Default is 100.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.
 #' @param N Integer. The total number of observations in the data. Default is the number of rows in the data frame.
@@ -130,10 +130,14 @@ test.gen <- function(formula,
       if (!is.null(mlfunc)) {
         mlfunc(formula, data = resampled_data, train_indices, test_indices, data_type = data_type, num_class = num_class, ...)
       } else if (method == "xgboost") {
-        objective <- switch(data_type,
-                            binary = "binary:logistic",
-                            categorical = "multi:softprob",
-                            continuous = "reg:squarederror")
+        if (!"objective" %in% names(list(...))) {
+          objective <- switch(data_type,
+                              binary = "binary:logistic",
+                              categorical = "multi:softprob",
+                              continuous = "reg:squarederror")
+        } else {
+          objective <- list(...)$objective
+        }
         wrapper_xgboost(
           formula,
           resampled_data,
