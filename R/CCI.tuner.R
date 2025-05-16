@@ -38,6 +38,7 @@
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
 #' @importFrom stats model.matrix var
+#' @importFrom base cor
 #'
 #' @return A list containing:
 #' \itemize{

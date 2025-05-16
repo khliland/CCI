@@ -18,7 +18,7 @@
 #' @examples
 #' # Example usage
 #' # Load necessary libraries
-#' dat <- sineGaussian_biv(N = 500, a = 2, d = 0)
+#' dat <- sineGaussian_biv(N = 500, a = 2)
 #'
 #' formula_init <- Y ~ X + Z1 + Z2
 #'

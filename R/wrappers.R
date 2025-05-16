@@ -15,6 +15,8 @@
 #' @importFrom stats model.matrix predict
 #' @importFrom caret confusionMatrix
 #' @importFrom rlang %||%
+#' @importFrom base modifyList
+#'
 #' @return Performance metric
 #' @export
 
@@ -65,7 +67,7 @@ wrapper_xgboost <- function(formula,
   )
 
   dots <- list(...)
-  params <- base::modifyList(params, dots)
+  params <- modifyList(params, dots)
 
   params <- params[!sapply(params, is.null)]
 

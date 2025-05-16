@@ -436,7 +436,7 @@ BinaryData <- function(N, threshold = 0) {
 #' @examples
 #' head(NonLinNormal(N = 100))
 #'
-NonLinNormal <- function(N, d = 0){
+NonLinNormal <- function(N){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
   X <- Z1*Z2 + rnorm(N,0,1)

@@ -45,7 +45,7 @@
 #'
 #' # Example: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-#' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 500)
+#' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 500, interaction = FALSE)
 #'
 #'
 #' # Example: Using xgboost when y is categorical

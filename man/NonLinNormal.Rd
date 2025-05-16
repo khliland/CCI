@@ -4,7 +4,7 @@
 \alias{NonLinNormal}
 \title{Generate Nonlinear Normal Data}
 \usage{
-NonLinNormal(N, d = 0)
+NonLinNormal(N)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
