@@ -174,7 +174,7 @@ BivMultinominal <- function(N, zeta = 1.5) {
   X <- ifelse(random < xp1, 0, ifelse(random < xp1 + xp2,1,2))
 
   yb1 = zeta*Z1*Z2
-  yb2 <- exp(Z2) +  Z1 + d*X
+  yb2 <- exp(Z2) +  Z1
 
   yp1 <- 1/(1+exp(yb1) + exp(yb2))
   yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))

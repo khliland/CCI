@@ -21,12 +21,9 @@ CCI.pretuner(
   degree = 3,
   interaction = TRUE,
   verboseIter = FALSE,
-  trace = FALSE,
   include_explanatory = FALSE,
   verbose = FALSE,
   parallel = FALSE,
-  size = 1:5,
-  decay = c(0.001, 0.01, 0.1, 0.2, 0.5, 1),
   mtry = 1:10,
   nrounds = seq(50, 400, by = 50),
   eta = seq(0.01, 0.3, by = 0.05),
@@ -37,11 +34,6 @@ CCI.pretuner(
   min_child_weight = 1:5,
   sigma = seq(0.1, 2, by = 0.3),
   C = seq(0.1, 2, by = 0.5),
-  num_leaves = c(20, 31, 40),
-  learning_rate = seq(0.1, 0.9, by = 0.1),
-  feature_fraction = seq(0.1, 1, by = 0.1),
-  bagging_fraction = seq(0.1, 1, by = 0.1),
-  min_data_in_leaf = c(5, 10, 20, 30),
   ...
 )
 }
@@ -76,17 +68,11 @@ CCI.pretuner(
 
 \item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
 
-\item{trace}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
-
 \item{include_explanatory}{Logical. If TRUE, given the condition Y \emph{||} X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE}
 
 \item{verbose}{Logical. If TRUE, the function will print the tuning process. Default is FALSE..}
 
 \item{parallel}{Logical. If TRUE, the function will use parallel processing. Default is TRUE.}
-
-\item{size}{Integer. The size of the neural network. Default is 1:5.}
-
-\item{decay}{Numeric. The decay parameter for the neural network. Default is c(0, 0.01, 0.1).}
 
 \item{mtry}{Integer. The number of variables randomly sampled as candidates at each split for random forest. Default is 1:5.}
 
@@ -108,17 +94,7 @@ CCI.pretuner(
 
 \item{C}{Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).}
 
-\item{num_leaves}{Integer. The number of leaves in the tree for LightGBM. Default is c(20, 31, 40).}
-
-\item{learning_rate}{Numeric. The learning rate for LightGBM. Default is c(0.01, 0.1, 0.3).}
-
-\item{feature_fraction}{Numeric. The fraction of features to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).}
-
-\item{bagging_fraction}{Numeric. The fraction of data to be used for LightGBM. Default is seq(0.1, 1, by = 0.1).}
-
 \item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
-
-\item{seed}{Integer. The seed for random number generation. Default is 1984.}
 }
 \value{
 A list containing:
@@ -135,11 +111,19 @@ The \code{CCI.tuner} function performs a grid search over parameters for a condi
 set.seed(123)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 # Tune random forest parameters
-result <- CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 5, folds = 3, method = "rf")
+result <- CCI.pretuner(formula = y ~ x1 | x2,
+data = data,
+samples = 5,
+folds = 3,
+method = "rf")
 # Returns a list with best parameters and tuning results
 if (requireNamespace("xgboost", quietly = TRUE)) {
   # Tune xgboost parameters
-  result_xgb <- CCI.pretuner(formula = y ~ x1 | x2, data = data, seed = 192, samples = 5, folds = 3, method = "xgboost")
+  result_xgb <- CCI.pretuner(formula = y ~ x1 | x2,
+  data = data,
+  samples = 5,
+  folds = 3,
+  method = "xgboost")
 }
 }
 \seealso{

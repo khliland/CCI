@@ -10,8 +10,6 @@ sineGaussian_biv(N, a = 1)
 \item{N}{Integer. Sample size.}
 
 \item{a}{Numeric. Frequency parameter for the sine function. Default is 1.}
-
-\item{d}{Numeric. Strength of dependency between X and Y. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.

@@ -76,6 +76,8 @@ CCI.test(
 
 \item{tune}{Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.}
 
+\item{samples}{Integer. The number of samples to use for tuning. Default is 35.}
+
 \item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 5.}
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
