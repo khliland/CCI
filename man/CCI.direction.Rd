@@ -44,15 +44,14 @@ formula either Y ~ X | Z or X ~ Y | Z .
 }
 \examples{
 # Example usage
-# Load necessary libraries
-dat <- sineGaussian_biv(N = 500, a = 2)
+dat <- sineGaussian_biv(N = 100, a = 2)
 
 formula_init <- Y ~ X + Z1 + Z2
 
 chosen_formula <- CCI.direction(
  formula = formula_init,
  data = dat,
- method = "xgboost",
+ method = "rf",
  data_type = "continuous",
  folds = 2,
  seed = 1)

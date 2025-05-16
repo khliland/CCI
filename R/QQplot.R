@@ -61,9 +61,13 @@ QQplot <- function(object, ...) {
   formula <- clean_formula(formula)
   check_formula(formula, data)
 
-  test_result <- test.gen(Y = formula[[2]],
-                          X = formula[[3]][[2]],
-                          Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ ")),
+  Y <- all.vars(formula)[1]
+  X <- all.vars(formula[[3]])[1]
+  Z <- all.vars(formula[[3]])[-1]
+
+  test_result <- test.gen(Y = Y,
+                          X = X,
+                          Z = Z,
                           data = data,
                           permutation = FALSE,
                           data_type = data_type,

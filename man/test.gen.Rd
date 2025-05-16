@@ -9,7 +9,7 @@ test.gen(
   data,
   data_type = "continuous",
   method = "rf",
-  nperm = 100,
+  nperm = 60,
   p = 0.8,
   N = nrow(data),
   poly = TRUE,
@@ -25,15 +25,15 @@ test.gen(
 )
 }
 \arguments{
-\item{formula}{Model formula or DAGitty object specifying the relationship between dependent and independent variables.}
+\item{formula}{Formula specifying the relationship between dependent and independent variables.}
 
-\item{data}{Data frame. The data containing the variables used in the analysis.}
+\item{data}{Data frame. The data containing the variables used.}
 
 \item{data_type}{Character. The type of data of the Y parameter: can be "continuous", "binary", or "categorical".}
 
-\item{method}{Character. The modeling method to be used. Options include "lightgbm" for LightGBM, "xgboost" for gradient boosting, or "rf" for random forests.}
+\item{method}{Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.}
 
-\item{nperm}{Integer. The number of generated samples or permutations. Default is 100.}
+\item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 60.}
 
 \item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.}
 
@@ -73,12 +73,11 @@ x2 = rnorm(100),
 x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
-result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, method = "lightgbm", degree = 4)
-data <- BinaryData(400)
+result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, method = "rf", degree = 4)
 result <- test.gen(formula = Y ~ X | Z1 + Z2,
                    data = data,
                    nperm = 40,
-                   method = "lightgbm",
+                   method = "xgboost",
                    data_type = "binary",
                    permutation = FALSE,
                    poly = TRUE,

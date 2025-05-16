@@ -19,7 +19,7 @@ Plot for CCI testing
 }
 \examples{
 dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-cci <- perm.test(y ~ x1 + x2, data = dat)
+cci <- perm.test(y ~ x1 + x2, data = dat, interaction = F)
 plot(cci)
 }
 \seealso{
