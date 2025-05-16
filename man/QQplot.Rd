@@ -19,7 +19,10 @@ QQ-plot for multiple testing in CCI
 }
 \examples{
 dat <- data.frame(x1 = rnorm(200), x2 = rnorm(200), y = rnorm(200))
-cci <- CCI.test(y ~ x1 | x2, data = dat, nperm = 100)
+cci <- CCI.test(y ~ x1 | x2,
+data = dat,
+nperm = 50,
+interaction = FALSE)
 QQplot(cci)
 }
 \seealso{

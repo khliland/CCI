@@ -102,19 +102,19 @@ set.seed(123)
 
 # Example: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-result <- CCI.test(y ~ x1 | x2, data = data, nperm = 500)
+result <- CCI.test(y ~ x1 | x2, data = data, nperm = 50, interaction = FALSE)
 
 
 # Example: Using xgboost when y is categorical
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
                    y = sample(1:3, 100, replace = TRUE) - 1)
 result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
-                   data_type = "categorical", nperm = 50, num_class = 3)
+                   data_type = "categorical", nperm = 25, num_class = 3)
 
 # Example: Again we can switch y and x1 (still using xgboost)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
                    y = sample(1:3, 100, replace = TRUE) - 1)
-result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 200, seed = 1)
+result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 50)
 
 # Example:
 custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {

@@ -54,7 +54,7 @@ chosen_formula <- CCI.direction(
  data = dat,
  method = "xgboost",
  data_type = "continuous",
- folds = 5,
+ folds = 2,
  seed = 1)
 
 chosen_formula
