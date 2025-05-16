@@ -64,7 +64,7 @@ A list containing the test distribution.
 }
 \description{
 This function generates the test statistic or a null distribution through permutation for conditional independence testing.
-It supports various machine learning methods, including random forests, gradient boosting, and LightGBM, and allows for custom metric functions and model fitting functions.
+It supports various machine learning methods, including random forests, extreme gradient boosting, and allows for custom metric functions and model fitting functions.
 }
 \examples{
 set.seed(123)

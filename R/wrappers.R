@@ -1,96 +1,3 @@
-#' Light Gradient Boosting Machine Wrapper for CCI
-#'
-#' Fits a LightGBM model and computes a performance metric for conditional independence testing.
-#'
-#' @param formula Model formula (e.g., Y ~ X + Z1 + Z2).
-#' @param data Data frame containing the variables in the formula.
-#' @param train_indices Indices for training data.
-#' @param test_indices Indices for testing data.
-#' @param data_type Character. Type of response: "continuous", "binary", or "categorical".
-#' @param num_class Integer. Number of classes for categorical data (default is 2).
-#' @param metricfunc A user-specified function to calculate a metric (optional).
-#' @param ... Additional arguments passed to lightgbm::lgb.train.
-#'
-#' @return Numeric. Performance metric (RMSE for continuous, Kappa for binary/categorical, or custom metric).
-#' @importFrom lightgbm lgb.Dataset lgb.train
-#' @importFrom stats model.matrix predict
-#' @importFrom caret confusionMatrix
-#' @export
-wrapper_lightgbm <- function(formula,
-                             data,
-                             train_indices,
-                             test_indices,
-                             data_type,
-                             num_class = 2,
-                             metricfunc = NULL,
-                             ...) {
-  if (!requireNamespace("lightgbm", quietly = TRUE)) {
-    stop("Package 'lightgbm' is required for method 'lightgbm'")
-  }
-
-  independent <- all.vars(formula)[-1]
-  dependent <- all.vars(formula)[1]
-  training <- data[train_indices, ]
-  testing <- data[test_indices, ]
-
-  if (any(sapply(training[independent], is.factor))) {
-    train_features <- model.matrix(~ . - 1, data = training[independent])
-    test_features <- model.matrix(~ . - 1, data = testing[independent])
-  } else {
-    train_features <- as.matrix(training[independent])
-    test_features <- as.matrix(testing[independent])
-  }
-  train_label <- training[[dependent]]
-  test_label <- testing[[dependent]]
-
-  # Create LightGBM datasets
-  dtrain <- lightgbm::lgb.Dataset(data = train_features, label = as.numeric(train_label))
-  dtest <- test_features
-
-  # Set objective based on data_type
-  objective <- switch(data_type,
-                      continuous = "regression",
-                      binary = "binary",
-                      categorical = "multiclass")
-
-
-  model <- lightgbm::lgb.train(
-    params = list(objective = objective, num_class = if (data_type == "categorical") num_class else 1, ...),
-    data = dtrain,
-    verbose = -1
-  )
-
-
-  pred <- predict(model, dtest)
-
-  # Compute metric
-  if (!is.null(metricfunc)) {
-    metric <- metricfunc(data, model, test_indices)
-  } else if (data_type == "continuous") {
-    actual <- test_label
-    metric <- sqrt(mean((pred - actual)^2))  # RMSE
-  } else if (data_type %in% c("binary", "categorical")) {
-    if (data_type == "binary") {
-      pred_class <- ifelse(pred > 0.5, levels(factor(test_label))[2], levels(factor(test_label))[1])
-    } else {
-      pred <- matrix(pred, ncol = num_class, byrow = TRUE)
-      pred_class <- levels(factor(test_label))[max.col(pred)]
-    }
-    conf_matrix <- tryCatch(
-      caret::confusionMatrix(
-        factor(pred_class, levels = levels(factor(test_label))),
-        factor(test_label, levels = levels(factor(test_label)))
-      ),
-      error = function(e) NULL
-    )
-    metric <- if (!is.null(conf_matrix)) conf_matrix$overall["Kappa"] else NA
-  } else {
-    stop("Unsupported data_type: ", data_type)
-  }
-
-  return(metric)
-}
-
 #' Extreme Gradient Boosting wrapper for CCI
 #'
 #' @param formula Model formula
@@ -158,7 +65,7 @@ wrapper_xgboost <- function(formula,
   )
 
   dots <- list(...)
-  params <- modifyList(params, dots)
+  params <- base::modifyList(params, dots)
 
   params <- params[!sapply(params, is.null)]
 

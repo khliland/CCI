@@ -1,7 +1,7 @@
 #' Generate the Test Statistic or Null Distribution Using Permutation
 #'
 #' This function generates the test statistic or a null distribution through permutation for conditional independence testing.
-#' It supports various machine learning methods, including random forests, gradient boosting, and LightGBM, and allows for custom metric functions and model fitting functions.
+#' It supports various machine learning methods, including random forests, extreme gradient boosting, and allows for custom metric functions and model fitting functions.
 #'
 #' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data Data frame. The data containing the variables used in the analysis.

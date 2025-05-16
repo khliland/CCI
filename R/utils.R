@@ -41,7 +41,7 @@ check_formula <- function(formula, data) {
 #' try(clean_formula(y ~ x))
 
 clean_formula <- function(formula) {
-  formula_terms <- attr(terms(formula), "term.labels")
+  formula_terms <- attr(stats::terms(formula), "term.labels")
 
   tryCatch({ if ("|" %in% all.names(formula)) {
     new_formula <- formula
