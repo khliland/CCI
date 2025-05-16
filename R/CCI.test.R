@@ -25,6 +25,7 @@
 #' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
+#' @param samples Integer. The number of samples to use for tuning. Default is 35.
 #' @param seed Integer. The seed for tuning. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
