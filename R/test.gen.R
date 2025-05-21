@@ -179,9 +179,13 @@ test.gen <- function(formula,
     })
 
     step <- max(1, ceiling(nperm / 100))
-    if (iteration %% step == 0) {
+    if (iteration %% step == 0 && permutation) {
       percentage <- (iteration / nperm) * 100
       cat(sprintf("%s: %d%% complete\r", "Creating null distribution", round(percentage)))
+      flush.console()
+    } else if (iteration %% step == 0 && !permutation && nperm > 9) {
+      percentage <- (iteration / nperm) * 100
+      cat(sprintf("%s: %d%% complete\r", "Creating test statistic distribution", round(percentage)))
       flush.console()
     }
   }

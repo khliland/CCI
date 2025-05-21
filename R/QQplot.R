@@ -36,11 +36,9 @@ QQplot <- function(object, ...) {
   tail <- object$tail
   parametric <- object$parametric
   p <- object$p
-  family_object <- object$family
-  family <- object$family$family
-  link <- object$family$link
   degree <- object$degree
   poly <- object$poly
+  interaction <- object$interaction
   additional_args <- object$additional_args
 
   # Ensure p and N are numeric
@@ -61,13 +59,8 @@ QQplot <- function(object, ...) {
   formula <- clean_formula(formula)
   check_formula(formula, data)
 
-  Y <- all.vars(formula)[1]
-  X <- all.vars(formula[[3]])[1]
-  Z <- all.vars(formula[[3]])[-1]
 
-  test_result <- test.gen(Y = Y,
-                          X = X,
-                          Z = Z,
+  test_result <- test.gen(formula = formula,
                           data = data,
                           permutation = FALSE,
                           data_type = data_type,
@@ -78,7 +71,7 @@ QQplot <- function(object, ...) {
                           p = p,
                           degree = degree,
                           poly = poly,
-                          family = family_object,
+                          interaction = interaction,
                           additional_args,
                           ...)
 

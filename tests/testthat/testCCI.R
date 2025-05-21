@@ -38,6 +38,17 @@ test_that("CCI.pretuner outputs a list", {
   result <- CCI.pretuner(formula = Y ~ X + Z, data = dat, method = 'xgboost')
   expect_true(is.list(result))
 })
+
+#-------------------------------------------------------------------------------
+# Basic tests QQplot
+#-------------------------------------------------------------------------------
+test_that("QQplot should produce a QQplot", {
+  dat <- NormalData(500)
+  cci_obj <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, nperm = 200)
+  QQplot(cci_obj)
+  expect_true(is.list(result))
+})
+
 #--------------------
 # With tuning
 #--------------------
