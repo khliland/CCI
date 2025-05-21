@@ -25,7 +25,7 @@ check_formula <- function(formula, data) {
 
 #' Clean and Reformat Formula String
 #'
-#' This function processes and reformats a formula string to ensure it is in the correct format for conditional independence testing.
+#' This function processes and reformats  formula string to ensure it is in the correct format for conditional independence testing.
 #' The function checks if the formula uses the '+' operator for additive models and transforms it into a format that includes a conditioning variable separated by '|'.
 #'
 #' @param formula Formula. The model formula that specifies the relationship between the dependent and independent variables, and potentially the conditioning variables. The formula is expected to follow the format `Y ~ X + Z1 + Z2` or `Y ~ X | Z1 + Z2`.
@@ -131,7 +131,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #'
 
 get_tuned_params <- function(tuned_model) {
-  supported_methods <- c("rf", "xgboost", "nnet", "svm", "gpr", 'lightgbm')
+  supported_methods <- c("rf", "xgboost", "svm")
   if (!tuned_model$method %in% supported_methods) {
     warning("Unsupported method '", tuned_model$method, "'. Returning NULL.")
     return(NULL)
@@ -152,14 +152,9 @@ get_tuned_params <- function(tuned_model) {
   } else if (tuned_model$method == 'svm') {
     return(list(gamma = tuned_model$sigma,
                 cost = tuned_model$C))
-  } else if (tuned_model$method == 'gpr'){
-    return(list(kpar = list(sigma = tuned_model$sigma)))
-  } else if (tuned_model$method == 'lightgbm') {
-    return(list(learning_rate = tuned_model$learning_rate,
-                feature_fraction = tuned_model$feature_fraction,
-                bagging_fraction = tuned_model$bagging_fraction,
-                num_leaves = tuned_model$num_leaves,
-                min_data_in_leaf = tuned_model$min_data_in_leaf))
+  }
+  else {
+    warning("Unsupported method '", tuned_model$method, "'. Returning NULL.")
     return(NULL)
   }
 }
