@@ -127,7 +127,7 @@ test.gen <- function(formula,
     # Apply machine learning method
     null[iteration] <- tryCatch({
       if (!is.null(mlfunc)) {
-        mlfunc(formula, data = resampled_data, train_indices, test_indices, data_type = data_type, num_class = num_class, ...)
+        mlfunc(formula, data = resampled_data, train_indices, test_indices ...)
       } else if (method == "xgboost") {
         if (!"objective" %in% names(list(...))) {
           objective <- switch(data_type,
