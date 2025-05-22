@@ -14,7 +14,7 @@
 print.summary.CCI <- function(x, ...) {
 
   cat(paste0("Computational conditional independence test using '", x$MLfunc, "'.\n")) #Fix so compatible with custom made functions
-  cat("CI condition tested: ", deparse(x$formula), "\n")
+  cat("Null hypothesis: ", deparse(x$formula), "\n")
   cat("Number of Monte Carlo samples: ", x$nperm, "\n")
   cat("Performance Metric: ", x$metric, "\n")
   cat("Test Statistic: ", unlist(x$test.statistic), "\n")
