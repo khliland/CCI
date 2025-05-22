@@ -115,7 +115,7 @@ perm.test <- function(formula,
               if (data_type == "continuous") {
                 "RMSE"
               } else {
-                "Accuracy"
+                "Kappa Score"
               }
   }
 
