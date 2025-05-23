@@ -139,18 +139,16 @@ return(df)
 }
 
 data <- data_generator(500)
-custom_metric <- function(data, model, test_indices) {
- predictions <- predict(model, data = data[test_indices, ])$predictions
- actual <- data[test_indices, ][["Y"]]
- sst <- sum((actual - mean(actual))^2)
- ssr <- sum((actual - predictions)^2)
- rsq <- 1 - (ssr / sst)
- return(rsq) # R-squared
+Rsquare_metric  <- function(actual, predictions, ...) {
+sst <- sum((actual - mean(actual))^2)
+ssr <- sum((actual - predictions)^2)
+metric <- 1 - (ssr / sst)
+return(metric)
 }
 correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 100,
-                         metricfunc = custom_metric, tail = "right")
+                         metricfunc = Rsquare_metric, tail = "right")
 false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 100,
-                       metricfunc = custom_metric, tail = "right")
+                       metricfunc = Rsquare_metric, tail = "right")
 }
 \seealso{
 \code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{CCI.pretuner}}, \code{\link{QQplot}}

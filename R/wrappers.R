@@ -77,21 +77,21 @@ wrapper_xgboost <- function(formula,
                               nrounds = nrounds,
                               verbose = 0)
 
-  pred <- predict(model, newdata = dtest)
+  predictions <- predict(model, newdata = dtest)
   actual <- y_test
   if (!is.null(metricfunc)) {
     data_type <- "custom"
     metric <- metricfunc(actual, predictions, ...)
   } else if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
-    metric <- sqrt(mean((pred - actual)^2))
+    metric <- sqrt(mean((predictions - actual)^2))
   } else if (params$objective %in% "binary:logistic") {
-    pred_class <- ifelse(pred > 0.5, 1, 0)
+    pred_class <- ifelse(predictions > 0.5, 1, 0)
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
     metric <- conf_matrix$overall[2]
   } else if (params$objective %in% "multi:softprob") {
     levels <- levels(factor(train_label))
-    pred <- matrix(pred, ncol=num_class, byrow=TRUE)
-    pred_class <- max.col(pred) - 1
+    predictions <- matrix(predictions, ncol=num_class, byrow=TRUE)
+    pred_class <- max.col(predictions) - 1
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels), factor(test_label, levels = levels)), silent = TRUE)
     metric <- conf_matrix$overall[2]
   } else {

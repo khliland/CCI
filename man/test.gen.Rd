@@ -15,7 +15,7 @@ test.gen(
   poly = TRUE,
   interaction = TRUE,
   degree = 3,
-  nrounds = 500,
+  nrounds = 120,
   num_class = NULL,
   nthread = 1,
   permutation = FALSE,

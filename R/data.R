@@ -39,6 +39,7 @@ sineGaussian <- function(N, a = 1, d = 0){
 #'
 #' @param N Integer. Sample size.
 #' @param a Numeric. Frequency parameter for the sine function. Default is 1.
+#' @param d Numeric. Strength of dependency between X and Y. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -174,7 +175,7 @@ BivMultinominal <- function(N, zeta = 1.5) {
   X <- ifelse(random < xp1, 0, ifelse(random < xp1 + xp2,1,2))
 
   yb1 = zeta*Z1*Z2
-  yb2 <- exp(Z2) +  Z1
+  yb2 <- exp(Z2) +  Z1 + d*X
 
   yp1 <- 1/(1+exp(yb1) + exp(yb2))
   yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
@@ -356,6 +357,7 @@ NonLinearData <- function(N) {
 #' A more intricate categorization based on combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -363,7 +365,7 @@ NonLinearData <- function(N) {
 #' @examples
 #' head(ComplexCategorization(100))
 #'
-ComplexCategorization <- function(N) {
+ComplexCategorization <- function(N, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
   X <- character(N)
@@ -402,6 +404,7 @@ ComplexCategorization <- function(N) {
 #'
 #' @param N Integer. Sample size.
 #' @param threshold Numeric. Threshold for binary classification. Default is 0.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -409,7 +412,7 @@ ComplexCategorization <- function(N) {
 #' @examples
 #' head(BinaryData(100))
 #'
-BinaryData <- function(N, threshold = 0) {
+BinaryData <- function(N, threshold = 0, d = 0) {
   Z1 <- rnorm(N)
   Z2 <- rnorm(N)
 
@@ -417,7 +420,7 @@ BinaryData <- function(N, threshold = 0) {
 
   X <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
 
-  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
+  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2 + d*X, 1) < threshold, 1, 0)
 
   df <- data.frame(Z1,Z2,X,Y)
 
@@ -430,17 +433,18 @@ BinaryData <- function(N, threshold = 0) {
 #' Creates nonlinear continuous data based on an exponential interaction of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
 #' @examples
-#' head(NonLinNormal(N = 100))
+#' head(NonLinNormal(N = 100, d = 1))
 #'
-NonLinNormal <- function(N){
+NonLinNormal <- function(N, d = 0){
   Z1 <- rnorm(N,0,1)
   Z2 <- rnorm(N,0,1)
   X <- Z1*Z2 + rnorm(N,0,1)
-  Y <- exp(Z1*Z2) + rnorm(N,0,1)
+  Y <- exp(Z1*Z2) + rnorm(N,0,1) + d*X
 
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
@@ -451,6 +455,7 @@ NonLinNormal <- function(N){
 #' Adds uniform noise to a nonlinear combination of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
+#' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
@@ -472,6 +477,7 @@ UniformNoise <- function(N) {
 #'
 #' @param N Integer. Sample size.
 #' @param rate_param Numeric. Rate parameter for the exponential distribution. Default is 1.
+#' @param d Numeric. Dependency strength. Default is 0.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
@@ -494,6 +500,7 @@ ExponentialNoise <- function(N, rate_param = 1) {
 #'
 #' @param N Integer. Sample size.
 #' @param lambda Numeric. Rate parameter for the Poisson distribution. Default is 1.
+#' @param d Numeric. Dependency strength. Default is 0.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
@@ -672,7 +679,7 @@ expLogThresholdContXSim <- function(N) {
 #' @export
 #'
 #' @examples
-#' head(hard_case_twoZ_sim(100))
+#' head(hard_case(100))
 #'
 hard_case <- function(N) {
   Z1 <- runif(N, -2, 2)

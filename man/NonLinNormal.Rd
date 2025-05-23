@@ -4,10 +4,12 @@
 \alias{NonLinNormal}
 \title{Generate Nonlinear Normal Data}
 \usage{
-NonLinNormal(N)
+NonLinNormal(N, d = 0)
 }
 \arguments{
 \item{N}{Integer. Sample size.}
+
+\item{d}{Numeric. Dependency strength. Default is 0.}
 }
 \value{
 A data frame with columns Z1, Z2, X, and Y.
@@ -16,6 +18,6 @@ A data frame with columns Z1, Z2, X, and Y.
 Creates nonlinear continuous data based on an exponential interaction of Z1 and Z2.
 }
 \examples{
-head(NonLinNormal(N = 100))
+head(NonLinNormal(N = 100, d = 1))
 
 }
