@@ -78,12 +78,11 @@ wrapper_xgboost <- function(formula,
                               verbose = 0)
 
   pred <- predict(model, newdata = dtest)
-
+  actual <- y_test
   if (!is.null(metricfunc)) {
     data_type <- "custom"
-    metric <- metricfunc(data, model, test_indices)
+    metric <- metricfunc(actual, predictions, ...)
   } else if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
-    actual <- y_test
     metric <- sqrt(mean((pred - actual)^2))
   } else if (params$objective %in% "binary:logistic") {
     pred_class <- ifelse(pred > 0.5, 1, 0)
@@ -137,7 +136,7 @@ wrapper_ranger <- function(formula,
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(data, model, test_indices)
+    metric <- metricfunc(actual, predictions, ...)
   } else if (data_type %in% c("binary", "categorical")) {
     if (nlevels(factor(actual)) > 2) {
       pred_class <- apply(predictions, 1, which.max)
@@ -188,11 +187,10 @@ wrapper_svm <- function(formula,
   model <- e1071::svm(formula = formula, data = data[train_indices, ], probability = TRUE, ...)
 
   predictions <- predict(model, newdata = data[test_indices, ], probability = TRUE)
-
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(data, model, test_indices)
+    metric <- metricfunc(actual, predictions, ...)
   } else if (data_type == "continuous") {
     metric <- sqrt(mean((predictions - actual)^2))
   } else if (data_type %in% c("binary", "categorical")) {
