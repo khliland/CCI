@@ -136,6 +136,9 @@ CCI.test <- function(formula = NA,
   if (tune && (folds < 1 || tune_length < 1)) {
     stop("folds and tune_length must be positive integers.")
   }
+  if (!is.null(mlfunc) && !is.null(metricfunc)) {
+    stop("You can only use one of mlfunc or metricfunc.")
+  }
 
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))
