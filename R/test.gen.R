@@ -38,15 +38,9 @@
 #' x3 = rnorm(100),
 #' x4 = rnorm(100),
 #' y = rnorm(100))
-#' result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, method = "rf", degree = 4)
-#' result <- test.gen(formula = Y ~ X | Z1 + Z2,
-#'                    data = data,
-#'                    nperm = 40,
-#'                    method = "xgboost",
-#'                    data_type = "binary",
-#'                    permutation = FALSE,
-#'                    poly = TRUE,
-#'                    degree = 4)
+#' result <- test.gen(formula = y ~ x1 | x2 + x3 + x4,
+#'                     data = data)
+
 test.gen <- function(formula,
                      data,
                      data_type = "continuous",
@@ -57,7 +51,7 @@ test.gen <- function(formula,
                      poly = TRUE,
                      interaction = TRUE,
                      degree = 3,
-                     nrounds = 120,
+                     nrounds = 500,
                      num_class = NULL,
                      nthread = 1,
                      permutation = FALSE,
@@ -127,7 +121,7 @@ test.gen <- function(formula,
     # Apply machine learning method
     null[iteration] <- tryCatch({
       if (!is.null(mlfunc)) {
-        mlfunc(formula, data = resampled_data, train_indices, test_indices, ...)
+        mlfunc(formula, data = resampled_data, train_indices, test_indices ...)
       } else if (method == "xgboost") {
         if (!"objective" %in% names(list(...))) {
           objective <- switch(data_type,
