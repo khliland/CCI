@@ -13,7 +13,7 @@ clean_formula(formula)
 A reformatted formula in the correct format for conditional independence testing. The returned formula will either retain the original format or be transformed to include conditioning variables.
 }
 \description{
-This function processes and reformats a formula string to ensure it is in the correct format for conditional independence testing.
+This function processes and reformats  formula string to ensure it is in the correct format for conditional independence testing.
 The function checks if the formula uses the '+' operator for additive models and transforms it into a format that includes a conditioning variable separated by '|'.
 }
 \examples{
