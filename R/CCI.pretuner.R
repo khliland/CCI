@@ -2,7 +2,6 @@
 #'
 #' The `CCI.tuner` function performs a grid search over parameters for a conditional independence test using machine learning model supported by CCI.test. The tuner use the caret package for tuning.
 #'
-#'
 #' @param formula Model formula specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
@@ -134,7 +133,8 @@ CCI.pretuner <- function(formula,
 
   Y = formula[[2]]
   X = formula[[3]][[2]]
-  Z = unlist(strsplit(deparse(formula[[3]][[3]]), split = " \\+ "))
+  vars <- all.vars(formula)
+  Z <- setdiff(vars, c(deparse(Y), deparse(X)))
 
   poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
   data <- poly_result$data
@@ -193,7 +193,7 @@ CCI.pretuner <- function(formula,
   if (include_explanatory) {
     formula <- formula
   } else {
-    formula <- as.formula(paste(all.vars(formula)[1], "~", paste(all.vars(formula[[3]])[-1], collapse = " + ")))  # Building new formula, keeping "X" out
+    formula <- as.formula(paste(all.vars(formula)[1], "~", paste(all.vars(formula[[3]])[-1], collapse = " + ")))
   }
 
   check_formula(formula, data)

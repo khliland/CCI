@@ -15,7 +15,7 @@ test.gen(
   poly = TRUE,
   interaction = TRUE,
   degree = 3,
-  nrounds = 120,
+  nrounds = 500,
   num_class = NULL,
   nthread = 1,
   permutation = FALSE,
@@ -73,13 +73,6 @@ x2 = rnorm(100),
 x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
-result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, data = data, method = "rf", degree = 4)
-result <- test.gen(formula = Y ~ X | Z1 + Z2,
-                   data = data,
-                   nperm = 40,
-                   method = "xgboost",
-                   data_type = "binary",
-                   permutation = FALSE,
-                   poly = TRUE,
-                   degree = 4)
+result <- test.gen(formula = y ~ x1 | x2 + x3 + x4,
+                    data = data)
 }

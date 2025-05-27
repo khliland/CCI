@@ -53,9 +53,14 @@ test_that("QQplot should produce a QQplot", {
 # With tuning
 #--------------------
 test_that("CCI.test outputs a list", {
-  dat <- sineGaussian(500)
+  data  <- NonLinNormalZs(N = 500, d = 0.5, Zs = 15)
+  head(data)
+  CCI.test(formula = Y ~ X | Z1 + Z2 + Z3 + Z4 + Z5 + Z6 + Z7 + Z8 + Z9 + Z10 + Z11 + Z12 + Z13 + Z14 + Z15,
+           data = data,
+           samples = 15,
+           method = 'xgboost',
+           tune = T)
 
-  result <- CCI.test(formula = Y ~ X + Z, data = dat, method = 'xgboost', tune = T)
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
