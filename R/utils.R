@@ -195,12 +195,9 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
   }
 
   if (any(sapply(data[Z], is.factor))) {
-    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
     return(list(data = data, new_terms = character(0), poly = FALSE))
   }
-  if (length(Z) * degree > 10) {
-    warning("Creating ", length(Z) * degree, " polynomial terms may be computationally expensive.")
-  }
+
   transformations <- lapply(2:degree, function(d) {
     function(x) x^d
   })
@@ -244,9 +241,7 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
 #'
 add_interaction_terms <- function(data, Z) {
   interaction_terms <- character(0)
-  if (length(Z) < 2) {
-    warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
-  }
+
   if (length(Z) >= 2) {
     interaction_terms <- combn(Z, 2, FUN = function(x) {
       interaction_name <- paste0(x[1], "_int_", x[2])

@@ -137,6 +137,12 @@ CCI.test <- function(formula = NA,
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
+  if (length(Z) < 2 && interaction) {
+    warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
+  }
+  if (any(sapply(data[Z], is.factor)) && poly) {
+    warning("Polynomial terms are not supported for categorical variables. You can include interaction variables manually and set poly = FALSE.")
+  }
 
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))
