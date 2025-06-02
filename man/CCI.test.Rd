@@ -44,7 +44,7 @@ CCI.test(
 
 \item{p}{Numeric. Proportion of data used for training the model. Default is 0.5.}
 
-\item{nperm}{Integer. The number of permutations to perform. Default is 500.}
+\item{nperm}{Integer. The number of permutations to perform. Default is 600.}
 
 \item{nrounds}{Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
 
@@ -102,7 +102,7 @@ set.seed(123)
 
 # Example: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-result <- CCI.test(y ~ x1 | x2, data = data, nperm = 50, interaction = FALSE)
+result <- CCI.test(y ~ x1 | x2, data = data, nperm = 25, interaction = FALSE)
 
 
 # Example: Using xgboost when y is categorical
@@ -114,7 +114,7 @@ result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
 # Example: Again we can switch y and x1 (still using xgboost)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
                    y = sample(1:3, 100, replace = TRUE) - 1)
-result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 50)
+result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 25)
 
 # Example:
 custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {
@@ -125,7 +125,7 @@ custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {
   return(metric)
 }
 
-result <- CCI.test(y ~ x1 | x2, data = data, nperm = 1000,
+result <- CCI.test(y ~ x1 | x2, data = data, nperm = 100,
                    mlfunc = custom_ml_func, tail = "right")
 
 # Example: Using a custom performance metric function
@@ -145,7 +145,7 @@ ssr <- sum((actual - predictions)^2)
 metric <- 1 - (ssr / sst)
 return(metric)
 }
-correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 100,
+correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 25,
                          metricfunc = Rsquare_metric, tail = "right")
 false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 100,
                        metricfunc = Rsquare_metric, tail = "right")
