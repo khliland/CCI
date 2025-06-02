@@ -11,7 +11,7 @@ CCI.test(
   plot = TRUE,
   p = 0.5,
   nperm = 60,
-  nrounds = 250,
+  nrounds = 600,
   dag = NA,
   dag_n = 1,
   data_type = "continuous",
