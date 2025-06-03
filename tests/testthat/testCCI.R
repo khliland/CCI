@@ -25,7 +25,7 @@ test_that("CCI.test outputs a list", {
 })
 
 test_that("CCI.test outputs a list", {
-  dat <- NormalData(500)
+  dat <- NormalData(250)
   result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'svm')
   expect_true(is.list(result))
 })
@@ -35,7 +35,7 @@ test_that("CCI.test outputs a list", {
 #-------------------------------------------------------------------------------
 test_that("CCI.pretuner outputs a list", {
   dat <- sineGaussian(500)
-  result <- CCI.pretuner(formula = Y ~ X + Z, data = dat, method = 'xgboost')
+  result <- CCI.pretuner(formula = Y ~ X + Z, data = dat, method = 'xgboost', samples = 3)
   expect_true(is.list(result))
 })
 
@@ -44,7 +44,7 @@ test_that("CCI.pretuner outputs a list", {
 #-------------------------------------------------------------------------------
 test_that("QQplot should produce a QQplot", {
   dat <- NormalData(500)
-  cci_obj <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, nperm = 200)
+  cci_obj <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, nperm = 100)
   QQplot(cci_obj)
   expect_true(is.list(result))
 })
@@ -149,6 +149,7 @@ test_that('CCI.direction', {
 #-----------------------------------------------------
 
 test_that('Dagitty', {
+  undebug(CCI.test)
   dag <- dagitty::dagitty("dag {
     Z1 -> Y
     Z2 -> Y

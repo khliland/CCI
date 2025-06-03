@@ -94,13 +94,13 @@
 #' false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 100,
 #'                        metricfunc = Rsquare_metric, tail = "right")
 
-CCI.test <- function(formula = NA,
+CCI.test <- function(formula = NULL,
                      data,
                      plot = TRUE,
                      p = 0.5,
                      nperm = 60,
                      nrounds = 600,
-                     dag = NA,
+                     dag = NULL,
                      dag_n = 1,
                      data_type = "continuous",
                      choose_direction = FALSE,
@@ -136,7 +136,7 @@ CCI.test <- function(formula = NA,
     status <- "Error: Formula or DAG are missing"
     stop("Formula or dagitty object is missing")
   }
-  if (!is.na(dag) & !inherits(dag, "dagitty")) {
+  if (!is.null(dag) & !inherits(dag, "dagitty")) {
     stop("DAG needs to be of class dagitty.")
   }
   if (tune && (folds < 1 || tune_length < 1)) {
@@ -144,9 +144,6 @@ CCI.test <- function(formula = NA,
   }
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
-  }
-  if (length(all.vars(formula)) < 3 && interaction) {
-    warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
   }
   if (!is.na(dag)) {
     if (!is.null(formula)) {
@@ -162,6 +159,9 @@ CCI.test <- function(formula = NA,
   }
   formula <- clean_formula(formula)
   check_formula(formula, data)
+  if (length(all.vars(formula)) < 3 && interaction) {
+    warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
+  }
 
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))

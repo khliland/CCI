@@ -9,8 +9,6 @@ perm.test(
   data,
   p = 0.7,
   nperm = 600,
-  dag = NA,
-  dag_n = NA,
   data_type = "continuous",
   method = "rf",
   nrounds = 120,
@@ -33,10 +31,6 @@ perm.test(
 \item{p}{Proportion of data to use for training the model. Default is 0.825.}
 
 \item{nperm}{Number of permutations to perform. Default is 500.}
-
-\item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG). Default is NA.}
-
-\item{dag_n}{If a DAGitty object is provided, specifies which conditional independence test to perform. Default is NA.}
 
 \item{data_type}{Type of data: "continuous", "binary", or "categorical". Default is "continuous".}
 

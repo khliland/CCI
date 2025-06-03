@@ -4,8 +4,6 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Proportion of data to use for training the model. Default is 0.825.
 #' @param nperm Number of permutations to perform. Default is 500.
-#' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG). Default is NA.
-#' @param dag_n If a DAGitty object is provided, specifies which conditional independence test to perform. Default is NA.
 #' @param data_type Type of data: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
 #' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
@@ -52,6 +50,8 @@ perm.test <- function(formula,
                       metricfunc = NULL,
                       mlfunc = NULL,
                       nthread = 1,
+                      dag = NA,
+                      dag_n  = NA,
                       ...) {
 
 
@@ -107,6 +107,8 @@ perm.test <- function(formula,
               test.statistic = test_statistic,
               tail = tail,
               p.value =  p.value,
+              dag = dag,
+              dag_n = dag_n,
               additional_args = additional_args
               )
 
