@@ -161,6 +161,19 @@ test_that('Dagitty', {
   result <- CCI.test(dag = dag, data = dat)
 
 })
+test_that('Dagitty with direction', {
+  undebug(CCI.test)
+  dag <- dagitty::dagitty("dag {
+    Z1 -> Y
+    Z2 -> Y
+    Z1 -> X
+    Z2 -> X
+  }")
+  dagitty::impliedConditionalIndependencies(dag)
+  dat <- NormalData(N = 500)
+  result <- CCI.test(dag = dag, data = dat, choose_direction = TRUE)
+
+})
 
 test_that('CCI.direction', {
   dat <- sineGaussian_biv(N = 500, a = 2, d = 1)
