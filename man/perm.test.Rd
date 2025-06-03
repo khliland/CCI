@@ -20,6 +20,8 @@ perm.test(
   metricfunc = NULL,
   mlfunc = NULL,
   nthread = 1,
+  dag = NA,
+  dag_n = NA,
   ...
 )
 }

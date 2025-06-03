@@ -6,13 +6,13 @@
 \title{Computational test for conditional independence based on ML and Monte Carlo Cross Validation}
 \usage{
 CCI.test(
-  formula = NA,
+  formula = NULL,
   data,
   plot = TRUE,
   p = 0.5,
   nperm = 60,
   nrounds = 600,
-  dag = NA,
+  dag = NULL,
   dag_n = 1,
   data_type = "continuous",
   choose_direction = FALSE,
