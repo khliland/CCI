@@ -41,8 +41,6 @@ perm.test <- function(formula,
                       data,
                       p = 0.7,
                       nperm = 600,
-                      dag = NA,
-                      dag_n = NA,
                       data_type = "continuous",
                       method = "rf",
                       nrounds = 120,
@@ -57,9 +55,6 @@ perm.test <- function(formula,
                       ...) {
 
 
-  if ((!is.null(metricfunc) | !is.null(mlfunc)) && is.na(tail)) {
-    stop("tail parameter must be either 'left' or 'right'")
-  }
 
   if (is.na(tail)) {
     if (data_type %in% c("binary", "categorical")) {
@@ -69,34 +64,6 @@ perm.test <- function(formula,
     }
   }
 
-  if (is.null(data)) {
-    status <- "Error: data is missing"
-    stop("Please provide some data")
-  }
-
-  if (is.null(formula) & is.na(dag)) {
-    status <- "Error: Formula and DAG are missing"
-    stop("Formula and dag object is missing")
-  }
-
-  if (!is.na(dag) & !inherits(dag, "dagitty")) {
-    stop("DAG needs to be of class dagitty.")
-  }
-
-  if (!is.na(dag)) {
-    if (!is.null(formula)) {
-      formula = as.formula(formula)
-    } else if (is.null(formula)) {
-      ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
-      names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
-      if (length(ci_statement$CI$Z) == 0) {
-        warning("The formula indicates an unconditional independence statement. Are you sure that you don't need conditioning variables.")
-      }
-      formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
-    }
-  }
-  formula <- clean_formula(formula)
-  check_formula(formula, data)
 
   # Creating the null distribution
   dist <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
@@ -128,8 +95,6 @@ perm.test <- function(formula,
               data = data,
               formula = formula,
               p = p,
-              dag = dag,
-              dag_n = dag_n,
               poly = poly,
               interaction = interaction,
               degree = degree,

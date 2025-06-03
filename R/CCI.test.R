@@ -126,11 +126,19 @@ CCI.test <- function(formula = NA,
   if (!is.na(seed)) {
     set.seed(seed)
   }
-
-  if (!inherits(formula, "formula") && !inherits(formula, "dagitty")) {
-    stop("The 'formula' must be a formula object or a dagitty object.")
+  if (is.null(data)) {
+    stop("Please provide some data")
   }
-
+  if ((!is.null(metricfunc) | !is.null(mlfunc)) && is.na(tail)) {
+    stop("tail parameter must be either 'left' or 'right'")
+  }
+  if (is.null(formula) & is.na(dag)) {
+    status <- "Error: Formula or DAG are missing"
+    stop("Formula or dagitty object is missing")
+  }
+  if (!is.na(dag) & !inherits(dag, "dagitty")) {
+    stop("DAG needs to be of class dagitty.")
+  }
   if (tune && (folds < 1 || tune_length < 1)) {
     stop("folds and tune_length must be positive integers.")
   }
@@ -140,10 +148,20 @@ CCI.test <- function(formula = NA,
   if (length(all.vars(formula)) < 3 && interaction) {
     warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
   }
-
-  # if (any(sapply(data[Z], is.factor)) && poly) {
-  #   warning("Polynomial terms are not supported for categorical variables. You can include interaction variables manually and set poly = FALSE.")
-  # }
+  if (!is.na(dag)) {
+    if (!is.null(formula)) {
+      formula = as.formula(formula)
+    } else if (is.null(formula)) {
+      ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
+      names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
+      if (length(ci_statement$CI$Z) == 0) {
+        warning("The formula indicates an unconditional independence statement. Are you sure that you don't need conditioning variables.")
+      }
+      formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
+    }
+  }
+  formula <- clean_formula(formula)
+  check_formula(formula, data)
 
   metric <- if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))

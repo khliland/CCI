@@ -144,6 +144,30 @@ test_that('CCI.direction', {
   expect_true(inherits(result, "formula"))
 })
 
+#-----------------------------------------------------
+# DAG example
+#-----------------------------------------------------
+
+test_that('Dagitty', {
+  dag <- dagitty::dagitty("dag {
+    Z1 -> Y
+    Z2 -> Y
+    Z1 -> X
+    Z2 -> X
+  }")
+  dagitty::impliedConditionalIndependencies(dag)
+  dat <- NormalData(N = 500)
+  result <- CCI.test(dag = dag, data = dat)
+
+})
+
+test_that('CCI.direction', {
+  dat <- sineGaussian_biv(N = 500, a = 2, d = 1)
+
+  CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, nperm = 50, method = 'xgboost', choose_direction = TRUE)
+  expect_true(inherits(result, "formula"))
+})
+
 #-------------------------------------------------------------------------------
 # Testing ML-wrapper functions
 # The machine learning wrapper functions takes formula, data and indices for training and test data.
