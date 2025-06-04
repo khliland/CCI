@@ -46,10 +46,10 @@ QQplot <- function(object, ...) {
     stop("p and N must be numeric values.")
   }
 
-  if (!is.na(dag)) {
-    if (!is.na(formula)) {
+  if (!is.null(dag)) {
+    if (!is.null(formula)) {
       formula = gsub("\\s+", " ", formula)
-    } else if (is.na(formula)) {
+    } else if (is.null(formula)) {
       ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
       formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
