@@ -68,6 +68,10 @@
 #'   method = "xgboost")
 #' }
 
+
+
+
+
 CCI.pretuner <- function(formula,
                          data,
                          method = "rf",
@@ -87,15 +91,17 @@ CCI.pretuner <- function(formula,
                          verbose = FALSE,
                          parallel = FALSE,
                          mtry = 1:10,
-                         nrounds = seq(50, 400, by = 50),
+                         nrounds = c(50, 100, 200, 300, 400),
                          eta = seq(0.01, 0.3, by = 0.05),
-                         max_depth = 1:6,
-                         subsample = seq(0.5, 1, by = 0.1),
-                         gamma = seq(0, 5, by = 1),
-                         colsample_bytree = seq(0.5, 1, by = 0.1),
-                         min_child_weight = 1:5,
+                         max_depth = 2:6,
+                         gamma = c(0,1,2,3),
+                         colsample_bytree = c(0.8, 0.9, 1),
+                         min_child_weight = c(1, 3),
+                         subsample = c(0.8,0.9,1),
                          sigma = seq(0.1, 2, by = 0.3),
                          C = seq(0.1, 2, by = 0.5),
+                         alpha = 1,
+                         lambda = 1,
                          ...) {
 
 
@@ -247,10 +253,10 @@ CCI.pretuner <- function(formula,
                        nrounds = nrounds,
                        eta = eta,
                        max_depth = max_depth,
-                       subsample = subsample,
-                       gamma = gamma,
                        colsample_bytree = colsample_bytree,
-                       min_child_weight = min_child_weight
+                       min_child_weight = min_child_weight,
+                       subsample = subsample,
+                       gamma = gamma
                      ),
                      svm = expand.grid(sigma = sigma, C = C),
                      stop("Unsupported method for pretuning.")

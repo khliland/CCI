@@ -18,8 +18,8 @@
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
-#' @param metricfunc Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.
-#' @param mlfunc Optional custom machine learning function to use instead of the predefined methods. Default is NULL.
+#' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
+#' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using `metricfunc` or `mlfunc`. Default is NA.
 #' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.

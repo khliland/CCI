@@ -2,9 +2,7 @@
 devtools::check()
 devtools::build()
 # install.packages("CCI_0.1.1.tar.gz", repos = NULL, type = "source")
-
 devtools::document()
-
 # devtools::install()
 devtools::load_all()
 library(CCI)
@@ -34,8 +32,8 @@ test_that("CCI.test outputs a list", {
 # Basic tests CCI.pretuner
 #-------------------------------------------------------------------------------
 test_that("CCI.pretuner outputs a list", {
-  dat <- sineGaussian(500)
-  result <- CCI.pretuner(formula = Y ~ X + Z, data = dat, method = 'xgboost', samples = 3)
+  dat <- NormalData(500)
+  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost', samples = 5)
   expect_true(is.list(result))
 })
 

@@ -25,15 +25,17 @@ CCI.pretuner(
   verbose = FALSE,
   parallel = FALSE,
   mtry = 1:10,
-  nrounds = seq(50, 400, by = 50),
+  nrounds = c(50, 100, 200, 300, 400),
   eta = seq(0.01, 0.3, by = 0.05),
-  max_depth = 1:6,
-  subsample = seq(0.5, 1, by = 0.1),
-  gamma = seq(0, 5, by = 1),
-  colsample_bytree = seq(0.5, 1, by = 0.1),
-  min_child_weight = 1:5,
+  max_depth = 2:6,
+  gamma = c(0, 1, 2, 3),
+  colsample_bytree = c(0.8, 0.9, 1),
+  min_child_weight = c(1, 3),
+  subsample = c(0.8, 0.9, 1),
   sigma = seq(0.1, 2, by = 0.3),
   C = seq(0.1, 2, by = 0.5),
+  alpha = 1,
+  lambda = 1,
   ...
 )
 }
@@ -82,13 +84,13 @@ CCI.pretuner(
 
 \item{max_depth}{Integer. The maximum depth of the tree for xgboost. Default is 1:6.}
 
-\item{subsample}{Numeric. The subsample ratio of the training instances for xgboost. Default is seq(0.5, 1, by = 0.1).}
-
 \item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node for xgboost. Default is seq(0, 5, by = 1).}
 
 \item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for xgboost. Default is seq(0.5, 1, by = 0.1).}
 
 \item{min_child_weight}{Integer. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1:5.}
+
+\item{subsample}{Numeric. The subsample ratio of the training instances for xgboost. Default is seq(0.5, 1, by = 0.1).}
 
 \item{sigma}{Numeric. The standard deviation of the Gaussian kernel for Gaussian Process Regression. Default is seq(0.1, 2, by = 0.3).}
 

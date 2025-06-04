@@ -68,9 +68,9 @@ CCI.test(
 
 \item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
 
-\item{metricfunc}{Optional custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
+\item{metricfunc}{Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
 
-\item{mlfunc}{Optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
+\item{mlfunc}{Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.}
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
 
