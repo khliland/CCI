@@ -100,8 +100,6 @@ CCI.pretuner <- function(formula,
                          subsample = c(0.8,0.9,1),
                          sigma = seq(0.1, 2, by = 0.3),
                          C = seq(0.1, 2, by = 0.5),
-                         alpha = 1,
-                         lambda = 1,
                          ...) {
 
 
