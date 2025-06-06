@@ -1,15 +1,15 @@
 # Welcome to the CCI Package
 
-Thanks for checking out the CCI (Computational Conditional Independence) package in R. The CCI-test conducts a computational test whether two variables are conditionally independent.
+Thanks for checking out the development version of CCI (Computational Conditional Independence) package in R. 
+The CCI-package is made for conducting computational testing for conditionally independent.
+Conditional independence is written as Y _||_ X | Z, meaning that the random variable Y is independent of X given Z.
+Computational testing of conditional independence is a machine learning based test where permutation and Monte Carlo Cross-Validation (MCCV) us used to build an empirical null distribution and estimating a test statistic. 
 
-The test is based on predictive machine learning methods in combination with permutation and Monte Carlo Cross-Validation (MCCV), building an empirical null distribution and estimating a test statistic. Testing conditional independence is especially useful in causal inference modeling.
 
 ### Key Features:
-- Generates null distributions and test statistics using permutation and MCCV.
-- Computes p-values and provides visualization of distributions.
-- Supports the machine learning algorithms: linear models (`lm`), random forests, and gradient boosting (`xgboost`).
-- Allows for custom machine learning functions and performance metrics.
-
+In this readme we will go through all the available features of the CCI package, and provide heuristics for how to use it. 
+The CCI package is designed to be flexible and hopefully user-friendly, allowing you to test conditional independence in various data types and scenarios. 
+Report any bugs or issues you encounter, and feel free to contribute to the package on GitHub.
 ## Installation
 You can install the development version of `CCI` from GitHub:
 ```r

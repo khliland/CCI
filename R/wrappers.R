@@ -34,6 +34,10 @@ wrapper_xgboost <- function(formula,
 
   independent <- all.vars(formula)[-1]
   dependent <- all.vars(formula)[1]
+  # if dependent is a factor variable encode to numeric
+  if (is.factor(data[[dependent]])) {
+    data[[dependent]] <- as.numeric(data[[dependent]]) - 1
+  }
   training <- data[train_indices, ]
   testing <- data[test_indices, ]
 

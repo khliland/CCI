@@ -50,39 +50,25 @@ test_that("QQplot should produce a QQplot", {
 #--------------------
 # With tuning
 #--------------------
-test_that("CCI.test outputs a list", {
-  data  <- NonLinNormalZs(N = 100, d = 0.5, Zs = 15)
-  CCI.test(formula = Y ~ X | Z1 + Z2 + Z3 + Z4 + Z5 + Z6 + Z7 + Z8 + Z9 + Z10 + Z11 + Z12 + Z13 + Z14 + Z15,
-           data = data,
-           samples = 15,
-           method = 'xgboost',
-           tune = T)
 
-  expect_true(is.list(result))
-})
 test_that("CCI.test outputs a list", {
   dat <- NonLinNormal(500)
-  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'rf', tune = T, choose_direction = T)
+  result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, interaction = F, method = 'rf', tune = TRUE)
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
   dat <- NonLinNormal(500)
-  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, nperm = 60, data = dat, method = 'rf')
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, nperm = 60, data = dat, method = 'xgboost', tune = TRUE)
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
-  data <- NonLinNormal(500)
-
-  res <- CCI.test(formula = Y ~ X | Z1,
-                         data = data,
-                         interaction = FALSE,
-                         method = 'xgboost',
-                         tune = T)
-
-  expect_true(is.list(res))
+  dat <- NonLinNormal(500)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, nperm = 60, data = dat, method = 'svm', tune = TRUE)
+  expect_true(is.list(result))
 })
+
 
 #-------------------------------------------------------------------------------
 # Basic tests Binary outcome
@@ -94,7 +80,7 @@ test_that("CCI.test outputs a list", {
 })
 test_that("CCI.test outputs a list", {
   dat <- BinaryData(500)
-  result <- CCI.test(formula = Y ~ X + Z2, data = dat, interaction = F, method = 'lightgbm', data_type = 'binary')
+  result <- CCI.test(formula = Y ~ X + Z2, data = dat, interaction = F, method = 'xgboost', data_type = 'binary')
   expect_true(is.list(result))
 })
 
@@ -109,19 +95,31 @@ test_that("CCI.test outputs a list", {
 # Basic tests Categorical outcome
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
-  dat <- NonLinearCategorization(800, d = 2)
+  dat <- NonLinearCategorization(600, d = 2)
+  dat$Y <- as.factor(dat$Y)
   result <- CCI.test(formula = Y ~ X + Z, data = dat, method = 'rf', data_type = 'categorical', interaction = F)
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
   dat <- NonLinearCategorization(800, d = 2)
-  result <- CCI.test(formula = Y ~ X + Z, data = dat, interaction = F, method = 'lightgbm', data_type = 'categorical', num_class = 5)
+  dat$Y <- as.factor(dat$Y)
+  result <- CCI.test(formula = Y ~ X + Z,
+                     data = dat,
+                     interaction = F,
+                     method = 'xgboost',
+                     data_type = 'categorical',
+                     num_class = length(levels(dat$Y)))
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
   dat <- NonLinearCategorization(800, d = 2)
-  result <- CCI.test(formula = Y ~ X + Z, interaction = F, data = dat, method = 'xgboost', data_type = 'categorical', num_class = 4)
+  dat$Y <- as.factor(dat$Y)
+  result <- CCI.test(formula = Y ~ X + Z,
+                     interaction = F,
+                     data = dat,
+                     method = 'svm',
+                     data_type = 'categorical')
   expect_true(is.list(result))
 })
 
