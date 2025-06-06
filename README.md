@@ -20,100 +20,121 @@ library(CCI)
 
 ## 1. Basic Usage
 
-### Simulating Data
+### Data
 
-First, define functions to simulate different types of data. In all the simulate data functions 'X' and 'Y' are independent by construction only when conditioned on both 'Z1' and 'Z2', conditioning on either one alone is not sufficient. 
-
-```r
-NormalData <- function(N){
-  Z1 <- rnorm(N, 0, 1)
-  Z2 <- rnorm(N, 0, 1)
-  X <- rnorm(N, Z1 + Z2, 1)
-  Y <- rnorm(N, Z1 + Z2, 1)
-  return(data.frame(Z1, Z2, X, Y))
-}
-
-BinaryData <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
-  X <- ifelse(rnorm(N, Z1 + Z2 + Z1 * Z2, 1) < 0, 1, 0)
-  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1 * Z2, 1) < 0, 1, 0)
-  return(data.frame(Z1, Z2, X, Y))
-}
-
-TrigData <- function(N) {
-  Z1 <- runif(N, -pi, pi)
-  Z2 <- rnorm(N)
-  X <- numeric(N)
-  Y <- numeric(N)
-  
-  for (i in 1:N) {
-    X[i] <- ifelse(sin(Z1[i]) + cos(Z2[i]) > 1, 3,
-                   ifelse(sin(Z1[i]) + cos(Z2[i]) > 0, 2,
-                          ifelse(sin(Z1[i]) > -1, 1, 0)))
-    
-    Y[i] <- ifelse(cos(Z1[i]) - sin(Z2[i]) > 1, 3,
-                   ifelse(cos(Z1[i]) - sin(Z2[i]) > 0, 2,
-                          ifelse(cos(Z1[i]) > -1, 1, 0)))
-  }
-  return(data.frame(Z1, Z2, X, Y))
-}
-
-NonLinNormal <- function(N){
-  Z1 = rnorm(N,0,1)
-  Z2 = rnorm(N,0,1)
-  X = exp(Z1*Z2) + rnorm(N,0,1)
-  Y <- Z1*Z2 + rnorm(N,0,1)
-  return( data.frame(Z1,Z2,X,Y))
-}
-
-SinusoidalData <- function(N, a = 1){
-  Z1 = rnorm(N,0,1)
-  Z2 = rnorm(N,0,1)
-  Z <- Z1 + Z2
-  X = exp(-(Z)^2 / 2) * sin(a * (2*Z1 + 0.1*Z2)) + rnorm(N,0,0.1)
-  Y = exp(-(Z)^2 / 2) * sin(a * (2*Z2 + 0.1*Z1)) + rnorm(N,0,0.1)
-  return(data.frame(Z1,Z2,X,Y))
-}
-```
+The CCI-package comes with several built-in data generating functions to help you get started. 
+These functions generate synthetic data sets that can be used to test conditional independence. 
 
 ### Testing Conditional Independence
 Below is an example of the simplest line of code needed to test the hypothesis `Y _||_ X | Z1, Z2` using the CCI package.
-
-
+The code generates a dataset with 400 observations, where `Y` is conditionally independent of `X` given `Z1` and `Z2`.
+The main user interface function for CCI is CCI.test(), which must at least have a formula and a data frame as input to perform a test.
 ```r
 set.seed(1985)
-dat <- NormalData(400)
+data <- NormalData(400)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data)
+```
+The output for this test should look something like this:
 
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat)
-CCI.test(formula = Y ~ X | Z1, data = dat, parametric = TRUE)
+- **Computational conditional independence test using 'rf'.
+- **Null hypothesis:  Y ~ X | Z1 + Z2 
+- **Number of Monte Carlo samples:  60 
+- **Performance Metric:  RMSE 
+- **Test Statistic:  1.143737 
+- **P-value:  0.9344262 
+- **tail:  left 
+- **Summary of Null Distribution: mean =  1.064956 , sd =  0.04709121 
+- **Plot generated.
+
+The output tells us that you have performed a computational test of conditional independence using the random forest method (`rf`), testing the condition `Y ~ X | Z1 + Z2`.
+The performance metric used to build the null distribution and the test statistic is Root Mean Square Error (RMSE).
+The test statistic is 1.143737, and the p-value is 0.9344262, indicating that we fail to reject the null hypothesis at a significance level of 0.05. Which is correct.
+tail is set to "left", meaning that the further left the test statistic is in the null distribution, the lower the p-value.
+The summary of the null distribution shows that the mean is 1.064956 and the standard deviation is 0.04709121.
+The CCI package automatically generates a histogram over the null distribution and the corresponding test statistic, which can be useful for visualizing the results.
+
+In the previous example we tested a true null hypothesis, for completeness, we will now test a false null hypothesis, where `Y` is not conditionally independent of `X` given `Z1`.
+```r
+CCI.test(formula = Y ~ X | Z1, data = data, parametric = TRUE)
 ```
 The output of the last test should look something like this: 
 
-- **Computational conditional independence test using 'rf'** 
-- **CI Condition Tested**: `Y ~ X | Z1` 
-- **Number of Monte Carlo Samples**: 500
-- **Performance Metric**: Root Mean Square Error (RMSE)
-- **Test Statistic**: 1.230432
-- **P-value**: 0.01594247
-- **Tail**: Left-tailed test
-- **Null Distribution Summary**: Mean = 1.461339, SD = 0.1076059
-- **Visualization**: A plot of the null distribution and test statistic has been generated.
+- **Computational conditional independence test using 'rf'.
+- **Null hypothesis:  Y ~ X | Z1 
+- **Number of Monte Carlo samples:  60 
+- **Performance Metric:  RMSE 
+- **Test Statistic:  1.292519 
+- **P-value:  0.003010517 
+- **tail:  left 
+- **Summary of Null Distribution: mean =  1.447802 , sd =  0.05653567 
+- **Plot generated.
 
-At significant level 0.05 the test rejects the null hypothesis of `Y ~ X | Z1`, since the p-value is less than 0.05. The CCI.test automatically generates a histogram over the null distribution and the corresponding test statistic. When the `parametric` argument is set to `TRUE`, the method assumes that the null distribution is approximately Gaussian.
+At significant level 0.05 the test rejects the null hypothesis of `Y ~ X | Z1`, since the p-value is less than 0.05.
+We also added in the argument parametric = TRUE, which means that the p-value is calculated assuming that the null distribution is Gaussian.
+The default way of calculating a p-value is empirically, which means that the p-value is calculated by comparing the test statistic to the null distribution.
+Using a parametric p-value is usually a good idea, since the empircal derived p-value is limited in how small it can be. 
 
 ## 2. Handling Different Data Types
+One of the main motivation for having a computational test of conditional independence is to be able to test conditional independence using different data types, such as continuous, binary, and categorical data.
+Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, you can adjust the `data_type` parameter to `"continuous"` (default), `"binary"`, or `"categorical"`. 
 
-Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, you can adjust the `data_type` parameter to `"continuous"` (default), `"binary"`, or `"categorical"`. Here is an example with binary data:
+In the example below, both `Y` and `X` are binary variables, meaning they only take on values 0 and 1. 
 
 ```r
 set.seed(1985)
-dat <- BinaryData(500)
+data <- BinaryData(500)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data, data_type = "binary")
+```
+If you notice in the example above, the null distribution looks kinda weird. It consist of two peaks, one at around -0.5 and one at 0.5. 
+This is in general not a good sign, and indicate that you should try to change the method.
+The two main method options in CCI.test() are 'rf' and 'xgbosst'. First we can change the method to XGBoost, like this: 
+```r
+set.seed(1985)
+data <- BinaryData(500)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data, data_type = "binary", method = "xgboost")
+```
+Viola, now the null distribution looks much better, which is what we want. The p-value is 0.72 which is what we expect since `Y` and `X` are conditionally independent given `Z1` and `Z2`.
 
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, data_type = "binary")
-CCI.test(formula = Y ~ X | Z2, data = dat, data_type = "binary", method = "xgboost")
+The third available method is support vector machine (`svm`). `svm` is fast, but not as robust as `rf` and `xgboost`.
+```r
+set.seed(1985)
+data <- BinaryData(500)
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data, data_type = "binary", method = "svm")
+```
+The third data type is categorical data, which is used when `Y` is a categorical variable with more than two levels. `CCI.test()` is designed to handle categorical variables as factor variables. 
+```r
+set.seed(1945)
+data <- TrigData(500)
+data$Y <-as.factor(data$Y) # Make sure Y is a factor variable
+data$X <-as.factor(data$X) # Make sure X is a factor variable
+CCI.test(formula = Y ~ X | Z2, data = data, data_type = "categorical")
+```
+If `data_type = 'categorical'` when `method = 'xgboost'`, you must also specify the `num_class` argument, which is the number of classes in the categorical variable.
+Like so, 
+```r
+CCI.test(formula = Y ~ X | Z2, data = data, data_type = "categorical", method = "xgboost", num_class = length(unique(data$Y)))
+```
+For completeness, we also see how `svm` performes
+```r
+CCI.test(formula = Y ~ X | Z2, data = data, data_type = "categorical", method = "svm", nperm = 250)
+```
+All three methods successfully reject the null hypothesis which is what we want. 
+In the last example we set the argument `nperm = 250`, which means that the null distribution is generated using 250 Monte Carlo samples. 
+The default `nperm` value is 60, which will usually be enough, but it does not hurt to increase the number of samples to get a more precise null distribution.
+
+The last important argument in `CCI.test()` is the `p` argument, which controls the proportion of data used for training the model in each Monte Carlo Sample, default value is 0.5.
+In lagrge datasets, you can set `p` to a lower value, like 0.1, to speed up the process and increase precision.
+```r
+set.seed(1984)
+data <- sineGaussian(20000, d = 0.3) # d = 0.3 breaks conditional independence Y _||_ X | Z
+CCI.test(formula = Y ~ X | Z, data = data, parametric = T, p = 0.05)
 ```
 
+
+### The formula
+As you might have guessed, the formula argument in `CCI.test()` gives the conditional independent statement to test. 
+The condition Y _||_ X | Z1, Z2 is written as `Y ~ X | Z1 + Z2`. When `Y` is the dependent variable it means that `Y` is predicted while `X` is permuted to see if it improves predicition performance beyond `Z1` and `Z2`.
+Naturally, the condition Y _||_ X | Z1, Z2 can also be tested by the formula `X ~ Y | Z1 + Z2`
 In the second example, we use `xgboost` as the machine learning algorithm. The CCI package offers three built-in methods: `lm` (linear model), `rf` (random forest, the default), and `xgboost` (extreme gradient boosting). While random forest is the default due to its balance of speed and accuracy, `xgboost` is more robust and recommended especially for binary and categorical data types. Custom machine learning algorithms can also be defined by the user. 
 
 Testing conditional independence with categorical data types is difficult. The CCI-package can handle such cases,  but requires quit large data sets, again, we recommend to use `xgboost`. Unfortunately, it is also a little slow.

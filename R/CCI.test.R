@@ -17,6 +17,7 @@
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
+#' @param subsampling Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
@@ -109,6 +110,7 @@ CCI.test <- function(formula = NULL,
                      parametric = FALSE,
                      poly = TRUE,
                      degree = 3,
+                     subsampling = 1,
                      interaction = TRUE,
                      metricfunc = NULL,
                      mlfunc = NULL,
@@ -173,6 +175,11 @@ CCI.test <- function(formula = NULL,
     } else {
       "Kappa Score"
     }
+  }
+  if (subsampling < 0 || subsampling > 1) {
+    stop("Subsampling must be between 0 and 1.")
+  } else if (subsampling < 1) {
+    data <- data[sample(nrow(data), size = round(nrow(data) * subsampling)), ]
   }
   if (choose_direction) {
     formula <- CCI.direction(
