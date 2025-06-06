@@ -21,6 +21,7 @@ CCI.test(
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
+  subsampling = 1,
   interaction = TRUE,
   metricfunc = NULL,
   mlfunc = NULL,
@@ -65,6 +66,8 @@ CCI.test(
 \item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
 
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+
+\item{subsampling}{Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).}
 
 \item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
 

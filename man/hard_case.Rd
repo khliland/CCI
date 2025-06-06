@@ -16,6 +16,6 @@ A data frame with columns X, Y, Z1, and Z2.
 Generates data with a hard case scenario where X and Y are influenced by two Z variables in a nonlinear manner.
 }
 \examples{
-head(hard_case(100))
+head(hard_case_twoZ_sim(100))
 
 }
