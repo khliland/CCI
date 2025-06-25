@@ -22,6 +22,7 @@ perm.test(
   nthread = 1,
   dag = NA,
   dag_n = NA,
+  num_class = NULL,
   ...
 )
 }
@@ -55,6 +56,12 @@ perm.test(
 \item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+
+\item{dag}{A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.}
+
+\item{dag_n}{A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.}
+
+\item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }

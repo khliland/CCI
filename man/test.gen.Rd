@@ -20,6 +20,7 @@ test.gen(
   permutation = FALSE,
   metricfunc = NULL,
   mlfunc = NULL,
+  num_class = NULL,
   ...
 )
 }
@@ -54,9 +55,9 @@ test.gen(
 
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
-\item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
-
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.}
+
+\item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
 }
 \value{
 A list containing the test distribution.

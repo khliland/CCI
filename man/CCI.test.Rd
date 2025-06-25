@@ -22,6 +22,7 @@ CCI.test(
   poly = TRUE,
   degree = 3,
   subsampling = 1,
+  num_class = NULL,
   interaction = TRUE,
   metricfunc = NULL,
   mlfunc = NULL,
