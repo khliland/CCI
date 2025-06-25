@@ -9,7 +9,7 @@ wrapper_ranger(
   data,
   train_indices,
   test_indices,
-  data_type,
+  metric,
   metricfunc = NULL,
   nthread = 1,
   ...
@@ -24,7 +24,7 @@ wrapper_ranger(
 
 \item{test_indices}{A vector of indices specifying the rows in \code{data} to be used as the test set.}
 
-\item{data_type}{Character string indicating the type of data. Can be "continuous" for regression, "binary" for binary classification, or "categorical" for multiclass classification.}
+\item{metric}{Character string indicating the type of performance metric. Can be "RMSE" for regression, "Kappa" for binary classification, or multiclass classification.}
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
 

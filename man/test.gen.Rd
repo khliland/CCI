@@ -7,8 +7,8 @@
 test.gen(
   formula,
   data,
-  data_type = "continuous",
   method = "rf",
+  metric,
   nperm = 60,
   p = 0.8,
   N = nrow(data),
@@ -16,7 +16,6 @@ test.gen(
   interaction = TRUE,
   degree = 3,
   nrounds = 600,
-  num_class = NULL,
   nthread = 1,
   permutation = FALSE,
   metricfunc = NULL,
@@ -29,9 +28,9 @@ test.gen(
 
 \item{data}{Data frame. The data containing the variables used.}
 
-\item{data_type}{Character. The type of data of the Y parameter: can be "continuous", "binary", or "categorical".}
-
 \item{method}{Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.}
+
+\item{metric}{Character. The type of metric: can be "RMSE", "Kappa" or "Custom. Default is 'RMSE'}
 
 \item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 60.}
 
@@ -47,8 +46,6 @@ test.gen(
 
 \item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 500.}
 
-\item{num_class}{Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.}
-
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
 \item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
@@ -58,6 +55,8 @@ test.gen(
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
+
+\item{num_class}{Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.}
 }
 \value{
 A list containing the test distribution.

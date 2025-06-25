@@ -71,7 +71,7 @@ wrapper_xgboost <- function(formula,
                          binary = "error",
                          categorical = "merror"))
   } else {
-    params <- list(objective = args$object, eval_metric = eval_metric = switch(data_type,
+    params <- list(objective = args$object, eval_metric = switch(data_type,
                                                                                continuous = "rmse",
                                                                                binary = "error",
                                                                                categorical = "merror"))

@@ -14,10 +14,10 @@ CCI.test(
   nrounds = 600,
   dag = NULL,
   dag_n = 1,
-  data_type = "automatic",
+  metric = "Auto",
+  method = "rf",
   choose_direction = FALSE,
   print_result = TRUE,
-  method = "rf",
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
@@ -53,13 +53,13 @@ CCI.test(
 
 \item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
-\item{data_type}{Character. Specifies the type of data: "automatic", "continuous", "binary", or "categorical". Default is "automatic".}
+\item{metric}{Character. Specifies the type of data: "Auto", "RMSE", "Kappa" or "Custom". Default is "automatic".}
+
+\item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
 
 \item{choose_direction}{Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.}
 
 \item{print_result}{Logical. If TRUE, the function will print the result of the test. Default is TRUE.}
-
-\item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
 
 \item{parametric}{Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.}
 
@@ -112,7 +112,7 @@ result <- CCI.test(y ~ x1 | x2, data = data, nperm = 25, interaction = FALSE)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
                    y = sample(1:3, 100, replace = TRUE) - 1)
 result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
-                   data_type = "categorical", nperm = 25, num_class = 3)
+                   metric = "Kappa", nperm = 25, num_class = 3)
 
 # Example: Again we can switch y and x1 (still using xgboost)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),

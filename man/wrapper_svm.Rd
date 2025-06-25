@@ -9,7 +9,7 @@ wrapper_svm(
   data,
   train_indices,
   test_indices,
-  data_type,
+  metric,
   metricfunc = NULL,
   ...
 )
@@ -23,7 +23,7 @@ wrapper_svm(
 
 \item{test_indices}{Indices for testing data}
 
-\item{data_type}{Type of data ("continuous", "binary", or "categorical")}
+\item{metric}{Type of metric ("RMSE" or "Kappa")}
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric.}
 

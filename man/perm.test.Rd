@@ -9,7 +9,7 @@ perm.test(
   data,
   p = 0.7,
   nperm = 600,
-  data_type = "continuous",
+  metric = "RMSE",
   method = "rf",
   nrounds = 120,
   parametric = FALSE,
@@ -34,7 +34,7 @@ perm.test(
 
 \item{nperm}{Number of permutations to perform. Default is 500.}
 
-\item{data_type}{Type of data: "continuous", "binary", or "categorical". Default is "continuous".}
+\item{metric}{Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.}
 
 \item{method}{The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".}
 
