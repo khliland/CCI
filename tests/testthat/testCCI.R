@@ -82,8 +82,7 @@ test_that("CCI.test outputs a list", {
 # Basic tests Binary outcome
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
-  debug(wrapper_xgboost)
-  det.seed(1985)
+  set.seed(1985)
   dat <- BinaryData(500)
   result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'xgboost', parametric = T)
   summary(result)
@@ -91,15 +90,20 @@ test_that("CCI.test outputs a list", {
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
+  set.seed(1985)
   dat <- BinaryData(500)
-  result <- CCI.test(formula = Y ~ X + Z2, data = dat, interaction = F, method = 'xgboost')
-
+  result <- CCI.test(formula = Y ~ X + Z1, data = dat, interaction = F, method = 'rf')
+  summary(result)
+  plot(result)
   expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
+  set.seed(1985)
   dat <- BinaryData(500)
-  result <- CCI.test(formula = Y ~ X + Z2, interaction = F, data = dat, method = 'xgboost', data_type = 'categorical', num_class = 2)
+  result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'svm', metric = 'RMSE')
+  summary(result)
+  plot(result)
   expect_true(is.list(result))
 })
 
