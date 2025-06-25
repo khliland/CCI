@@ -9,7 +9,6 @@ CCI.direction(
   data,
   method = "rf",
   folds = 4,
-  data_type = "continuous",
   poly = TRUE,
   degree = 3,
   interaction = TRUE,
@@ -24,8 +23,6 @@ CCI.direction(
 \item{method}{A character string specifying the method to be used for model fitting. Options include "rf" (random forest), "xgboost" (XGBoost), "nnet" (neural network), "gpr" (Gaussian process regression), and "svm" (support vector machine).}
 
 \item{folds}{An integer specifying the number of folds for cross-validation. Default is 4.}
-
-\item{data_type}{A character string specifying the type of data. Options include "continuous", "binary", and "categorical". Default is "continuous".}
 
 \item{poly}{Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.}
 
@@ -52,7 +49,6 @@ chosen_formula <- CCI.direction(
  formula = formula_init,
  data = dat,
  method = "rf",
- data_type = "continuous",
  folds = 2,
  seed = 1)
 

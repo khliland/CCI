@@ -14,7 +14,6 @@
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 10.
-#' @param metric Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.
 #' @param verboseIter Logical. If TRUE, the function will print the tuning process. Default is FALSE.
 #' @param include_explanatory Logical. If TRUE, given the condition Y _||_ X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE
 #' @param verbose Logical. If TRUE, the function will print the tuning process. Default is FALSE..
@@ -39,7 +38,7 @@
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{best_param}: A data frame with the best parameters and their performance metric.
+#'   \item \code{best_param}: A data frame with the best parameters.
 #'   \item \code{tuning_result}: A data frame with all tested parameter combinations and their performance metrics.
 #'   \item \code{warnings}: A character vector of warnings issued during tuning.
 #' }
@@ -107,12 +106,10 @@ CCI.pretuner <- function(formula,
   if (!is.numeric(tune_length) || tune_length < 1) {
     stop("tune_length must be a positive integer.")
   }
-  if (!method %in% c("rf", "xgboost", "lightgbm", "svm")) {
-    stop("method must be one of 'rf', 'xgboost', 'lightgbm' or 'svm'.")
+  if (!method %in% c("rf", "xgboost", "svm")) {
+    stop("method must be one of 'rf', 'xgboost' or 'svm'.")
   }
-  if (!data_type %in% c("continuous", "binary", "categorical")) {
-    stop("data_type must be one of 'continuous', 'binary', or 'categorical'.")
-  }
+
   if (poly && degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
@@ -180,17 +177,6 @@ CCI.pretuner <- function(formula,
 
   outcome_name <- all.vars(formula)[1]
 
-  if (data_type %in% c("binary", "categorical") && metric != "Accuracy") {
-    warning("For binary or categorical data, metric is set to 'Accuracy'.")
-    metric <- "Accuracy"
-  }
-
-  if (data_type %in% c("categorical", "binary")) {
-    Y <- as.factor(data[[outcome_name]])
-    metric <- "Accuracy"
-  } else {
-    Y <- data[[outcome_name]]
-  }
 
   if (include_explanatory) {
     formula <- formula
@@ -200,7 +186,7 @@ CCI.pretuner <- function(formula,
 
   check_formula(formula, data)
   X <- model.matrix(formula, data = data)[, -1, drop = FALSE]
-
+  Y <- data[[all.vars(formula)[1]]]
   if (ncol(X) == 0) {
     stop("The formula produced an empty design matrix. Check variable types and formula specification.")
   }
@@ -286,7 +272,6 @@ CCI.pretuner <- function(formula,
         method = caret_method,
         trControl = ctrl,
         tuneGrid = row,
-        metric = metric,
         ...
       )
 
@@ -319,6 +304,7 @@ CCI.pretuner <- function(formula,
       cbind(row, res)
     })
   } else {
+    last_error <- NULL
     results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
       row <- tuneGrid[i, , drop = FALSE]
       if (verbose) {
@@ -330,9 +316,7 @@ CCI.pretuner <- function(formula,
         method = caret_method,
         trControl = ctrl,
         tuneGrid = row,
-        metric = metric,
-        ...
-      )
+        ...)
       model <- tryCatch(
         {
           withCallingHandlers(
@@ -346,6 +330,7 @@ CCI.pretuner <- function(formula,
           )
         },
         error = function(e) {
+          last_error <<- conditionMessage(e)
           warning_log <<- c(warning_log, paste("Error for parameters ",
                                                paste(names(row), row, sep = "=", collapse = ", "),
                                                ": ", conditionMessage(e)))
@@ -362,15 +347,18 @@ CCI.pretuner <- function(formula,
       cbind(row, res)
     })
   }
-
+  if (!is.null(last_error)) {
+    message("Last error: ", last_error)
+  }
   results <- results[!sapply(results, is.null)]
   if (length(results) == 0) {
-    stop("No models were successfully trained. Check parameter ranges and data.")
+
+    warning("No models were successfully trained in pretuning. Check parameter ranges and data.")
   }
 
   results_df <- do.call(rbind, results)
 
-  best_idx <- if (metric == "RMSE") which.min(results_df$RMSE) else which.max(results_df[[metric]])
+  best_idx <- which.min(results_df$RMSE)
   best <- results_df[best_idx, ]
   best$method <- method
   formula <- org_formula # Restore the original formula

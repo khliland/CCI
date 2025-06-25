@@ -13,7 +13,6 @@ CCI.pretuner(
   folds = 4,
   training_share = 0.7,
   tune_length = 4,
-  metric = "RMSE",
   random_grid = TRUE,
   samples = 35,
   data_type = "continuous",
@@ -52,13 +51,9 @@ CCI.pretuner(
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
 
-\item{metric}{Character. The performance metric to optimize during tuning. Defaults to 'RMSE' for continuous data. Automatically set to 'Accuracy' for binary or categorical data.}
-
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 
 \item{samples}{Integer. The number of random samples to take from the grid. Default is 30.}
-
-\item{data_type}{Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".}
 
 \item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
 
@@ -99,7 +94,7 @@ CCI.pretuner(
 \value{
 A list containing:
 \itemize{
-\item \code{best_param}: A data frame with the best parameters and their performance metric.
+\item \code{best_param}: A data frame with the best parameters.
 \item \code{tuning_result}: A data frame with all tested parameter combinations and their performance metrics.
 \item \code{warnings}: A character vector of warnings issued during tuning.
 }
