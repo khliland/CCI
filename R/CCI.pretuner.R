@@ -10,7 +10,6 @@
 #' @param training_share Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param samples Integer. The number of random samples to take from the grid. Default is 30.
-#' @param data_type Character. Specifies the type of data of dependent variable: "continuous", "binary", or "categorical". Default is "continuous".
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
@@ -79,7 +78,6 @@ CCI.pretuner <- function(formula,
                          folds = 4,
                          training_share = 0.7,
                          tune_length = 4,
-                         metric = 'RMSE',
                          random_grid = TRUE,
                          samples = 35,
                          data_type = "continuous",

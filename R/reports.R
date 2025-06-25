@@ -13,7 +13,7 @@
 #' @export
 print.summary.CCI <- function(x, ...) {
 
-  cat(paste0("Computational conditional independence test using '", x$MLfunc, "'.\n")) #Fix so compatible with custom made functions
+  cat(paste0("Computational conditional independence test using '", x$method, "'.\n")) #Fix so compatible with custom made functions
   cat("Null hypothesis: ", deparse(x$formula), "\n")
   cat("Number of Monte Carlo samples: ", x$nperm, "\n")
   cat("Performance Metric: ", x$metric, "\n")
@@ -36,7 +36,9 @@ summary.CCI <- function(object, ...) {
     nperm = object$nperm,
     dag = object$dag,
     dag_n = object$dag_n,
+    tail = object$tail,
     p.value = object$p.value,
+    metric = object$metric,
     null.distribution = object$null.distribution,
     test.statistic = object$test.statistic
   )

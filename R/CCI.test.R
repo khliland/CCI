@@ -32,7 +32,6 @@
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
-#' @importFrom stats set.seed stop warning sample round is.na is.null
 #' @importFrom dplyr %>%
 #' @importFrom dagitty impliedConditionalIndependencies
 #' @importFrom caret train trainControl createDataPartition

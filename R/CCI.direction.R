@@ -7,7 +7,6 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param method A character string specifying the method to be used for model fitting. Options include "rf" (random forest), "xgboost" (XGBoost), "nnet" (neural network), "gpr" (Gaussian process regression), and "svm" (support vector machine).
 #' @param folds An integer specifying the number of folds for cross-validation. Default is 4.
-#' @param data_type A character string specifying the type of data. Options include "continuous", "binary", and "categorical". Default is "continuous".
 #' @param poly Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditioning variables are included in the model. Default is TRUE.
@@ -25,7 +24,6 @@
 #'  formula = formula_init,
 #'  data = dat,
 #'  method = "rf",
-#'  data_type = "continuous",
 #'  folds = 2,
 #'  seed = 1)
 #'
@@ -36,7 +34,6 @@ CCI.direction <- function(formula,
                                  data,
                                  method = "rf",
                                  folds = 4,
-                                 data_type = "continuous",
                                  poly = TRUE,
                                  degree = 3,
                                  interaction = TRUE,
@@ -52,7 +49,6 @@ CCI.direction <- function(formula,
     Z <- NULL
   }
   if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
-    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
     poly <- FALSE
   }
 
@@ -90,12 +86,18 @@ CCI.direction <- function(formula,
     paste(X_var, "~", paste(c(outcome_var, Z_vars), collapse = " + "))
   )
 
-  # Set caret method
+  # Make any data type into numeric
+  data <- data.frame(lapply(data, function(x) {
+    if (is.factor(x)) {
+      as.numeric(as.character(x))
+    } else {
+      x
+    }
+  }))
+
   caret_method <- switch(method,
                          rf = "rf",
                          xgboost = "xgbTree",
-                         nnet = "nnet",
-                         gpr = "gaussprRadial",
                          svm = "svmRadial",
                          stop("Unsupported method"))
 
@@ -104,17 +106,11 @@ CCI.direction <- function(formula,
   model1 <- caret::train(formula_Y_XZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
   model2 <- caret::train(formula_X_YZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
 
-  # Choose based on metric
-  if (data_type == "continuous") {
-    metric1 <- min(model1$results$RMSE, na.rm = TRUE)
-    metric2 <- min(model2$results$RMSE, na.rm = TRUE)
-    best_direction <- if (metric1 <= metric2) "Y ~ X | Z" else "X ~ Y | Z"
-  } else if (data_type %in% c("binary", "categorical")) {
-    metric1 <- max(model1$results$Kappa, na.rm = TRUE)
-    metric2 <- max(model2$results$Kappa, na.rm = TRUE)
-    best_direction <- if (metric1 >= metric2) "Y ~ X | Z" else "X ~ Y | Z"
-  } else {
-    stop("Unsupported data type: must be 'continuous', 'binary', or 'categorical'.")
+  metric1 <- min(model1$results$RMSE, na.rm = TRUE)
+  metric2 <- min(model2$results$RMSE, na.rm = TRUE)
+  best_direction <- if (metric1 <= metric2) "Y ~ X | Z" else "X ~ Y | Z"
+  if (unique(data[[outcome_var]] < 6) && unique(data[[X_var]] < 6)) {
+    warning("Choosing direction based on RMSE may not be appropriate for your data.")
   }
 
   # Using the original formula to present to user
