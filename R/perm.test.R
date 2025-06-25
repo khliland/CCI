@@ -4,7 +4,7 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Proportion of data to use for training the model. Default is 0.825.
 #' @param nperm Number of permutations to perform. Default is 500.
-#' @param data_type Type of data: "continuous", "binary", or "categorical". Default is "continuous".
+#' @param metric Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.
 #' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
 #' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param parametric Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.
@@ -18,10 +18,7 @@
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
-#' @importFrom stats lm rnorm predict as.formula
-#' @importFrom dagitty impliedConditionalIndependencies
 #' @importFrom dplyr mutate
-#' @importFrom utils flush.console
 #' @export
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}
@@ -39,7 +36,7 @@ perm.test <- function(formula,
                       data,
                       p = 0.7,
                       nperm = 600,
-                      data_type = "continuous",
+                      metric = 'RMSE',
                       method = "rf",
                       nrounds = 120,
                       parametric = FALSE,
@@ -57,41 +54,40 @@ perm.test <- function(formula,
 
 
   if (is.na(tail)) {
-    if (data_type %in% c("binary", "categorical")) {
+    if (metric == "Kappa") {
       tail <- "right"
-    } else if (data_type == "continuous") {
+    } else if (metric == "RMSE") {
       tail <- "left"
     }
   }
 
 
   # Creating the null distribution
-  dist <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(formula = formula, data_type = data_type, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
   status <- "Complete"
 
-  metric <- if (!is.null(metricfunc)) {
-          deparse(substitute(metricfunc))
-  } else if (!is.null(mlfunc) && is.null(metricfunc)) {
-          deparse(substitute(mlfunc))
-  } else {
-              if (data_type == "continuous") {
-                "RMSE"
-              } else {
-                "Kappa Score"
-              }
-  }
+  # metric <- if (!is.null(metricfunc)) {
+  #         deparse(substitute(metricfunc))
+  # } else if (!is.null(mlfunc) && is.null(metricfunc)) {
+  #         deparse(substitute(mlfunc))
+  # } else {
+  #             if (data_type == "continuous") {
+  #               "RMSE"
+  #             } else {
+  #               "Kappa Score"
+  #             }
+  # }
 
   additional_args <- list(...)
 
   # Gather everything in "obj"
   obj <- list(status = status,
               MLfunc = method,
-              metric = metric,
               data = data,
               formula = formula,
               p = p,
@@ -101,7 +97,7 @@ perm.test <- function(formula,
               nperm = nperm,
               nrounds = nrounds,
               train_test_ratio = p,
-              data_type = data_type,
+              metric = metric,
               parametric = parametric,
               null.distribution = dist,
               test.statistic = test_statistic,

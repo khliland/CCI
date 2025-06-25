@@ -11,7 +11,7 @@
 #' @param nrounds Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
-#' @param data_type Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".
+#' @param metric Character. Specifies the type of data: "Auto", "RMSE", "Kappa" or "Custom". Default is "automatic".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
 #' @param print_result Logical. If TRUE, the function will print the result of the test. Default is TRUE.
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
@@ -32,8 +32,10 @@
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
-#' @importFrom stats lm predict density gaussian predict.glm rexp runif sd rpois
+#' @importFrom stats set.seed stop warning sample round is.na is.null
 #' @importFrom dplyr %>%
+#' @importFrom dagitty impliedConditionalIndependencies
+#' @importFrom caret train trainControl createDataPartition
 #'
 #' @return Invisibly returns the result of \code{perm.test}, which is an object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 #' @aliases CCI
@@ -54,7 +56,7 @@
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
 
 #' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
-#'                    data_type = "categorical", nperm = 25, num_class = 3)
+#'                    metric = "Kappa", nperm = 25, num_class = 3)
 #'
 #' # Example: Again we can switch y and x1 (still using xgboost)
 #' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
@@ -103,10 +105,10 @@ CCI.test <- function(formula = NULL,
                      nrounds = 600,
                      dag = NULL,
                      dag_n = 1,
-                     data_type = "continuous",
+                     metric = "Auto",
+                     method = 'rf',
                      choose_direction = FALSE,
                      print_result = TRUE,
-                     method = 'rf',
                      parametric = FALSE,
                      poly = TRUE,
                      degree = 3,
@@ -165,22 +167,35 @@ CCI.test <- function(formula = NULL,
     warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
   }
 
-  metric <- if (!is.null(metricfunc)) {
+  if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))
   } else if (!is.null(mlfunc)) {
-    "custom"
-  } else {
-    if (data_type %in% "continuous") {
-      "RMSE"
-    } else {
-      "Kappa Score"
+    metric <- "custom"
+  } else if (metric == "Auto") {
+    response_var <- all.vars(formula)[1]
+    y <- data[[response_var]]
+      if (is.numeric(y) && (length(unique(y)) > 2)) {
+        metric <- "RMSE"
+      } else if (is.factor(y) || is.character(y)) {
+          metric <- "Kappa"
+      } else if (is.numeric(y) && length(unique(y)) == 2) {
+          metric <- "Kappa"
+      } else {
+          stop("Could not determine an appropriate metric automatically. Please specify the 'metric' explicitly.")
     }
+  } else if (metric == "RMSE" || metric == "Kappa" || metric == "Custom") {
+    metric <- metric
+  } else {
+    stop("Invalid metric specified. Use 'Auto', 'RMSE', 'Kappa' or 'Custom'")
   }
-  if (subsampling < 0 || subsampling > 1) {
+
+
+  if ((subsampling < 0 || subsampling > 1) && method != "xgboost") {
     stop("Subsampling must be between 0 and 1.")
   } else if (subsampling < 1) {
     data <- data[sample(nrow(data), size = round(nrow(data) * subsampling)), ]
   }
+
   if (choose_direction) {
     formula <- CCI.direction(
       formula = formula,
@@ -202,7 +217,7 @@ CCI.test <- function(formula = NULL,
                                 tune_length = tune_length,
                                 metric = metric,
                                 random_grid = random_grid,
-                                data_type = data_type,
+                                metric = metric,
                                 interaction = interaction,
                                 poly = poly,
                                 degree = degree,
@@ -232,7 +247,7 @@ CCI.test <- function(formula = NULL,
     dag = dag,
     dag_n = dag_n,
     nrounds = nrounds,
-    data_type = data_type,
+    metric = metric,
     degree = degree,
     poly = poly,
     interaction = interaction,
@@ -244,18 +259,20 @@ CCI.test <- function(formula = NULL,
     params,
     ...
   )
+  result$metric <- metric
   if (tune) {
     result$warnings <- tune_warning
   }
 
-  if (print_result) {
-    print.summary.CCI(result)
+  pvalue <- result$p.value
+
+  # Only print the result if not assigned
+  if (sys.nframe() != 0) {
+    # Skip a line
+    cat("\n")
+    cat("p-value: ", pvalue, "\n")
   }
 
-  if (plot) {
-    plot(result)
-    cat("Plot generated.\n")
-  }
 
   return(invisible(result))
 }

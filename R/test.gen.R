@@ -5,7 +5,7 @@
 #'
 #' @param formula Formula specifying the relationship between dependent and independent variables.
 #' @param data Data frame. The data containing the variables used.
-#' @param data_type Character. The type of data of the Y parameter: can be "continuous", "binary", or "categorical".
+#' @param metric Character. The type of metric: can be "RMSE", "Kappa" or "Custom. Default is 'RMSE'
 #' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.
 #' @param nperm Integer. The number of generated Monte Carlo samples. Default is 60.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.
@@ -43,8 +43,8 @@
 
 test.gen <- function(formula,
                      data,
-                     data_type = "continuous",
                      method = "rf",
+                     metric,
                      nperm = 60,
                      p = 0.8,
                      N = nrow(data),
@@ -52,7 +52,6 @@ test.gen <- function(formula,
                      interaction = TRUE,
                      degree = 3,
                      nrounds = 600,
-                     num_class = NULL,
                      nthread = 1,
                      permutation = FALSE,
                      metricfunc = NULL,
@@ -65,12 +64,7 @@ test.gen <- function(formula,
   if (poly && degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
-  if (method == "xgboost" && data_type == "categorical" && is.null(num_class)) {
-    stop("num_class needs to be set for xgboost with categorical data")
-  }
-  if (method == "lightgbm" && data_type == "categorical" && is.null(num_class)) {
-    stop("num_class needs to be set for lightgbm with categorical data")
-  }
+
 
   # Parse formula
   Y <- all.vars(formula)[1]
@@ -80,7 +74,7 @@ test.gen <- function(formula,
     Z <- NULL
   }
   if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
-    warning("Polynomial terms are not supported for categorical variables. Polynomial terms will not be included.")
+    warning("Polynomial terms are not supported for factor variables. Polynomial terms will not be included. If you want polynomial terms you need pass in factor variables as several binary dummy variables.")
     poly <- FALSE
   }
 
@@ -103,11 +97,11 @@ test.gen <- function(formula,
 
   for (iteration in 1:nperm) {
     # Split data
-    if (data_type %in% c("continuous", "custom")) {
+    if (metric %in% c("RMSE", "Custom")) {
       inTraining <- sample(1:nrow(data), size = floor(p * N), replace = FALSE)
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(data), inTraining)
-    } else if (data_type %in% c("binary", "categorical")) {
+    } else if (metric %in% c("Kappa")) {
       inTraining <- caret::createDataPartition(y = factor(data[[Y]]), p = p, list = FALSE)
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(data), inTraining)
@@ -121,26 +115,20 @@ test.gen <- function(formula,
     # Apply machine learning method
     null[iteration] <- tryCatch({
       if (!is.null(mlfunc)) {
-        mlfunc(formula, data = resampled_data, train_indices, test_indices, ...)
+        mlfunc(formula,
+               data = resampled_data,
+               train_indices,
+               test_indices, ...)
       } else if (method == "xgboost") {
-        if (!"objective" %in% names(list(...))) {
-          objective <- switch(data_type,
-                              binary = "binary:logistic",
-                              categorical = "multi:softprob",
-                              continuous = "reg:squarederror")
-        } else {
-          objective <- list(...)$objective
-        }
         wrapper_xgboost(
           formula,
           resampled_data,
           train_indices,
           test_indices,
-          data_type = data_type,
+          metric = metric,
           num_class = num_class,
           metricfunc = metricfunc,
           nrounds = nrounds,
-          objective = objective,
           ...
         )
       } else if (method == "rf") {
@@ -149,7 +137,7 @@ test.gen <- function(formula,
           resampled_data,
           train_indices,
           test_indices,
-          data_type = data_type,
+          metric = metric,
           metricfunc = metricfunc,
           num.trees = nrounds,
           ...
@@ -160,7 +148,7 @@ test.gen <- function(formula,
           resampled_data,
           train_indices,
           test_indices,
-          data_type = data_type,
+          metric = metric,
           metricfunc = metricfunc,
           ...
         )

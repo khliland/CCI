@@ -5,7 +5,7 @@
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for training data
 #' @param nrounds Number of boosting rounds
-#' @param data_type Type of data (continuous, binary or categorical)
+#' @param metric Type of performance metric
 #' @param num_class Number of categorical classes
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
@@ -24,9 +24,8 @@ wrapper_xgboost <- function(formula,
                             data,
                             train_indices,
                             test_indices,
-                            data_type,
+                            metric,
                             nrounds = 150,
-                            num_class = NULL,
                             metricfunc = NULL,
                             nthread = 1,
                             ...) {
@@ -57,6 +56,11 @@ wrapper_xgboost <- function(formula,
 
   y_test <- as.matrix(testing[dependent])
 
+  data_type <- ifelse(is.numeric(train_label), "continuous",
+                      ifelse(length(unique(train_label)) == 2, "binary", "categorical"))
+
+  args <- list(...)
+  if (!"object" %in% names(args)) {
   params <- list(
     objective = switch(data_type,
                        continuous = "reg:squarederror",
@@ -65,9 +69,13 @@ wrapper_xgboost <- function(formula,
     eval_metric = switch(data_type,
                          continuous = "rmse",
                          binary = "error",
-                         categorical = "merror"),
-    num_class = if (data_type == "categorical") length(unique(train_label)) else NULL
-  )
+                         categorical = "merror"))
+  } else {
+    params <- list(objective = args$object, eval_metric = eval_metric = switch(data_type,
+                                                                               continuous = "rmse",
+                                                                               binary = "error",
+                                                                               categorical = "merror"))
+  }
 
   dots <- list(...)
   params <- utils::modifyList(params, dots)
@@ -84,7 +92,6 @@ wrapper_xgboost <- function(formula,
   predictions <- predict(model, newdata = dtest)
   actual <- y_test
   if (!is.null(metricfunc)) {
-    data_type <- "custom"
     metric <- metricfunc(actual, predictions, ...)
   } else if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
     metric <- sqrt(mean((predictions - actual)^2))
@@ -99,7 +106,7 @@ wrapper_xgboost <- function(formula,
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels), factor(test_label, levels = levels)), silent = TRUE)
     metric <- conf_matrix$overall[2]
   } else {
-    stop("Objective function for XGBoost is not supported by perm.test()")
+    stop("Objective function for XGBoost is not supported")
   }
   return(metric)
 }
@@ -110,7 +117,7 @@ wrapper_xgboost <- function(formula,
 #' @param data Data frame containing the dataset to be used for training and testing the model.
 #' @param train_indices A vector of indices specifying the rows in `data` to be used as the training set.
 #' @param test_indices A vector of indices specifying the rows in `data` to be used as the test set.
-#' @param data_type Character string indicating the type of data. Can be "continuous" for regression, "binary" for binary classification, or "categorical" for multiclass classification.
+#' @param metric Character string indicating the type of performance metric. Can be "RMSE" for regression, "Kappa" for binary classification, or multiclass classification.
 #' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param ... Additional arguments passed to the `ranger` function.
@@ -126,13 +133,13 @@ wrapper_ranger <- function(formula,
                            data,
                            train_indices,
                            test_indices,
-                           data_type,
+                           metric,
                            metricfunc = NULL,
                            nthread = 1,
                            ...) {
-  if (data_type %in% c("binary", "categorical")) {
+  if (metric %in% c("Kappa")) {
     model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, ...)
-  } else if (data_type %in% "continuous") {
+  } else if (data_type %in% "RMSE") {
     model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, ...)
   }
 
@@ -141,7 +148,7 @@ wrapper_ranger <- function(formula,
 
   if (!is.null(metricfunc)) {
     metric <- metricfunc(actual, predictions, ...)
-  } else if (data_type %in% c("binary", "categorical")) {
+  } else if (metric %in% c("Kappa")) {
     if (nlevels(factor(actual)) > 2) {
       pred_class <- apply(predictions, 1, which.max)
       pred_class <- factor(pred_class, levels = 1:nlevels(factor(actual)), labels = levels(factor(actual)))
@@ -152,7 +159,7 @@ wrapper_ranger <- function(formula,
       cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
       metric <- cm$overall["Kappa"]
       }
-    } else if (data_type == "continuous") {
+    } else if (metric == "RMSE") {
     metric <- sqrt(mean((predictions - actual)^2))
   }
 
@@ -165,7 +172,7 @@ wrapper_ranger <- function(formula,
 #' @param data Data frame
 #' @param train_indices Indices for training data
 #' @param test_indices Indices for testing data
-#' @param data_type Type of data ("continuous", "binary", or "categorical")
+#' @param metric Type of metric ("RMSE" or "Kappa")
 #' @param metricfunc Optional user-defined function to calculate a custom performance metric.
 #' @param ... Additional arguments passed to e1071::svm
 #'
@@ -178,12 +185,12 @@ wrapper_svm <- function(formula,
                         data,
                         train_indices,
                         test_indices,
-                        data_type,
+                        metric,
                         metricfunc = NULL,
                         ...) {
   y_name <- all.vars(formula)[1]
 
-  if (data_type %in% c("binary", "categorical")) {
+  if (metric %in% c("Kappa")) {
     data[[y_name]] <- as.factor(data[[y_name]])
   }
 
@@ -195,14 +202,14 @@ wrapper_svm <- function(formula,
 
   if (!is.null(metricfunc)) {
     metric <- metricfunc(actual, predictions, ...)
-  } else if (data_type == "continuous") {
+  } else if (metric == "RMSE") {
     metric <- sqrt(mean((predictions - actual)^2))
-  } else if (data_type %in% c("binary", "categorical")) {
+  } else if (metric %in% c("Kappa")) {
     pred_class <- factor(predictions, levels = levels(factor(actual)))
     cm <- caret::confusionMatrix(pred_class, factor(actual))
     metric <- cm$overall["Kappa"]
   } else {
-    stop("Unsupported data_type for SVM wrapper.")
+    stop("Unsupported metric for SVM wrapper.")
   }
 
   return(metric)

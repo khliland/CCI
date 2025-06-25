@@ -14,7 +14,7 @@ CCI.test(
   nrounds = 600,
   dag = NULL,
   dag_n = 1,
-  data_type = "continuous",
+  data_type = "automatic",
   choose_direction = FALSE,
   print_result = TRUE,
   method = "rf",
@@ -53,7 +53,7 @@ CCI.test(
 
 \item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
-\item{data_type}{Character. Specifies the type of data: "continuous", "binary", or "categorical". Default is "continuous".}
+\item{data_type}{Character. Specifies the type of data: "automatic", "continuous", "binary", or "categorical". Default is "automatic".}
 
 \item{choose_direction}{Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.}
 

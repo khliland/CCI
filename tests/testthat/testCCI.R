@@ -11,10 +11,14 @@ library(CCI)
 #-------------------------------------------------------------------------------
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
+  # undebug(perm.test)
   result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', interaction = F)
+  CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', interaction = F)
   expect_true(is.list(result))
 })
 
+summary(result)
+plot(result)
 
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
