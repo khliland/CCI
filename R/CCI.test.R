@@ -113,6 +113,7 @@ CCI.test <- function(formula = NULL,
                      poly = TRUE,
                      degree = 3,
                      subsampling = 1,
+                     num_class = NULL,
                      interaction = TRUE,
                      metricfunc = NULL,
                      mlfunc = NULL,
@@ -149,6 +150,12 @@ CCI.test <- function(formula = NULL,
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
+  if (is.null(num_class) && metric == "Kappa" && !is.null(mlfunc)) {
+    num_class <- unique(data[[all.vars(formula)[1]]])
+  } else {
+    num_class <- num_class
+  }
+
   if (!is.null(dag)) {
     if (!is.null(formula)) {
       formula = as.formula(formula)
@@ -256,6 +263,7 @@ CCI.test <- function(formula = NULL,
     tail = tail,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
+    num_class = num_class,
     params,
     ...
   )

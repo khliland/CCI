@@ -26,6 +26,7 @@ wrapper_xgboost <- function(formula,
                             test_indices,
                             metric,
                             nrounds = 150,
+                            num_class = NULL,
                             metricfunc = NULL,
                             nthread = 1,
                             ...) {
@@ -71,10 +72,11 @@ wrapper_xgboost <- function(formula,
                          binary = "error",
                          categorical = "merror"))
   } else {
-    params <- list(objective = args$object, eval_metric = switch(data_type,
-                                                                               continuous = "rmse",
-                                                                               binary = "error",
-                                                                               categorical = "merror"))
+    params <- list(objective = args$object,
+                   eval_metric = switch(data_type,
+                                        continuous = "rmse",
+                                        binary = "error",
+                                        categorical = "merror"))
   }
 
   dots <- list(...)
@@ -139,7 +141,7 @@ wrapper_ranger <- function(formula,
                            ...) {
   if (metric %in% c("Kappa")) {
     model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, ...)
-  } else if (data_type %in% "RMSE") {
+  } else if (metric %in% "RMSE") {
     model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, ...)
   }
 

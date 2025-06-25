@@ -56,6 +56,7 @@ test.gen <- function(formula,
                      permutation = FALSE,
                      metricfunc = NULL,
                      mlfunc = NULL,
+                     num_class = NULL,
                      ...) {
 
   if (permutation && nperm < 10) {

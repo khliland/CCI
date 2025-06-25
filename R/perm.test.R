@@ -15,6 +15,10 @@
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
+#' @param dag A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.
+#' @param dag_n A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.
+#' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
+#'
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
@@ -49,6 +53,7 @@ perm.test <- function(formula,
                       nthread = 1,
                       dag = NA,
                       dag_n  = NA,
+                      num_class = NULL,
                       ...) {
 
 
@@ -63,9 +68,9 @@ perm.test <- function(formula,
 
 
   # Creating the null distribution
-  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, ...)
+  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
 
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
