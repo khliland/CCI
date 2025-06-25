@@ -25,7 +25,7 @@ wrapper_xgboost <- function(formula,
                             train_indices,
                             test_indices,
                             metric,
-                            nrounds = 150,
+                            nrounds = 500,
                             num_class = NULL,
                             metricfunc = NULL,
                             nthread = 1,
@@ -57,8 +57,13 @@ wrapper_xgboost <- function(formula,
 
   y_test <- as.matrix(testing[dependent])
 
-  data_type <- ifelse(is.numeric(train_label), "continuous",
-                      ifelse(length(unique(train_label)) == 2, "binary", "categorical"))
+  if (is.numeric(train_label) && length(unique(train_label)) > 2) {
+    data_type <- "continuous"
+  } else if (is.numeric(train_label) && length(unique(train_label)) == 2) {
+    data_type <- "binary"
+  } else {
+    data_type <- "categorical"
+  }
 
   args <- list(...)
   if (!"object" %in% names(args)) {
