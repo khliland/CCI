@@ -13,7 +13,7 @@ library(CCI)
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
   result <- CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', interaction = F)
-  # CCI.test(formula = Y ~ X + Z1, data = dat, method = 'rf', interaction = F)
+  summary(result)
   expect_true(is.list(result))
 })
 
@@ -22,7 +22,6 @@ plot(result)
 
 test_that("CCI.test outputs a list", {
   dat <- NormalData(500)
-  debug(CCI.test)
   result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'xgboost')
   summary(result)
   expect_true(is.list(result))
@@ -31,6 +30,7 @@ test_that("CCI.test outputs a list", {
 test_that("CCI.test outputs a list", {
   dat <- NormalData(250)
   result <- CCI.test(formula = Y ~ X + Z1, interaction = F, data = dat, method = 'svm')
+  summary(result)
   expect_true(is.list(result))
 })
 

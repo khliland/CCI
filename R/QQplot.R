@@ -32,7 +32,7 @@ QQplot <- function(object, ...) {
   dag <- object$dag
   dag_n <- object$dag_n
   N <- nrow(data)
-  data_type <- object$data_type
+  metric <- object$metric
   tail <- object$tail
   parametric <- object$parametric
   p <- object$p
@@ -63,7 +63,7 @@ QQplot <- function(object, ...) {
   test_result <- test.gen(formula = formula,
                           data = data,
                           permutation = FALSE,
-                          data_type = data_type,
+                          metric = metric,
                           method = method,
                           nperm = nperm,
                           nrounds = nrounds,

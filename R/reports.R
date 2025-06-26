@@ -17,10 +17,10 @@ print.summary.CCI <- function(x, ...) {
   cat("Null hypothesis: ", deparse(x$formula), "\n")
   cat("Number of Monte Carlo samples: ", x$nperm, "\n")
   cat("Performance Metric: ", x$metric, "\n")
-  cat("Test Statistic: ", unlist(x$test.statistic), "\n")
-  cat("P-value: ", x$p.value, "\n")
+  cat("Test Statistic: ", format(unlist(x$test.statistic), digits = 3), "\n")
+  cat("P-value: ", format(x$p.value, digits = 5), "\n")
   cat("tail: ", x$tail, "\n")
-  cat("Summary of Null Distribution: mean = ", mean <- mean(unlist(x$null.distribution)) , ", sd = ", sd(unlist(x$null.distribution)) ,"\n")
+  cat("Summary of Null Distribution: mean = ", mean <- format(mean(unlist(x$null.distribution)), digits = 3) , ", sd = ", format(sd(unlist(x$null.distribution)), digits = 4) ,"\n")
 
   invisible(x)
 }
