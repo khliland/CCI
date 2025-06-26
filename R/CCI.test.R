@@ -208,7 +208,6 @@ CCI.test <- function(formula = NULL,
       data = data,
       method = method,
       folds = 4,
-      data_type = data_type,
       poly = poly,
       degree = degree,
       interaction = interaction

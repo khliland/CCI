@@ -26,9 +26,9 @@ wrapper_xgboost <- function(formula,
                             test_indices,
                             metric,
                             nrounds = 500,
-                            num_class = NULL,
                             metricfunc = NULL,
                             nthread = 1,
+                            num_class = NULL,
                             ...) {
 
 
@@ -57,12 +57,27 @@ wrapper_xgboost <- function(formula,
 
   y_test <- as.matrix(testing[dependent])
 
-  if (is.numeric(train_label) && length(unique(train_label)) > 2) {
+  if (is.numeric(train_label) && length(unique(train_label)) > 2 && metric == 'RMSE') {
     data_type <- "continuous"
-  } else if (is.numeric(train_label) && length(unique(train_label)) == 2) {
+  } else if (is.numeric(train_label) && length(unique(train_label)) == 2 && metric == 'Kappa') {
     data_type <- "binary"
-  } else {
+  } else if (is.numeric(train_label) && length(unique(train_label)) == 2 && metric == 'RMSE'){
+    data_type <- "continuous"
+  } else if (is.numeric(train_label) && length(unique(train_label)) > 2 && metric == 'Kappa') {
     data_type <- "categorical"
+  } else if (metric == "RMSE") {
+    data_type <- "continuous"
+  } else if (is.numeric(train_label) && length(unique(train_label)) == 1) {
+    data_type <- "cateogorical"
+  } else if (length(unique(train_label)) > 6 && metric == 'Kappa') {
+    data_type <- "categorical"
+    warning("More than 6 classes detected. It might be better to use RMSE as the metric for this data.")
+  }
+  else {
+    data_type <- "categorical"
+  }
+  if (data_type == "categorical" && is.null(num_class)) {
+    num_class <- length(unique(train_label))
   }
 
   args <- list(...)
@@ -86,6 +101,7 @@ wrapper_xgboost <- function(formula,
 
   dots <- list(...)
   params <- utils::modifyList(params, dots)
+  params <- utils::modifyList(params, list(num_class = num_class))
 
   params <- params[!sapply(params, is.null)]
 

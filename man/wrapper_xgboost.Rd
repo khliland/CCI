@@ -11,9 +11,9 @@ wrapper_xgboost(
   test_indices,
   metric,
   nrounds = 500,
-  num_class = NULL,
   metricfunc = NULL,
   nthread = 1,
+  num_class = NULL,
   ...
 )
 }
@@ -30,11 +30,11 @@ wrapper_xgboost(
 
 \item{nrounds}{Number of boosting rounds}
 
-\item{num_class}{Number of categorical classes}
-
 \item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
 
 \item{nthread}{Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.}
+
+\item{num_class}{Number of categorical classes}
 
 \item{...}{Additional arguments passed to xgb.train}
 }

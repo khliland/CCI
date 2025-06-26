@@ -9,6 +9,7 @@ CCI.pretuner(
   formula,
   data,
   method = "rf",
+  metric = "RMSE",
   validation_method = "cv",
   folds = 4,
   training_share = 0.7,

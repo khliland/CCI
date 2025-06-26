@@ -57,6 +57,12 @@ perm.test <- function(formula,
                       ...) {
 
 
+  # Add in progress bar
+
+  # Creating the null distribution
+  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
+  # Creating the test statistic
+  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
 
   if (is.na(tail)) {
     if (metric == "Kappa") {
@@ -65,13 +71,6 @@ perm.test <- function(formula,
       tail <- "left"
     }
   }
-
-
-  # Creating the null distribution
-  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
-  # Creating the test statistic
-  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
-
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
   status <- "Complete"

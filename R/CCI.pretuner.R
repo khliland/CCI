@@ -35,6 +35,7 @@
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
 #' @importFrom stats model.matrix var
+#' @import progress
 #'
 #' @return A list containing:
 #' \itemize{
@@ -67,12 +68,10 @@
 #' }
 
 
-
-
-
 CCI.pretuner <- function(formula,
                          data,
                          method = "rf",
+                         metric = "RMSE",
                          validation_method = 'cv',
                          folds = 4,
                          training_share = 0.7,
@@ -99,7 +98,9 @@ CCI.pretuner <- function(formula,
                          C = seq(0.1, 2, by = 0.5),
                          ...) {
 
-
+  if (metric != "RMSE") {
+    stop("Pre tuning does not currently work for the other than the RMSE metric. Will be fixed soon.")
+  }
   if (!is.data.frame(data) || nrow(data) == 0) {
     stop("The 'data' argument must be a non-empty data frame.")
   }
@@ -207,7 +208,7 @@ CCI.pretuner <- function(formula,
                               search = search,
                               verboseIter = verboseIter,
                               allowParallel = parallel,
-                              summaryFunction = if (data_type == "continuous") {
+                              summaryFunction = if (metric == "RMSE") {
                                 function(data, lev = NULL, model = NULL) {
                                   obs <- data$obs
                                   pred <- data$pred
@@ -255,101 +256,65 @@ CCI.pretuner <- function(formula,
   }
 
   warning_log <- character()
+  pb <- progress::progress_bar$new(
+    format = "  tuning [:bar] :percent eta: :eta",
+    total = nrow(tuneGrid),
+    clear = FALSE,
+    width = 60
+  )
+  results <- lapply(seq_len(nrow(tuneGrid)), function(i) {
+    pb$tick()
+    row <- tuneGrid[i, , drop = FALSE]
+    if (verbose) {
+      cat("Training model", i, "of", nrow(tuneGrid), "with parameters:",
+          paste(names(row), row, sep = "=", collapse = ", "), "\n")
+    }
 
-  # Progress bar with pbapply
-  if (!requireNamespace("pbapply", quietly = TRUE)) {
-    warning("The 'pbapply' package is not installed. Progress bars will not be shown.")
-    warning_log <- c(warning_log, "The 'pbapply' package is not installed. Progress bars will not be shown.")
+    train_args <- list(
+      x = X,
+      y = Y,
+      method = caret_method,
+      trControl = ctrl,
+      tuneGrid = row,
+      metric = metric,
+      ...
+    )
 
-    results <- lapply(seq_len(nrow(tuneGrid)), function(i) {
-      row <- tuneGrid[i, , drop = FALSE]
-      if (verbose) {
-        cat("Training model with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
+    model <- tryCatch(
+      {
+        withCallingHandlers(
+          do.call(caret::train, train_args),
+          warning = function(w) {
+            warning_log <<- c(warning_log, paste("Warning for parameters ",
+                                                 paste(names(row), row, sep = "=", collapse = ", "),
+                                                 ": ", conditionMessage(w)))
+            invokeRestart("muffleWarning")
+          }
+        )
+      },
+      error = function(e) {
+        warning_log <<- c(warning_log, paste("Error for parameters ",
+                                             paste(names(row), row, sep = "=", collapse = ", "),
+                                             ": ", conditionMessage(e)))
+        return(NULL)
       }
-      train_args <- list(
-        x = X,
-        y = Y,
-        method = caret_method,
-        trControl = ctrl,
-        tuneGrid = row,
-        ...
-      )
+    )
 
-      model <- tryCatch(
-        {
-          withCallingHandlers(
-            do.call(caret::train, train_args),
-            warning = function(w) {
-              warning_log <<- c(warning_log, paste("Warning for parameters ",
-                                                   paste(names(row), row, sep = "=", collapse = ", "),
-                                                   ": ", conditionMessage(w)))
-              invokeRestart("muffleWarning")
-            }
-          )
-        },
-        error = function(e) {
-          warning_log <<- c(warning_log, paste("Error for parameters ",
-                                               paste(names(row), row, sep = "=", collapse = ", "),
-                                               ": ", conditionMessage(e)))
-          NULL
-        }
-      )
-      if (is.null(model)) return(NULL)
-      res <- model$results[1, ]
-      res[] <- lapply(res, function(x) if (is.numeric(x)) replace(x, is.nan(x), NA) else x)
-      if (verbose) {
-        cat("Results for parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
-        # print(res)
-      }
-      cbind(row, res)
-    })
-  } else {
-    last_error <- NULL
-    results <- pbapply::pblapply(seq_len(nrow(tuneGrid)), function(i) {
-      row <- tuneGrid[i, , drop = FALSE]
-      if (verbose) {
-        cat("Training model with parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
-      }
-      train_args <- list(
-        x = X,
-        y = Y,
-        method = caret_method,
-        trControl = ctrl,
-        tuneGrid = row,
-        ...)
-      model <- tryCatch(
-        {
-          withCallingHandlers(
-            do.call(caret::train, train_args),
-            warning = function(w) {
-              warning_log <<- c(warning_log, paste("Warning for parameters ",
-                                                   paste(names(row), row, sep = "=", collapse = ", "),
-                                                   ": ", conditionMessage(w)))
-              invokeRestart("muffleWarning")
-            }
-          )
-        },
-        error = function(e) {
-          last_error <<- conditionMessage(e)
-          warning_log <<- c(warning_log, paste("Error for parameters ",
-                                               paste(names(row), row, sep = "=", collapse = ", "),
-                                               ": ", conditionMessage(e)))
-          NULL
-        }
-      )
-      if (is.null(model)) return(NULL)
-      res <- model$results[1, ]
-      res[] <- lapply(res, function(x) if (is.numeric(x)) replace(x, is.nan(x), NA) else x)
-      if (verbose) {
-        cat("Results for parameters:", paste(names(row), row, sep = "=", collapse = ", "), "\n")
-        print(res)
-      }
-      cbind(row, res)
-    })
-  }
-  if (!is.null(last_error)) {
-    message("Last error: ", last_error)
-  }
+    if (is.null(model)) return(NULL)
+
+    res <- model$results[1, ]
+    res[] <- lapply(res, function(x) if (is.numeric(x)) replace(x, is.nan(x), NA) else x)
+
+    if (verbose) {
+      cat("Results for model", i, ":", paste(names(res), res, sep = "=", collapse = ", "), "\n")
+    }
+
+    cbind(row, res)
+  })
+
+  # if (!is.null(last_error)) { # For debugging
+  #   message("Last error: ", last_error)
+  # }
   results <- results[!sapply(results, is.null)]
   if (length(results) == 0) {
 

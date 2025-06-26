@@ -101,6 +101,7 @@ CCI.direction <- function(formula,
                          svm = "svmRadial",
                          stop("Unsupported method"))
 
+
   ctrl <-  suppressWarnings(caret::trainControl(method = "cv", number = folds))
 
   model1 <- caret::train(formula_Y_XZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
@@ -109,9 +110,6 @@ CCI.direction <- function(formula,
   metric1 <- min(model1$results$RMSE, na.rm = TRUE)
   metric2 <- min(model2$results$RMSE, na.rm = TRUE)
   best_direction <- if (metric1 <= metric2) "Y ~ X | Z" else "X ~ Y | Z"
-  if (unique(data[[outcome_var]] < 6) && unique(data[[X_var]] < 6)) {
-    warning("Choosing direction based on RMSE may not be appropriate for your data.")
-  }
 
   # Using the original formula to present to user
   outcome_var <- all.vars(org_formula[[2]])

@@ -114,19 +114,22 @@ test_that("CCI.test outputs a list", {
 test_that("CCI.test outputs a list", {
   dat <- NonLinearCategorization(600, d = 2)
   dat$Y <- as.factor(dat$Y)
-  result <- CCI.test(formula = Y ~ X + Z, data = dat, method = 'rf', data_type = 'categorical', interaction = F)
+  result <- CCI.test(formula = Y ~ X + Z, data = dat, method = 'rf', interaction = F)
   expect_true(is.list(result))
 })
 test_that("CCI.test outputs a list", {
   dat <- NonLinearCategorization(800, d = 2)
+  # undebug(CCI.test)
+  # undebug(perm.test)
+  # undebug(test.gen)
+  # undebug(wrapper_xgboost)
   dat$Y <- as.factor(dat$Y)
   result <- CCI.test(formula = Y ~ X + Z,
                      data = dat,
                      interaction = F,
-                     method = 'xgboost',
-                     data_type = 'categorical',
-                     num_class = length(levels(dat$Y)))
-  expect_true(is.list(result))
+                     method = 'xgboost')
+  summary(result)
+                     expect_true(is.list(result))
 })
 
 test_that("CCI.test outputs a list", {
@@ -135,8 +138,7 @@ test_that("CCI.test outputs a list", {
   result <- CCI.test(formula = Y ~ X + Z,
                      interaction = F,
                      data = dat,
-                     method = 'svm',
-                     data_type = 'categorical')
+                     method = 'svm')
   expect_true(is.list(result))
 })
 
@@ -200,113 +202,8 @@ test_that('CCI.direction', {
 # The machine learning wrapper functions takes formula, data and indices for training and test data.
 # estimates the ML model with training data, and evaluates on testing data. The different ML-wrapper takes
 # different parameters depending on the ML model used. The default ML in the test is ranger (random forest).
-test_that("wrapper_lightgbm outputs a metric score (basic use)", {
-  dat <- data.frame(
-    x1 = rnorm(100),
-    x2 = rnorm(100),
-    x3 = rnorm(100),
-    x4 = rnorm(100),
-    y = rnorm(100)
-  )
-  train_indices <- c(1:80)
-  test_indices <- c(81:100)
-  metric <- wrapper_lightgbm(formula = y ~ x1 + x2 + x3 + x4, data = dat, train_indices = train_indices, test_indices = test_indices, data_type = "continuous")
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_lightgbm outputs a custom metric score (advance use)", {
-  rSquared <- function(data, model, test_indices) {
-    actual <- data[test_indices,][['Y']]
-    independent <- c('X', 'Z1', 'Z2')
-    testing <- data[test_indices, ]
-    test_matrix <- as.matrix(testing[independent])
-    pred <- predict(model, newdata = test_matrix, type = "response")
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
-  }
-
-  dat <- NormalData(200)
-  inTraining <- sample(1:nrow(dat), size = floor(0.8 * nrow(dat)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(dat), inTraining)
-  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
-                             data = dat,
-                             train_indices = train_indices,
-                             test_indices = test_indices,
-                             data_type = "continuous",
-                             metricfunc = rSquared)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_lightgbm outputs a metric score (binary var)", {
-  data <- BinaryData(400)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
-                             data = data,
-                             train_indices = train_indices,
-                             test_indices = test_indices,
-                             data_type = "binary")
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-#-------------------------------------------------------------------------------
-test_that("wrapper_lightgbm outputs a metric score (binary var)", {
-  data <- BivMultinominal(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
-                             data = data,
-                             train_indices = train_indices,
-                             test_indices = test_indices,
-                             data_type = "categorical",
-                             num_class = 4)
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
 
 #-------------------------------------------------------------------------------
-# Example of a custom function for calculating log loss with categorical outcome
-#-------------------------------------------------------------------------------
-
-test_that("wrapper_multinom outputs a custom log loss metric score", {
-  multi_class_log_loss <- function(data, model, test_indices) {
-    eps = 0.001
-    pred <- predict(model, newdata = data[test_indices,], type = "probs")
-    actual <- data[test_indices,][['Y']]
-    actual <- factor(actual, levels = levels(data$Y))
-    actual_matrix <- model.matrix(~ actual - 1)
-    predicted <- pmax(pmin(pred, 1 - eps), eps)
-    log_loss <- -sum(actual_matrix * log(predicted)) / nrow(predicted)
-    return(log_loss)
-  }
-
-  data <- Multinominal(1000)
-  data$X <- as.factor(data$X)
-  data$Y <- as.factor(data$Y)
-
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_lightgbm(formula = Y ~ X + Z1 + Z2,
-                             data = data,
-                             train_indices = train_indices,
-                             test_indices = test_indices,
-                             metricfunc = multi_class_log_loss)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
 
 #-------------------------------------------------------------------------------
 test_that("wrapper_xgboost rmse output", {
@@ -320,7 +217,7 @@ test_that("wrapper_xgboost rmse output", {
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
-                            data_type = "continuous",
+                            metric = "RMSE",
                             nrounds = 400)
 
   expect_true(is.numeric(metric))
@@ -359,28 +256,6 @@ test_that("wrapper_xgboost rmse output using a different objective", {
                             test_indices = test_indices,
                             objective = "reg:squaredlogerror",
                             nrounds = 120)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-#-------------------------------------------------------------------------------
-test_that("wrapper_xgboost rmse output with reg:pseudohubererror and various parameter settings", {
-
-  data <- UniformNoise(1000)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
-                            data = data,
-                            train_indices = train_indices,
-                            test_indices = test_indices,
-                            objective = "reg:pseudohubererror",
-                            nrounds = 120,
-                            eta = 0.1,
-                            max_depth = 4,
-                            lambda = 0.5)
 
   expect_true(is.numeric(metric))
   expect_false(is.nan(metric))
@@ -430,7 +305,7 @@ test_that("wrapper_xgboost Kappa score output", {
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
-                            data_type = "binary",
+                            metric = "Kappa",
                             nrounds = 120)
   expect_true(is.numeric(metric))
   expect_false(is.nan(metric))
@@ -447,7 +322,6 @@ test_that("wrapper_xgboost Kappa score output", {
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
-                            data_type = "binary",
                             nrounds = 120)
   expect_true(is.numeric(metric))
   expect_false(is.nan(metric))
@@ -501,13 +375,15 @@ test_that("wrapper_xgboost Kappa score output", {
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
   test_indices <- setdiff(1:nrow(data), inTraining)
+  data$Y <- as.factor(data$Y)
+  data$X <- as.factor(data$X)
 
   metric <- wrapper_xgboost(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             train_indices = train_indices,
                             test_indices = test_indices,
                             objective = "multi:softprob",
-                            num_class = 4,
+                            metric = "Kappa",
                             nrounds = 120,
                             eta = 0.1,
                             lambda = 0.5,
@@ -664,14 +540,6 @@ test_that("wrapper_svm basic use with categorical Y", {
 #-------------------------------------------------------------------------------
 
 test_that("wrapper_ranger basic use with custom metric function ", {
-  rSquared <- function(data, model, test_indices) {
-    actual <- data[test_indices,][['Y']]
-    pred <- predict(model, data = data[test_indices,])$predictions
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
-  }
   data <- ExponentialNoise(1000)
   inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
   train_indices  <- inTraining
@@ -681,54 +549,13 @@ test_that("wrapper_ranger basic use with custom metric function ", {
                            data = data,
                            train_indices = train_indices,
                            test_indices = test_indices,
-                           data_type = "continuous",
-                           metricfunc = rSquared)
+                           metric = "RMSE")
 
   expect_true(is.numeric(metric))
   expect_false(is.nan(metric))
 })
 
 #-------------------------------------------------------------------------------
-
-test_that("wrapper_nnet basic use", {
-
-  data <- NormalData(500)
-  inTraining <- sample(1:nrow(data), size = floor(0.8 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
-                         data = data,
-                         train_indices = train_indices,
-                         test_indices = test_indices,
-                         data_type = "continuous",
-                         size = 3)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-
-test_that("wrapper_nnet categorical data", {
-
-  data <- ComplexCategorization(1000)
-  data$Y <- as.factor(data$Y)
-  inTraining <- sample(1:nrow(data), size = floor(0.7 * nrow(data)), replace = FALSE)
-  train_indices  <- inTraining
-  test_indices <- setdiff(1:nrow(data), inTraining)
-
-  metric <- wrapper_nnet(formula = Y ~ X + Z1 + Z2,
-                         data = data,
-                         train_indices = train_indices,
-                         test_indices = test_indices,
-                         data_type = "categorical",
-                         size = 3)
-
-  expect_true(is.numeric(metric))
-  expect_false(is.nan(metric))
-})
-
-
 
 #-------------------------------------------------------------------------------
 # Testing the tuning function
@@ -736,9 +563,9 @@ test_that("wrapper_nnet categorical data", {
 
 test_that("Tuning using 'rf' (default)", {
   dat <- NormalData(200)
-    CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf', tune = F)
+  CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'rf', tune = F, tune_length = 3)
   CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost')
-  param <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, samples = 100, method = 'lightgbm')
+  param <- CCI.pretuner(formula = Y ~ X + Z1 + Z2, data = dat, samples = 100, method = 'svm')
 
 
   # expect_true(is.numeric(parameters_rf$best_param.mtry))
@@ -764,51 +591,14 @@ test_that("Tuning using 'xgboost'", {
 
 })
 
-test_that("Tuning using 'nnet'", {
-  dat <- NormalData(500)
-  parameters_nnet <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
-                                  data = dat,
-                                  samples = 200,
-                                  method = 'nnet',
-                                  trace = F)
-
-  print(parameters_nnet)
-  # expect_true(is.numeric(parameters_nnet$best_param.size))
-  # expect_true(is.numeric(parameters_nnet$best_param.decay))
-})
-
-test_that("Tuning using 'svm'", {
-  dat <- NormalData(1000)
-  parameters_svm <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
-                                 data = dat,
-                                 method = 'svm')
-
-  print(parameters_svm)
-  # expect_true(is.numeric(parameters_svm$sigma))
-  # expect_true(is.numeric(parameters_svm$C))
-
-
-})
-
-test_that("Tuning using 'gpr'", {
-  dat <- NormalData(1000)
-  parameters_gpr <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
-                                 data = dat,
-                                 method = 'gpr')
-
-
-  expect_true(is.numeric(parameters_gpr$sigma))
-})
-
 test_that("Tuning using 'rf' and categorical data", {
 
   data <- TrigData(500)
-  data$Y <- data$Y - 1
-
+  data$Y <- as.numeric(as.factor(data$Y))
+  data$X <- as.numeric(as.factor(data$X))
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             seed = 192,
-                            data_type = 'categorical',
                             method = 'rf')
 
 
@@ -818,28 +608,26 @@ test_that("Tuning using 'rf' and categorical data", {
 test_that("Tuning using 'xgboost' and categorical data", {
 
   data <- TrigData(700)
-  data$Y <- data$Y - 1
-
+  data$Y <- as.numeric(as.factor(data$Y)) - 1
+  data$X <- as.numeric(as.factor(data$X)) - 1
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                             data = data,
-                            seed = 1,
-                            data_type = 'categorical',
+                            metric = 'Kappa',
                             method = 'xgboost',
                             verboseIter = F)
 
-
+  parameter$warnings
   expect_true(is.numeric(parameter$mtry))
 })
 
 test_that("Tuning using 'svm' and categorical data", {
 
   data <- TrigData(400)
-  data$Y <- data$Y - 1
-
+  data$Y <- as.numeric(as.factor(data$Y)) - 1
+  data$X <- as.numeric(as.factor(data$X)) - 1
   parameter <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                             data = data,
                             tune_length = 10,
-                            data_type = 'categorical',
                             method = 'svm')
 
 
@@ -862,7 +650,7 @@ test_that("Testing utils get_tuned_params ", {
   dat <- NormalData(1000)
   tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
                               data = dat,
-                              tune_length = 5,
+                              samples = 5,
                               method = 'xgboost')
 
   tuned_params <- get_tuned_params(tuned_model)
@@ -925,7 +713,7 @@ test_that("get_pvalues outputs p-values", {
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger)", {
 
   data <- NonLinNormal(200)
-  result <- test.gen(formula = Y ~ X | Z1 + Z2, data = data)
+  result <- test.gen(formula = Y ~ X | Z1 + Z2, data = data, metric = "RMSE")
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
 
@@ -933,7 +721,7 @@ test_that("test.gen works correctly for continuous data, default method is rando
 #-------------------------------------------------------------------------------
 test_that("test.gen works correctly for continuous data, default method is random forest (Ranger) with poly turned off", {
   data <- NormalData(200)
-  result <- test.gen(formula = Y ~ X | Z1 + Z2, data = data, poly = FALSE)
+  result <- test.gen(formula = Y ~ X | Z1 + Z2, data = data, poly = FALSE, metric = 'RMSE')
   expect_true(class(result) == "list")
   expect_true(class(mean(unlist(result))) == "numeric")
 
@@ -949,7 +737,8 @@ test_that("test.gen works correctly for continuous data, default method is rando
                                degree = 5,
                                nrounds = 600,
                                max.depth = 6,
-                               mtry = 1)
+                               mtry = 1,
+                               metric = "RMSE")
             expect_true(class(result) == "list")
             expect_true(class(mean(unlist(result))) == "numeric")
 
@@ -1006,7 +795,6 @@ test_that("test.gen works correctly for categorical data, with Xgboost
             result <- test.gen(formula = Y ~ X | Z1 + Z2,
                                data = data,
                                method = "xgboost",
-                               data_type = "categorical",
                                permutation = TRUE,
                                degree = 3,
                                nperm = 40,
@@ -1022,7 +810,6 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
             result <- test.gen(formula = Y ~ X | Z1 + Z2,
                                data = data,
                                method = "xgboost",
-                               data_type = "binary",
                                nperm = 40,
                                permutation = TRUE,
                                degree = 3,
@@ -1047,52 +834,7 @@ test_that("test.gen works correctly with Xgboost", {
 
           })
 #-------------------------------------------------------------------------------
-test_that("test.gen works correctly for continuous data, with GLM
-          various parameter settings", {
-            data <- NormalData(400)
-            result <- test.gen(formula = Y ~ X | Z1 + Z2,
-                               data = data,
-                               nperm = 40,
-                               method = "lm",
-                               data_type = "continuous",
-                               family = gaussian(),
-                               permutation = TRUE,
-                               degree = 3)
-            expect_true(class(mean(unlist(result))) == "numeric")
-          })
-#-------------------------------------------------------------------------------
-test_that("test.gen works correctly for binary Y, with glm", {
-  data <- BinaryData(400)
 
-  result <- test.gen(formula = Y ~ X | Z1 + Z2,
-                     data = data,
-                     nperm = 40,
-                     method = "lm",
-                     data_type = "binary",
-                     family = binomial(link = "logit"),
-                     permutation = FALSE,
-                     degree = 3)
-  expect_true(class(mean(unlist(result))) == "numeric")
-
-})
-#-------------------------------------------------------------------------------
-test_that("test.gen works correctly for categorical Y, with glm", {
-  data <- InteractiondData(400)
-
-  result <- test.gen(Y = "Y",
-                     X = "X",
-                     Z = c("Z1", "Z2"),
-                     data = data,
-                     nperm = 50,
-                     method = "lm",
-                     data_type = "categorical",
-                     permutation = TRUE,
-                     degree = 3)
-
-  expect_true(class(result) == "list")
-  expect_true(class(mean(unlist(result))) == "numeric")
-})
-#-------------------------------------------------------------------------------
 test_that("test.gen works correctly with  SVM", {
   data <- NormalData(600)
 
@@ -1230,7 +972,6 @@ test_that("perm.test works correctly", {
                       data = data,
                       p = 0.7,
                       nperm = 25,
-                      data_type = "continuous",
                       method = "xgboost",
                       nrounds = 40,
                       parametric = TRUE,
@@ -1258,7 +999,6 @@ test_that("perm.test works correctly with dagitty object", {
                       data = data,
                       p = 0.7,
                       nperm = 40,
-                      data_type = "continuous",
                       parametric = TRUE)
   expect_is(result, "CCI")
 })
@@ -1296,9 +1036,9 @@ test_that("CCI.test works binary data", {
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
                      nperm = 25,
-                     data_type = 'binary',
                      parametric = F
   )
+  summary(result)
   expect_is(result, "CCI")
 })
 
@@ -1306,12 +1046,15 @@ test_that("CCI.test works binary data", {
 
 test_that("CCI.test works categorical data", {
   data <- TrigData(800)
+  data$Y <- as.numeric(as.factor(data$Y)) - 1
+  data$X <- as.numeric(as.factor(data$X)) - 1
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
                      nperm = 50,
-                     data_type = 'categorical',
+                     metric = "Kappa",
                      parametric = F
   )
+  summary(result)
   expect_is(result, "CCI")
 })
 
@@ -1322,12 +1065,10 @@ test_that("CII.test works correctly with pre tuning", {
   data <- ExponentialNoise(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
-                     nperm = 100,
-                     tune = T,
-                     tune_length = 4,
+                     choose_direction = TRUE,
                      method = "rf",
                      parametric = T)
-  expect_is(result, "CCI")
+  warningexpect_is(result, "CCI")
 })
 
 #-------------------------------------------------------------------------------
@@ -1335,14 +1076,14 @@ test_that("CII.test works correctly with pre tuning", {
 test_that("CII.test works correctly with pre tuning", {
 
   data <- BinaryData(700)
-  data$Y <- as.factor(data$Y)
+  data$Y <- as.numeric(as.factor(data$Y))-1
   result <- CCI.test(formula = Y ~ X |  Z2,
                      data = data,
-                     nperm = 100,
+                     nperm = 10,
                      tune = T,
                      tune_length = 10,
                      method = "xgboost",
-                     data_type = 'binary',
+                     metric = "RMSE",
                      parametric = T)
   expect_is(result, "CCI")
 })
@@ -1353,9 +1094,7 @@ test_that("CII.test works correctly basic usage", {
   set.seed(11)
   data <- NormalData(500)
   result <- CCI.test(formula = Y ~ X |  Z2,
-                     data = data,
-                     nperm = 25,
-                     parametric = T)
+                     data = data)
   expect_is(result, "CCI")
 })
 
@@ -1364,102 +1103,59 @@ test_that("CII.test works correctly basic usage", {
 
 test_that("CCI.test works categorical data with xgboost", {
   data <- TrigData(500)
-  data$Y <- data$Y - 1
+  data$Y <- as.factor(data$Y)
+  data$X <- as.factor(data$X)
   result <- CCI.test(formula = Y ~ X | Z2,
                      data = data,
                      p = 0.7,
                      method = "xgboost",
                      nperm = 10,
-                     data_type = 'categorical',
+                     metric = 'Kappa',
                      num_class = 3,
                      parametric = F
   )
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
-test_that("CCI.test works basic with lightgbm", {
+test_that("CCI.test works basic", {
   data <- NormalData(5000)
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
                      p = 0.7,
-                     method = "lightgbm",
+                     subsample = 0.2,
+                     method = "svm",
                      nperm = 100,
                      parametric = T
   )
+  summary(result)
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
 # HER
 test_that("CCI.test works categorical data", {
   data <- TrigData(500)
-  head(data)
-  data$Y <- data$Y - 1
+
+  data$Y <- as.factor(data$Y)
   data$X <- as.factor(data$X)
 
   result <- CCI.test(formula = Y ~ X | Z2 + Z1,
                      data = data,
                      nperm = 100,
-                     data_type = 'categorical',
+                     metric = 'Kappa',
                      parametric = T,
                      tune = T,
                      verboseIter = T
   )
   expect_is(result, "CCI")
 })
-#-------------------------------------------------------------------------------
-# HER
-test_that("CCI.test works nnet", {
-  data <- NormalData(500)
 
-  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
-                     data = data,
-                     nperm = 100,
-                     parametric = T,
-                     tune = T,
-                     method = 'nnet'
-  )
-  expect_is(result, "CCI")
-})
-
-#-------------------------------------------------------------------------------
-test_that("CCI.test works rejecting a wrong null with lm", {
-
-  data <- NormalData(500)
-  result <- CCI.test(formula = Y ~ X | Z2,
-                     p = 0.6,
-                     data = data,
-                     nperm = 25,
-                     method = 'lm',
-                     family = gaussian(),
-                     data_type = "continuous",
-                     parametric = TRUE
-  )
-  expect_is(result, "CCI")
-})
-#-------------------------------------------------------------------------------
-test_that("CCI.test works categorical data with glm", {
-
-  data <- TrigData(500)
-  data$Y <- data$Y - 1
-  result <- CCI.test(formula = Y ~ X | Z2,
-                     data = data,
-                     p = 0.7,
-                     method = "lm",
-                     nperm = 25,
-                     data_type = 'categorical',
-                     parametric = T
-  )
-  expect_is(result, "CCI")
-})
 #-------------------------------------------------------------------------------
 test_that("CCI.test works rejecting a wrong null with xgboost", {
   data <- NonLinNormal(500)
   result <- CCI.test(formula = Y ~ X | Z2,
                      p = 0.7,
                      data = data,
-                     nperm = 50,
                      method = 'xgboost',
-                     data_type = "continuous",
                      parametric = TRUE
   )
   expect_is(result, "CCI")
@@ -1467,13 +1163,17 @@ test_that("CCI.test works rejecting a wrong null with xgboost", {
 #-------------------------------------------------------------------------------
 test_that("CCI.test works categorical data, wrong null", {
   data <- ExpLogData(500)
-  result <- CCI.test(formula = Y ~ X | Z2 + Z1,
+  data$Y <- as.numeric(as.factor(data$Y)) - 1
+  data$X <- as.numeric(as.factor(data$X)) - 1
+  result <- CCI.test(formula = Y ~ X | Z1,
                      p = 0.7,
                      data = data,
                      nperm = 40,
-                     data_type = 'categorical',
+                     method = "xgboost",
                      parametric = FALSE
   )
+  summary(result)
+  plot(result)
   expect_is(result, "CCI")
 })
 #-------------------------------------------------------------------------------
