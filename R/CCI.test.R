@@ -11,7 +11,7 @@
 #' @param nrounds Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
-#' @param metric Character. Specifies the type of data: "Auto", "RMSE", "Kappa" or "Custom". Default is "automatic".
+#' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
 #' @param print_result Logical. If TRUE, the function will print the result of the test. Default is TRUE.
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
@@ -136,6 +136,7 @@ CCI.test <- function(formula = NULL,
   if ((!is.null(metricfunc) | !is.null(mlfunc)) && is.na(tail)) {
     stop("tail parameter must be either 'left' or 'right'")
   }
+
   if (is.null(formula) & is.null(dag)) {
     status <- "Error: Formula or DAG are missing"
     stop("Formula or dagitty object is missing")
@@ -176,7 +177,7 @@ CCI.test <- function(formula = NULL,
   if (!is.null(metricfunc)) {
     deparse(substitute(metricfunc))
   } else if (!is.null(mlfunc)) {
-    metric <- "custom"
+    metric <- "Custom"
   } else if (metric == "Auto") {
     response_var <- all.vars(formula)[1]
     y <- data[[response_var]]

@@ -54,7 +54,7 @@ CCI.test(
 
 \item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
-\item{metric}{Character. Specifies the type of data: "Auto", "RMSE", "Kappa" or "Custom". Default is "automatic".}
+\item{metric}{Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".}
 
 \item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
 

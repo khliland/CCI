@@ -679,9 +679,8 @@ hard_case <- function(N) {
   Z1 <- runif(N, -2, 2)
   Z2 <- runif(N, -2, 2)
 
-  hZ <- sin(Z1) * cos(Z2)  # Shared nonlinear component
+  hZ <- sin(Z1) * cos(Z2)
 
-  # X and Y both depend on the same nonlinear function of Z1, Z2, but are otherwise independent
   X <- hZ + 0.2 * rnorm(N)
   Y <- hZ^2 + 0.2 * rnorm(N)
 

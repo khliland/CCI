@@ -1318,3 +1318,63 @@ result <- CCI.test(formula = Y ~ X | Z2,
                    parametric = T
 )
 QQplot(result)
+
+
+
+
+
+devtools::load_all()
+library(CCI)
+library(caret)
+caret_wrapper <- function(formula,
+                          data,
+                          train_indices,
+                          test_indices,
+                          caret_method,
+                          caret_metric,
+                          ...) {
+
+  training_data <- data[train_indices, ]
+  test_data <- data[test_indices, ]
+  ctrl <- caret::trainControl(method = "none")
+  model <- caret::train(formula,
+                        data = training_data,
+                        method = caret_method,
+                        trControl = ctrl,
+                        verbose = F,
+                        trace = F,
+                        ...)
+
+  predictions <- predict(model, newdata = test_data)
+  actual <- data[test_indices, ][[all.vars(formula)[1]]]
+  if (caret_metric =="RMSE") {
+    metric <- sqrt(mean((predictions - actual)^2))
+  } else if (caret_metric == "Kappa") {
+    actual <- test_data[[all.vars(formula)[1]]]
+    metric <- sum(predictions == actual) / length(actual)
+  } else {
+    stop("Unsupported data type for caret")
+  }
+  return(metric)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
