@@ -13,6 +13,7 @@
 #' @param ... Additional arguments to be passed to the model fitting function.
 #'
 #' @return A formula object specifying the selected model direction.
+#' @importFrom caret train trainControl
 #' @export
 #' @examples
 #' # Example usage

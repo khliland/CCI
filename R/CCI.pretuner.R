@@ -32,9 +32,7 @@
 #' @param ... Additional arguments to pass to the \code{CCI.tuner} function.
 #'
 #' @importFrom caret train trainControl nearZeroVar
-#' @importFrom lightgbm lgb.Dataset lgb.cv
 #' @importFrom dplyr %>%
-#' @importFrom pbapply pblapply
 #' @importFrom stats model.matrix var cor
 #' @import progress
 #'

@@ -27,9 +27,8 @@
 #' @importFrom xgboost xgb.train xgb.DMatrix
 #' @importFrom ranger ranger
 #' @importFrom data.table :=
-#' @importFrom utils flush.console
+#' @importFrom utils flush.console combn
 #' @importFrom dplyr mutate across all_of sym
-#' @importFrom utils combn
 #' @export
 #' @examples
 #' set.seed(123)
