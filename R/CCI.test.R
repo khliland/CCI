@@ -18,6 +18,7 @@
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param subsampling Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
+#' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
@@ -46,19 +47,19 @@
 #' set.seed(123)
 #'
 #' # Example: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+#' data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), y = stats::rnorm(100))
 #' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 25, interaction = FALSE)
 #'
 #'
 #' # Example: Using xgboost when y is categorical
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
+#' data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), x3 = stats::rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
 
 #' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
 #'                    metric = "Kappa", nperm = 25, num_class = 3)
 #'
 #' # Example: Again we can switch y and x1 (still using xgboost)
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100),
+#' data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), x3 = stats::rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
 #' result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 25)
 #'

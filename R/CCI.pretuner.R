@@ -6,6 +6,7 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost" and Support Vector Machine "svm".
+#' @param metric Character. The performance metric to optimize during tuning. Default is "RMSE".
 #' @param validation_method Character. Specifies the resampling method. Default is "cv".
 #' @param training_share Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
@@ -78,7 +79,6 @@ CCI.pretuner <- function(formula,
                          tune_length = 4,
                          random_grid = TRUE,
                          samples = 35,
-                         data_type = "continuous",
                          poly = TRUE,
                          degree = 3,
                          interaction = TRUE,

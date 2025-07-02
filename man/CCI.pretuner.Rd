@@ -16,7 +16,6 @@ CCI.pretuner(
   tune_length = 4,
   random_grid = TRUE,
   samples = 35,
-  data_type = "continuous",
   poly = TRUE,
   degree = 3,
   interaction = TRUE,
@@ -43,6 +42,8 @@ CCI.pretuner(
 \item{data}{A data frame containing the variables specified in the formula.}
 
 \item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost" and Support Vector Machine "svm".}
+
+\item{metric}{Character. The performance metric to optimize during tuning. Default is "RMSE".}
 
 \item{validation_method}{Character. Specifies the resampling method. Default is "cv".}
 

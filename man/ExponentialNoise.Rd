@@ -19,4 +19,5 @@ Adds exponential noise to a nonlinear combination of Z1 and Z2.
 }
 \examples{
 head(ExponentialNoise(100))
+
 }

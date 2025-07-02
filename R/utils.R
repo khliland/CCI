@@ -65,7 +65,7 @@ clean_formula <- function(formula) {
 #' @param parametric Logical. If TRUE, calculates parametric p-values assuming the null distribution is normal. If FALSE, calculates empirical p-values. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values. Must be either "left" or "right". Default is "left".
 #'
-#' @importFrom stats pnorm
+#' @importFrom stats pnorm sd
 #' @return Numeric. The calculated p-value.
 #' @export
 #'
@@ -80,7 +80,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
   dist <- as.numeric(dist)
   test_statistic <- as.numeric(test_statistic)
   null_mean <- mean(dist)
-  null_sd <- sd(dist)
+  null_sd <- stats::sd(dist)
   if (parametric && null_sd == 0) {
     stop("Cannot compute parametric p-value: null distribution has zero standard deviation.")
   }
