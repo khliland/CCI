@@ -35,7 +35,7 @@
 #' @importFrom lightgbm lgb.Dataset lgb.cv
 #' @importFrom dplyr %>%
 #' @importFrom pbapply pblapply
-#' @importFrom stats model.matrix var
+#' @importFrom stats model.matrix var cor
 #' @import progress
 #'
 #' @return A list containing:
@@ -215,7 +215,7 @@ CCI.pretuner <- function(formula,
                                   if (verbose) {
                                     cat("Summary function called. Variance of predictions:", var(pred), "\n")
                                     cat("Variance of observed:", var(obs), "\n")
-                                    cat("Correlation:", base::cor(obs, pred, use = "pairwise.complete.obs"), "\n")
+                                    cat("Correlation:", stats::cor(obs, pred, use = "pairwise.complete.obs"), "\n")
                                   }
                                   if (stats::var(pred) < 1e-10 || stats::var(obs) < 1e-10) {
                                     return(c(RMSE = sqrt(mean((obs - pred)^2)), Rsquared = NA, MAE = mean(abs(obs - pred))))

@@ -89,7 +89,7 @@
 #'   metric <- 1 - (ssr / sst)
 #'   return(metric)
 #' }
-#' debug(test.gen)
+#'
 #' correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data,
 #'                          metricfunc = Rsquare_metric, tail = "right")
 #' false_test <- CCI.test(Y ~ X | Z1, data = data,

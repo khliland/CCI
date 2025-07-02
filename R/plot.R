@@ -4,6 +4,7 @@
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2
+#' @importFrom stats density
 #' @return A plot of the null distribution and the test statistic in ggplot2 format.
 #' @seealso \code{\link{print.CCI}}, \code{\link{summary.CCI}},
 #' \code{\link{plot.CCI}}, \code{\link{perm.test}}
@@ -11,7 +12,7 @@
 #'
 #' @examples
 #' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
-#' cci <- perm.test(y ~ x1 + x2, data = dat, interaction = FALSE)
+#' cci <- CCI.test(y ~ x1 + x2, data = dat, interaction = FALSE)
 #' plot(cci)
 
 

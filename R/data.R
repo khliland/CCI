@@ -684,7 +684,7 @@ expLogThresholdContXSim <- function(N) {
 #' @importFrom stats runif rnorm
 #'
 #' @examples
-#' head(hard_case_twoZ_sim(100))
+#' head(hard_case(100))
 #'
 hard_case <- function(N) {
   Z1 <- stats::runif(N, -2, 2)
