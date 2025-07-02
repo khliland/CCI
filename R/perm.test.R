@@ -75,18 +75,6 @@ perm.test <- function(formula,
 
   status <- "Complete"
 
-  # metric <- if (!is.null(metricfunc)) {
-  #         deparse(substitute(metricfunc))
-  # } else if (!is.null(mlfunc) && is.null(metricfunc)) {
-  #         deparse(substitute(mlfunc))
-  # } else {
-  #             if (data_type == "continuous") {
-  #               "RMSE"
-  #             } else {
-  #               "Kappa Score"
-  #             }
-  # }
-
   additional_args <- list(...)
 
   # Gather everything in "obj"

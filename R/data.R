@@ -289,7 +289,7 @@ TrigData <- function(N) {
 #' Generates X and Y categories based on polynomial combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'@importFrom stats rnorm
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 PolyData <- function(N) {
@@ -627,7 +627,7 @@ polyDecisionContXSim <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #'
-#' @import stats runif rnorm
+#' @importFrom stats runif rnorm
 #' @export
 #'
 #' @examples
@@ -654,7 +654,7 @@ sinCosThresholdContXSim <- function(N) {
 #' @param N Integer. Sample size.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
-#' @import stats rnorm
+#' @importFrom stats rnorm
 #' @export
 #'
 #' @examples

@@ -119,7 +119,7 @@ CCI.pretuner <- function(formula,
     stop("All formula variables must be numeric or factors.")
   }
 
-  if (data_type == "continuous" && stats::var(data[[formula_vars[1]]]) < 1e-10) {
+  if (stats::var(data[[formula_vars[1]]]) < 1e-10) {
     warning("Response variable has near-zero variance (", stats::var(data[[formula_vars[1]]]), "). R-squared may be unreliable.")
   }
   nzv <- caret::nearZeroVar(data[formula_vars[-1]], saveMetrics = TRUE)
@@ -257,7 +257,7 @@ CCI.pretuner <- function(formula,
 
   warning_log <- character()
   pb <- progress::progress_bar$new(
-    format = "  tuning [:bar] :percent eta: :eta",
+    format = "tuning [:bar] :percent eta: :eta",
     total = nrow(tuneGrid),
     clear = FALSE,
     width = 60

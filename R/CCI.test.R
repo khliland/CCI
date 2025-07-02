@@ -47,54 +47,52 @@
 #' set.seed(123)
 #'
 #' # Example: Basic use with a continuous outcome. The tests if y is independent of x1 given x2.
+#'
 #' data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), y = stats::rnorm(100))
 #' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 25, interaction = FALSE)
-#'
-#'
+#' summary(result)
 #' # Example: Using xgboost when y is categorical
 #' data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), x3 = stats::rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
-
 #' result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
 #'                    metric = "Kappa", nperm = 25, num_class = 3)
-#'
 #' # Example: Again we can switch y and x1 (still using xgboost)
 #' data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), x3 = stats::rnorm(100),
 #'                    y = sample(1:3, 100, replace = TRUE) - 1)
 #' result <- CCI.test(x1 ~ y | x2 + x3, data = data, method = "xgboost", nperm = 25)
-#'
-#' # Example:
-#' custom_ml_func <- function(formula, data, train_indices, test_indices, ...) {
+#' # Example testing with a linear model as:
+#' ml_wrapper <- function(formula, data, train_indices, test_indices, ...) {
 #'   model <- lm(formula, data = data[train_indices, ])
 #'   predictions <- predict(model, newdata = data[test_indices, ])
 #'   actual <- data[test_indices, ][[all.vars(formula)[1]]]
-#'   metric <- sqrt(mean((predictions - actual)^2)) # RMSE
+#'   metric <- sqrt(mean((abs(predictions - actual))))
 #'   return(metric)
 #' }
 #'
-#' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 100,
-#'                    mlfunc = custom_ml_func, tail = "right")
-#'
+#' result <- CCI.test(y ~ x1 | x2, data = data, nperm = 200,
+#'                    mlfunc = ml_wrapper, tail = "right")
+#' summary(result)
 #' # Example: Using a custom performance metric function
 #' data_generator <-  function(N){
-#' Z1 <- rnorm(N,0,1)
-#' Z2 <- rnorm(N,0,1)
-#' X <- rnorm(N, Z1 + Z2, 1)
-#' Y <- rnorm(N, Z1 + Z2, 1)
-#' df <- data.frame(Z1, Z2, X, Y)
-#' return(df)
+#'   Z1 <- rnorm(N,0,1)
+#'   Z2 <- rnorm(N,0,1)
+#'   X <- rnorm(N, Z1 + Z2, 1)
+#'   Y <- rnorm(N, Z1 + Z2, 1)
+#'   df <- data.frame(Z1, Z2, X, Y)
+#'   return(df)
 #' }
 #'
 #' data <- data_generator(500)
 #' Rsquare_metric  <- function(actual, predictions, ...) {
-#' sst <- sum((actual - mean(actual))^2)
-#' ssr <- sum((actual - predictions)^2)
-#' metric <- 1 - (ssr / sst)
-#' return(metric)
+#'   sst <- sum((actual - mean(actual))^2)
+#'   ssr <- sum((actual - predictions)^2)
+#'   metric <- 1 - (ssr / sst)
+#'   return(metric)
 #' }
-#' correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data, nperm = 25,
+#' debug(test.gen)
+#' correct_test <- CCI.test(Y ~ X | Z1 + Z2, data = data,
 #'                          metricfunc = Rsquare_metric, tail = "right")
-#' false_test <- CCI.test(Y ~ X | Z1, data = data, nperm = 100,
+#' false_test <- CCI.test(Y ~ X | Z1, data = data,
 #'                        metricfunc = Rsquare_metric, tail = "right")
 
 CCI.test <- function(formula = NULL,
@@ -176,7 +174,7 @@ CCI.test <- function(formula = NULL,
   }
 
   if (!is.null(metricfunc)) {
-    deparse(substitute(metricfunc))
+    metric <- "Custom"
   } else if (!is.null(mlfunc)) {
     metric <- "Custom"
   } else if (metric == "Auto") {

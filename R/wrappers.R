@@ -164,6 +164,8 @@ wrapper_ranger <- function(formula,
     model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, ...)
   } else if (metric %in% "RMSE") {
     model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, ...)
+  } else {
+    model <- ranger::ranger(formula, data = data[train_indices, ], num.threads = nthread, ...)
   }
 
   predictions <- predict(model, data = data[test_indices, ])$predictions
