@@ -5,13 +5,14 @@
 #' @param N Integer. Sample size.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
+#' @importFrom stats rnorm
 #' @export
 #'
 NormalData <- function(N){
-  Z1 <- rnorm(N,0,1)
-  Z2 <- rnorm(N,0,1)
-  X <- rnorm(N, Z1 + Z2, 1)
-  Y <- rnorm(N, Z1 + Z2, 1)
+  Z1 <- stats::rnorm(N,0,1)
+  Z2 <- stats::rnorm(N,0,1)
+  X <- stats::rnorm(N, Z1 + Z2, 1)
+  Y <- stats::rnorm(N, Z1 + Z2, 1)
 
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
@@ -24,12 +25,13 @@ NormalData <- function(N){
 #' @param a Numeric. Frequency parameter of the sine function. Default is 1.
 #' @param d Numeric. Strength of dependency between X and Y. Default is 0.
 #'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z, X, and Y.
 #' @export
 sineGaussian <- function(N, a = 1, d = 0){
-  Z = rnorm(N,0,1)
-  X = exp(-(Z)^2 / 2) * sin(a * (Z)) + 0.3*rnorm(N,0,0.1)
-  Y = exp(-(Z)^2 / 2) * sin(a * (Z)) +  d*X + 0.3*rnorm(N,0,0.1)
+  Z = stats::rnorm(N,0,1)
+  X = exp(-(Z)^2 / 2) * sin(a * (Z)) + 0.3*stats::rnorm(N,0,0.1)
+  Y = exp(-(Z)^2 / 2) * sin(a * (Z)) +  d*X + 0.3*stats::rnorm(N,0,0.1)
   df <- data.frame(Z,X,Y)
   return(df)
 }
@@ -40,14 +42,14 @@ sineGaussian <- function(N, a = 1, d = 0){
 #' @param N Integer. Sample size.
 #' @param a Numeric. Frequency parameter for the sine function. Default is 1.
 #' @param d Numeric. Strength of dependency between X and Y. Default is 0.
-#'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 sineGaussian_biv <- function(N, a = 1, d = 0){
-  Z1 = rnorm(N,0,1)
-  Z2 = rnorm(N,0,1)
-  X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1)
-  Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*rnorm(N,0,0.1) + d*X
+  Z1 = stats::rnorm(N,0,1)
+  Z2 = stats::rnorm(N,0,1)
+  X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*stats::rnorm(N,0,0.1)
+  Y = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) + (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*stats::rnorm(N,0,0.1) + d*X
 
   return(data.frame(Z1,Z2,X,Y))
 }
@@ -60,13 +62,14 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
 #' @param a Numeric. Frequency parameter for the sine function. Default is 1.
 #' @param d Numeric. Strength of dependency between X and Y. Default is 0.
 #'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
 sineGaussian_noise <- function(N, a = 1, d = 0){
-  Z = rnorm(N,0,1)
-  X = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1)
-  Y = exp(-(Z)^2 / 2) * sin(a * (Z))*rnorm(N,0,1) + d*X
+  Z = stats::rnorm(N,0,1)
+  X = exp(-(Z)^2 / 2) * sin(a * (Z))*stats::rnorm(N,0,1)
+  Y = exp(-(Z)^2 / 2) * sin(a * (Z))*stats::rnorm(N,0,1) + d*X
 
   return(data.frame(Z,X,Y))
 }
@@ -78,12 +81,13 @@ sineGaussian_noise <- function(N, a = 1, d = 0){
 #' @param N Integer. Sample size.
 #' @param d Numeric. Dependency strength. Default is 0.
 #'
+#' @importFrom stats runif rnorm
 #' @return A data frame with columns Z, X, and Y.
 #' @export
 #'
 NonLinearCategorization <- function(N, d = 0) {
-  Z <- runif(N, -1, 1)
-  X <- rnorm(N, mean = Z, sd = 1)
+  Z <- stats::runif(N, -1, 1)
+  X <- stats::rnorm(N, mean = Z, sd = 1)
   Y <- character(N)
 
   for (i in 1:N) {
@@ -109,13 +113,13 @@ NonLinearCategorization <- function(N, d = 0) {
 #' Generates categorical variables X and Y based on nonlinear combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#' @importFrom stats runif
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
 BivNonLinearCategorization <- function(N) {
-  Z1 <- runif(N, -2, 2)
-  Z2 <- runif(N, -2,2)
+  Z1 <- stats::runif(N, -2, 2)
+  Z2 <- stats::runif(N, -2,2)
   X <- character(N)
   Y <- character(N)
 
@@ -156,13 +160,13 @@ BivNonLinearCategorization <- function(N) {
 #'
 #' @param N Integer. Sample size.
 #' @param zeta Numeric. Strength of interaction. Default is 1.5.
-#'
+#' @importFrom stats rnorm runif
 #' @return A data frame with columns Z1, Z2, X, and Y (both factors).
 #' @export
 #'
 BivMultinominal <- function(N, zeta = 1.5) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
 
   xb1 <- Z2 + zeta*Z1*Z2 + Z1
   xb2 <- Z2 - Z1
@@ -170,7 +174,7 @@ BivMultinominal <- function(N, zeta = 1.5) {
   xp1 <- 1/(1+exp(xb1) + exp(xb2))
   xp2 <- exp(xb1) /(1+exp(xb1) + exp(xb2))
 
-  random <- runif(N,0, 1)
+  random <- stats::runif(N,0, 1)
 
   X <- ifelse(random < xp1, 0, ifelse(random < xp1 + xp2,1,2))
 
@@ -180,23 +184,23 @@ BivMultinominal <- function(N, zeta = 1.5) {
   yp1 <- 1/(1+exp(yb1) + exp(yb2))
   yp2 <- exp(yb1) /(1+exp(yb1) + exp(yb2))
 
-  random <- runif(N,0, 1)
+  random <- stats::runif(N,0, 1)
 
   Y <- ifelse(random < yp1, 0, ifelse(random < yp1 + yp2,1,2))
 
-  return( data.frame(Z1,Z2, X,Y))
+  return(data.frame(Z1,Z2, X,Y))
 }
 #' Generate Categorical Data Based on Interactions
 #'
 #' Creates categorical X and Y variables based on the interaction of signs and sums of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 InteractiondData <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
   X <- character(N)
   Y <- character(N)
 
@@ -232,12 +236,12 @@ InteractiondData <- function(N) {
 #' Categorizes based on thresholds of exponential and logarithmic transformations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 ExpLogData <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
   X <- character(N)
   Y <- character(N)
 
@@ -258,13 +262,12 @@ ExpLogData <- function(N) {
 #' Uses sine and cosine functions of Z1 and Z2 to generate categorical outcomes.
 #'
 #' @param N Integer. Sample size.
-
-#'
+#' @importFrom stats rnorm runif
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 TrigData <- function(N) {
-  Z1 <- runif(N, -pi, pi)
-  Z2 <- rnorm(N)
+  Z1 <- stats::runif(N, -pi, pi)
+  Z2 <- stats::rnorm(N)
   X <- character(N)
   Y <- character(N)
 
@@ -286,12 +289,12 @@ TrigData <- function(N) {
 #' Generates X and Y categories based on polynomial combinations of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#'@importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 PolyData <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
   X <- character(N)
   Y <- character(N)
 
@@ -313,13 +316,13 @@ PolyData <- function(N) {
 #' Creates categorical X and Y variables based on sinusoidal and cosine functions of Z1 and Z2.
 #'
 #' @param N Integer. Sample size.
-#'
+#' @importFrom stats runif
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
 NonLinearData <- function(N) {
-  Z1 <- runif(N, -1, 1)
-  Z2 <- runif(N, -1, 1)
+  Z1 <- stats::runif(N, -1, 1)
+  Z2 <- stats::runif(N, -1, 1)
   X <- character(N)
   Y <- character(N)
 
@@ -358,6 +361,7 @@ NonLinearData <- function(N) {
 #'
 #' @param N Integer. Sample size.
 #'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
@@ -365,8 +369,8 @@ NonLinearData <- function(N) {
 #' head(ComplexCategorization(100))
 #'
 ComplexCategorization <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
   X <- character(N)
   Y <- character(N)
 
@@ -404,6 +408,7 @@ ComplexCategorization <- function(N) {
 #' @param N Integer. Sample size.
 #' @param threshold Numeric. Threshold for binary classification. Default is 0.
 #'
+#' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
@@ -411,14 +416,14 @@ ComplexCategorization <- function(N) {
 #' head(BinaryData(100))
 #'
 BinaryData <- function(N, threshold = 0) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
 
   threshold <- threshold
 
-  X <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
+  X <- ifelse(stats::rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
 
-  Y <- ifelse(rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
+  Y <- ifelse(stats::rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
 
   df <- data.frame(Z1,Z2,X,Y)
 
@@ -433,15 +438,15 @@ BinaryData <- function(N, threshold = 0) {
 #' @param N Integer. Sample size.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-#'
+#' @importFrom stats rnorm
 #' @examples
 #' head(NonLinNormal(N = 100))
 #'
 NonLinNormal <- function(N){
-  Z1 <- rnorm(N,0,1)
-  Z2 <- rnorm(N,0,1)
-  X <- Z1*Z2 + rnorm(N,0,1)
-  Y <- exp(Z1*Z2) + rnorm(N,0,1)
+  Z1 <- stats::rnorm(N,0,1)
+  Z2 <- stats::rnorm(N,0,1)
+  X <- Z1*Z2 + stats::rnorm(N,0,1)
+  Y <- exp(Z1*Z2) + stats::rnorm(N,0,1)
 
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
@@ -454,15 +459,15 @@ NonLinNormal <- function(N){
 #' @param N Integer. Sample size.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-#'
+#' @importFrom stats rnorm runif
 #' @examples
 #' head(UniformNoise(100))
 #'
 UniformNoise <- function(N) {
-  Z1 = rnorm(N, 0, 1)
-  Z2 = rnorm(N, 0, 1)
-  X = Z2 - Z1 - Z2 * Z1 + runif(N, min=-2, max=2)
-  Y = Z2 + Z1 + Z2 * Z1 + runif(N, min=-2, max=2)
+  Z1 = stats::rnorm(N, 0, 1)
+  Z2 = stats::rnorm(N, 0, 1)
+  X = Z2 - Z1 - Z2 * Z1 + stats::runif(N, min=-2, max=2)
+  Y = Z2 + Z1 + Z2 * Z1 + stats::runif(N, min=-2, max=2)
   df <- data.frame(Z1, Z2, X, Y)
   return(df)
 }
@@ -475,15 +480,16 @@ UniformNoise <- function(N) {
 #' @param rate_param Numeric. Rate parameter for the exponential distribution. Default is 1.
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-#'
+#' @importFrom stats rnorm rexp
 #' @examples
 #' head(ExponentialNoise(100))
+#'
 ExponentialNoise <- function(N, rate_param = 1) {
-  Z1 = rnorm(N, 0, 1)
-  Z2 = rnorm(N, 0, 1)
+  Z1 = stats::rnorm(N, 0, 1)
+  Z2 = stats::rnorm(N, 0, 1)
   rate_param = rate_param
-  X = Z2 - Z1 - Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
-  Y = Z2 + Z1 + Z2 * Z1 + rexp(N, rate = rate_param) - (1 / rate_param)
+  X = Z2 - Z1 - Z2 * Z1 + stats::rexp(N, rate = rate_param) - (1 / rate_param)
+  Y = Z2 + Z1 + Z2 * Z1 + stats::rexp(N, rate = rate_param) - (1 / rate_param)
 
 
   df <- data.frame(Z1, Z2, X, Y)
@@ -497,16 +503,17 @@ ExponentialNoise <- function(N, rate_param = 1) {
 #' @param lambda Numeric. Rate parameter for the Poisson distribution. Default is 1.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
+#' @importFrom stats rnorm rpois
 #' @export
 #'
 #' @examples
 #' head(PoissonNoise(100))
 #'
 PoissonNoise <- function(N, lambda = 1){
-  Z1 = rnorm(N,0,1)
-  Z2 = rnorm(N,0,1)
-  X = Z2*Z1 + (rpois(N, lambda = lambda)-1)
-  Y = Z2*Z1  + (rpois(N, lambda = lambda)-1)
+  Z1 = stats::rnorm(N,0,1)
+  Z2 = stats::rnorm(N,0,1)
+  X = Z2*Z1 + (stats::rpois(N, lambda = lambda)-1)
+  Y = Z2*Z1  + (stats::rpois(N, lambda = lambda)-1)
 
   df <- data.frame(Z1,Z2,X,Y)
   return(df)
@@ -521,18 +528,19 @@ PoissonNoise <- function(N, lambda = 1){
 #' @param Zs Integer. Number of Z variables. Default is 10.
 #'
 #' @return A data frame with columns Z1-Z10, X, and Y.
+#' @importFrom stats rnorm
 #' @export
 #'
 #' @examples
 #' head(NonLinNormalZs(N = 100, Zs  = 20))
 #'
 NonLinNormalZs <- function(N, d = 0, Zs = 20) {
-  Z <- replicate(Zs, rnorm(N, 0, 1))
+  Z <- replicate(Zs, stats::rnorm(N, 0, 1))
   colnames(Z) <- paste0("Z", 1:Zs)
   Z_df <- as.data.frame(Z)
 
-  X <- Z[,1] * Z[,2] + sin(Z[,3] * Z[,4]) + abs(Z[,5]) + rnorm(N, 0, 1)
-  Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - abs(Z[,8]) + rnorm(N, 0, 1) + d*X
+  X <- Z[,1] * Z[,2] + sin(Z[,3] * Z[,4]) + abs(Z[,5]) + stats::rnorm(N, 0, 1)
+  Y <- Z[,1] * Z[,2] + cos(Z[,6] * Z[,7]) - abs(Z[,8]) + stats::rnorm(N, 0, 1) + d*X
 
   df <- cbind(Z_df, X = X, Y = Y)
   return(df)
@@ -545,15 +553,15 @@ NonLinNormalZs <- function(N, d = 0, Zs = 20) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-#'
+#' @importFrom stats rnorm
 #' @examples
 #' head(quadThreshContXSim(100))
 
 quadThreshContXSim <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
 
-  X <- Z1 + 2 * Z2 + rnorm(N, 0, 0.2)  # continuous linear combination
+  X <- Z1 + 2 * Z2 + stats::rnorm(N, 0, 0.2)  # continuous linear combination
   Y <- ifelse(Z1 + Z2 > 1, "Strong",
               ifelse(Z1 + Z2 > 0, "Weak",
                      ifelse(Z1 + Z2 > -1, "Medium", 0)))
@@ -570,15 +578,15 @@ quadThreshContXSim <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-#'
+#' @importFrom stats rnorm
 #' @examples
 #' head(gridPartitionContXSim(100))
 #'
 gridPartitionContXSim <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
 
-  X <- sin(pi * Z1) + cos(pi * Z2) + rnorm(N, 0, 0.2)  # continuous nonlinear combo
+  X <- sin(pi * Z1) + cos(pi * Z2) + stats::rnorm(N, 0, 0.2)  # continuous nonlinear combo
   Y <- ifelse(Z1 + Z2 < -1, "High",
               ifelse(Z1 + Z2 < 0, "Low",
                      ifelse(Z1 + Z2 < 1, "Medium", "No opinion")))
@@ -594,15 +602,15 @@ gridPartitionContXSim <- function(N) {
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-#'
+#' @importFrom stats rnorm
 #' @examples
 #' head(polyDecisionContXSim(100))
 #'
 polyDecisionContXSim <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
 
-  X <- Z1^2 + Z2^2 + rnorm(N, 0, 1)
+  X <- Z1^2 + Z2^2 + stats::rnorm(N, 0, 1)
   Y <- ifelse(Z1^3 + Z2 > 1, "Blue",
               ifelse(Z1^2 - Z2^2 > 0, "White",
                      ifelse(Z1 - Z2^3 > -1, "Black", "Red")))
@@ -618,16 +626,18 @@ polyDecisionContXSim <- function(N) {
 #' @param N Integer. Sample size.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
+#'
+#' @import stats runif rnorm
 #' @export
 #'
 #' @examples
 #' head(sinCosThresholdContXSim(100))
 
 sinCosThresholdContXSim <- function(N) {
-  Z1 <- runif(N, -1, 1)
-  Z2 <- runif(N, -1, 1)
+  Z1 <- stats::runif(N, -1, 1)
+  Z2 <- stats::runif(N, -1, 1)
 
-  X <- sin(Z1 * pi) + Z2 + rnorm(N, 0, 0.1)
+  X <- sin(Z1 * pi) + Z2 + stats::rnorm(N, 0, 0.1)
 
   Y <- ifelse(cos(Z1 * pi) + Z2 > 1, "Laptop",
               ifelse(cos(Z1 * pi) + Z2 > 0.5, "Desktop",
@@ -644,17 +654,17 @@ sinCosThresholdContXSim <- function(N) {
 #' @param N Integer. Sample size.
 #'
 #' @return A data frame with columns Z1, Z2, X, and Y.
-#'
+#' @import stats rnorm
 #' @export
 #'
 #' @examples
 #' head(expLogThresholdContXSim(100))
 
 expLogThresholdContXSim <- function(N) {
-  Z1 <- rnorm(N)
-  Z2 <- rnorm(N)
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
 
-  X <- exp(Z1) + Z2 + rnorm(N, 0, 0.2)
+  X <- exp(Z1) + Z2 + stats::rnorm(N, 0, 0.2)
   Y <- ifelse(log(abs(Z1) + 1) + Z2 > 0.5, "Goblin",
               ifelse(log(abs(Z1) + 1) + Z2 > 0, "Orc",
                      ifelse(log(abs(Z1) + 1) > -0.5, "Troll", "Elf")))
@@ -671,18 +681,19 @@ expLogThresholdContXSim <- function(N) {
 #'
 #' @return A data frame with columns X, Y, Z1, and Z2.
 #' @export
+#' @importFrom stats runif rnorm
 #'
 #' @examples
 #' head(hard_case_twoZ_sim(100))
 #'
 hard_case <- function(N) {
-  Z1 <- runif(N, -2, 2)
-  Z2 <- runif(N, -2, 2)
+  Z1 <- stats::runif(N, -2, 2)
+  Z2 <- stats::runif(N, -2, 2)
 
   hZ <- sin(Z1) * cos(Z2)
 
-  X <- hZ + 0.2 * rnorm(N)
-  Y <- hZ^2 + 0.2 * rnorm(N)
+  X <- hZ + 0.2 * stats::rnorm(N)
+  Y <- hZ^2 + 0.2 * stats::rnorm(N)
 
   data.frame(X, Y, Z1, Z2)
 }
