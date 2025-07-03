@@ -9,6 +9,7 @@
 #' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.
 #' @param nperm Integer. The number of generated Monte Carlo samples. Default is 60.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.
+#' @param subsampling Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
 #' @param N Integer. The total number of observations in the data. Default is the number of rows in the data frame.
 #' @param poly Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.
 #' @param interaction Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.
@@ -47,6 +48,7 @@ test.gen <- function(formula,
                      method = "rf",
                      metric,
                      nperm = 60,
+                     subsampling = 1,
                      p = 0.8,
                      N = nrow(data),
                      poly = TRUE,
@@ -98,7 +100,13 @@ test.gen <- function(formula,
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
   for (iteration in 1:nperm) {
-    # Split data
+    if ((subsampling <= 0 || subsampling > 1) && method != "xgboost") {
+      stop("Subsampling must be between 0 and 1.")
+    } else if (subsampling < 1) {
+      data <- data[sample(nrow(data), size = round(nrow(data) * subsampling)), ]
+    } else  {
+      data <- data
+    }
     if (metric %in% c("RMSE", "Custom")) {
       inTraining <- sample(1:nrow(data), size = floor(p * N), replace = FALSE)
       train_indices <- inTraining

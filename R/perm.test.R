@@ -3,6 +3,7 @@
 #' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Proportion of data to use for training the model. Default is 0.825.
+#' @param subsampling The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
 #' @param nperm Number of permutations to perform. Default is 500.
 #' @param metric Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.
 #' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
@@ -40,6 +41,7 @@ perm.test <- function(formula,
                       data,
                       p = 0.7,
                       nperm = 600,
+                      subsampling = 1,
                       metric = 'RMSE',
                       method = "rf",
                       nrounds = 120,
@@ -56,8 +58,6 @@ perm.test <- function(formula,
                       num_class = NULL,
                       ...) {
 
-
-  # Add in progress bar
 
   # Creating the null distribution
   dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)

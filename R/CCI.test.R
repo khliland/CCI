@@ -194,12 +194,6 @@ CCI.test <- function(formula = NULL,
   }
 
 
-  if ((subsampling < 0 || subsampling > 1) && method != "xgboost") {
-    stop("Subsampling must be between 0 and 1.")
-  } else if (subsampling < 1) {
-    data <- data[sample(nrow(data), size = round(nrow(data) * subsampling)), ]
-  }
-
   if (choose_direction) {
     formula <- CCI.direction(
       formula = formula,
@@ -258,6 +252,7 @@ CCI.test <- function(formula = NULL,
     tail = tail,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
+    subsampling = subsampling,
     num_class = num_class,
     params,
     ...
