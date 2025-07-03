@@ -21,7 +21,7 @@ CCI.test(
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
-  subsampling = 1,
+  subsample = 1,
   num_class = NULL,
   interaction = TRUE,
   metricfunc = NULL,
@@ -68,7 +68,7 @@ CCI.test(
 
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
-\item{subsampling}{Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).}
+\item{subsample}{Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).}
 
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
 

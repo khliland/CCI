@@ -9,6 +9,7 @@ perm.test(
   data,
   p = 0.7,
   nperm = 600,
+  subsample = 1,
   metric = "RMSE",
   method = "rf",
   nrounds = 120,
@@ -64,6 +65,8 @@ perm.test(
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
+
+\item{subsampling}{The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 }
 \value{
 An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.

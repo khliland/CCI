@@ -9,6 +9,7 @@ CCI.direction(
   data,
   method = "rf",
   folds = 4,
+  subsample = 1,
   poly = TRUE,
   degree = 3,
   interaction = TRUE,

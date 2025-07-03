@@ -14,6 +14,7 @@ wrapper_xgboost(
   metricfunc = NULL,
   nthread = 1,
   num_class = NULL,
+  subsample = 1,
   ...
 )
 }

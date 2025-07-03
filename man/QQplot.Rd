@@ -4,10 +4,29 @@
 \alias{QQplot}
 \title{QQ-plot for multiple testing in CCI}
 \usage{
-QQplot(object, ...)
+QQplot(
+  object,
+  axis.text.x = 17,
+  axis.text.y = 17,
+  strip.text.x = 17,
+  strip.text.y = 17,
+  legend.text = 17,
+  legend.title = 17,
+  ...
+)
 }
 \arguments{
 \item{object}{Object of class 'CCI'}
+
+\item{axis.text.x}{Size of x-axis text}
+
+\item{axis.text.y}{Size of y-axis text}
+
+\item{strip.text.x}{Size of x-axis strip text}
+
+\item{strip.text.y}{Size of y-axis strip text}
+
+\item{legend.text}{Size of legend text}
 
 \item{...}{Additional arguments to pass to the \code{test.gen} function.}
 }

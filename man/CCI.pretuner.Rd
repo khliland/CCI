@@ -30,7 +30,7 @@ CCI.pretuner(
   gamma = c(0, 1, 2, 3),
   colsample_bytree = c(0.8, 0.9, 1),
   min_child_weight = c(1, 3),
-  subsample = c(0.8, 0.9, 1),
+  subsample = 1,
   sigma = seq(0.1, 2, by = 0.3),
   C = seq(0.1, 2, by = 0.5),
   ...
@@ -85,7 +85,7 @@ CCI.pretuner(
 
 \item{min_child_weight}{Integer. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1:5.}
 
-\item{subsample}{Numeric. The subsample ratio of the training instances for xgboost. Default is seq(0.5, 1, by = 0.1).}
+\item{subsample}{Numeric. The subsample ratio of the training. Default is 1.}
 
 \item{sigma}{Numeric. The standard deviation of the Gaussian kernel for Gaussian Process Regression. Default is seq(0.1, 2, by = 0.3).}
 

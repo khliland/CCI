@@ -10,6 +10,7 @@ test.gen(
   method = "rf",
   metric,
   nperm = 60,
+  subsample = 1,
   p = 0.8,
   N = nrow(data),
   poly = TRUE,
@@ -34,6 +35,8 @@ test.gen(
 \item{metric}{Character. The type of metric: can be "RMSE", "Kappa" or "Custom. Default is 'RMSE'}
 
 \item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 60.}
+
+\item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 
 \item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.}
 

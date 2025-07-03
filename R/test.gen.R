@@ -103,23 +103,23 @@ test.gen <- function(formula,
     if ((subsample <= 0 || subsample > 1) && method != "xgboost") {
       stop("Subsample must be between 0 and 1.")
     } else if (subsample < 1) {
-      data <- data[sample(nrow(data), size = round(nrow(data) * subsample)), ]
+      sub_data <- data[sample(nrow(data), size = round(nrow(data) * subsample)), ]
     } else  {
-      data <- data
+      sub_data <- data
     }
     if (metric %in% c("RMSE", "Custom")) {
-      inTraining <- sample(1:nrow(data), size = floor(p * N), replace = FALSE)
+      inTraining <- sample(1:nrow(sub_data), size = floor(p * N), replace = FALSE)
       train_indices <- inTraining
-      test_indices <- setdiff(1:nrow(data), inTraining)
+      test_indices <- setdiff(1:nrow(sub_data), inTraining)
     } else if (metric %in% c("Kappa")) {
-      inTraining <- caret::createDataPartition(y = factor(data[[Y]]), p = p, list = FALSE)
+      inTraining <- caret::createDataPartition(y = factor(sub_data[[Y]]), p = p, list = FALSE)
       train_indices <- inTraining
-      test_indices <- setdiff(1:nrow(data), inTraining)
+      test_indices <- setdiff(1:nrow(sub_data), inTraining)
     }
 
-    resampled_data <- data
+    resampled_data <- sub_data
     if (permutation) {
-      resampled_data <- data %>% mutate(!!X := sample(!!sym(X)))
+      resampled_data <- sub_data %>% mutate(!!X := sample(!!sym(X)))
     }
 
     # Apply machine learning method
