@@ -29,6 +29,7 @@ wrapper_xgboost <- function(formula,
                             metricfunc = NULL,
                             nthread = 1,
                             num_class = NULL,
+                            subsample = 1,
                             ...) {
 
 
@@ -110,6 +111,7 @@ wrapper_xgboost <- function(formula,
                               params = params,
                               nthread = nthread,
                               nrounds = nrounds,
+                              subsample = subsample,
                               verbose = 0)
 
   predictions <- predict(model, newdata = dtest)

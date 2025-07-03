@@ -23,7 +23,7 @@
 #' @param nrounds Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is seq(50, 200, by = 25).
 #' @param eta Numeric. The learning rate for xgboost. Default is seq(0.01, 0.3, by = 0.05).
 #' @param max_depth Integer. The maximum depth of the tree for xgboost. Default is 1:6.
-#' @param subsample Numeric. The subsample ratio of the training instances for xgboost. Default is seq(0.5, 1, by = 0.1).
+#' @param subsample Numeric. The subsample ratio of the training. Default is 1.
 #' @param gamma Numeric. The minimum loss reduction required to make a further partition on a leaf node for xgboost. Default is seq(0, 5, by = 1).
 #' @param colsample_bytree Numeric. The subsample ratio of columns when constructing each tree for xgboost. Default is seq(0.5, 1, by = 0.1).
 #' @param min_child_weight Integer. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1:5.
@@ -91,7 +91,7 @@ CCI.pretuner <- function(formula,
                          gamma = c(0,1,2,3),
                          colsample_bytree = c(0.8, 0.9, 1),
                          min_child_weight = c(1, 3),
-                         subsample = c(0.8,0.9,1),
+                         subsample = 1,
                          sigma = seq(0.1, 2, by = 0.3),
                          C = seq(0.1, 2, by = 0.5),
                          ...) {
@@ -229,7 +229,8 @@ CCI.pretuner <- function(formula,
 
   if (is.null(tuneGrid)) {
   tuneGrid <- switch(method,
-                     rf   = expand.grid(mtry = mtry),
+                     rf   = expand.grid(mtry = mtry,
+                                        subsample = subsample),
                      xgboost = expand.grid(
                        nrounds = nrounds,
                        eta = eta,
@@ -239,7 +240,9 @@ CCI.pretuner <- function(formula,
                        subsample = subsample,
                        gamma = gamma
                      ),
-                     svm = expand.grid(sigma = sigma, C = C),
+                     svm = expand.grid(sigma = sigma,
+                                       C = C,
+                                       subsample = subsample),
                      stop("Unsupported method for pretuning.")
   )
   }

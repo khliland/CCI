@@ -17,7 +17,7 @@
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
-#' @param subsampling Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
+#' @param subsample Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
 #' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
@@ -110,7 +110,7 @@ CCI.test <- function(formula = NULL,
                      parametric = FALSE,
                      poly = TRUE,
                      degree = 3,
-                     subsampling = 1,
+                     subsample = 1,
                      num_class = NULL,
                      interaction = TRUE,
                      metricfunc = NULL,
@@ -199,6 +199,7 @@ CCI.test <- function(formula = NULL,
       formula = formula,
       data = data,
       method = method,
+      subsample = subsample,
       folds = 4,
       poly = poly,
       degree = degree,
@@ -210,6 +211,7 @@ CCI.test <- function(formula = NULL,
     best_params <- CCI.pretuner(formula = formula,
                                 data = data,
                                 method = method,
+                                subsample = subsample,
                                 folds = folds,
                                 tune_length = tune_length,
                                 random_grid = random_grid,
@@ -252,7 +254,7 @@ CCI.test <- function(formula = NULL,
     tail = tail,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
-    subsampling = subsampling,
+    subsample = subsample,
     num_class = num_class,
     params,
     ...

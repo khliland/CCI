@@ -35,6 +35,7 @@ CCI.direction <- function(formula,
                                  data,
                                  method = "rf",
                                  folds = 4,
+                                 subsample = 1,
                                  poly = TRUE,
                                  degree = 3,
                                  interaction = TRUE,
@@ -95,7 +96,13 @@ CCI.direction <- function(formula,
       x
     }
   }))
-
+  if ((subsample <= 0 || subsample > 1) && method != "xgboost") {
+    stop("Subsample must be between 0 and 1.")
+  } else if (subsample < 1) {
+    data <- data[sample(nrow(data), size = round(nrow(data) * subsample)), ]
+  } else  {
+    data <- data
+  }
   caret_method <- switch(method,
                          rf = "rf",
                          xgboost = "xgbTree",
@@ -105,8 +112,8 @@ CCI.direction <- function(formula,
 
   ctrl <-  suppressWarnings(caret::trainControl(method = "cv", number = folds))
 
-  model1 <- caret::train(formula_Y_XZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
-  model2 <- caret::train(formula_X_YZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, ...)
+  model1 <- caret::train(formula_Y_XZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, subsample = subsample, ...)
+  model2 <- caret::train(formula_X_YZ, data = data, method = caret_method, trControl = ctrl,  verbosity = 0, subsample = subsample, ...)
 
   metric1 <- min(model1$results$RMSE, na.rm = TRUE)
   metric2 <- min(model2$results$RMSE, na.rm = TRUE)

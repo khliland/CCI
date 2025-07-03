@@ -41,7 +41,7 @@ perm.test <- function(formula,
                       data,
                       p = 0.7,
                       nperm = 600,
-                      subsampling = 1,
+                      subsample = 1,
                       metric = 'RMSE',
                       method = "rf",
                       nrounds = 120,
@@ -60,9 +60,9 @@ perm.test <- function(formula,
 
 
   # Creating the null distribution
-  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
+  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, subsample = subsample, ...)
   # Creating the test statistic
-  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, ...)
+  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, subsample = subsample, ...)
 
   if (is.na(tail)) {
     if (metric == "Kappa") {
@@ -88,6 +88,7 @@ perm.test <- function(formula,
               degree = degree,
               nperm = nperm,
               nrounds = nrounds,
+              subsample = subsample,
               train_test_ratio = p,
               metric = metric,
               parametric = parametric,
