@@ -180,11 +180,9 @@ CCI.test <- function(formula = NULL,
   } else if (metric == "Auto") {
     response_var <- all.vars(formula)[1]
     y <- data[[response_var]]
-      if (is.numeric(y) && (length(unique(y)) > 2)) {
+      if (is.numeric(y)) {
         metric <- "RMSE"
       } else if (is.factor(y) || is.character(y)) {
-          metric <- "Kappa"
-      } else if (is.numeric(y) && length(unique(y)) == 2) {
           metric <- "Kappa"
       } else {
           stop("Could not determine an appropriate metric automatically. Please specify the 'metric' explicitly.")
