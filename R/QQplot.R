@@ -1,6 +1,12 @@
 #' QQ-plot for multiple testing in CCI
 #'
 #' @param object Object of class 'CCI'
+#' @param axis.text.x Size of x-axis text
+#' @param axis.text.y Size of y-axis text
+#' @param strip.text.x Size of x-axis strip text
+#' @param strip.text.y Size of y-axis strip text
+#' @param legend.text Size of legend text
+#'
 #' @param ... Additional arguments to pass to the \code{test.gen} function.
 #'
 #' @importFrom ggplot2 ggplot aes geom_qq geom_abline labs theme_minimal theme element_text
@@ -18,7 +24,7 @@
 #' interaction = FALSE)
 #' QQplot(cci)
 
-QQplot <- function(object, ...) {
+QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17, strip.text.y = 17, legend.text = 17, legend.title = 17, ...) {
   if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -88,7 +94,12 @@ QQplot <- function(object, ...) {
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
          title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
     ggplot2::theme_minimal() +
-    ggplot2::theme(text = element_text(size = 17), legend.position = 'none')
+    ggplot2::theme(axis.text.x = element_text(size = 16),
+                   axis.text.y = element_text(size = 16),
+                   strip.text.x = element_text(size = 16),
+                   strip.text.y = element_text(size = 16),
+                   legend.text = element_text(size = 16),
+                   legend.title = element_text(size = 16), legend.position = 'none')
 
   return(ggobj)
 }
