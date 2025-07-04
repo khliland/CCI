@@ -19,7 +19,7 @@
 #' plot(cci)
 
 
-plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 17, axis.text.y = 17, strip.text.x = 17, strip.text.7 = 17, legend.text = 17, legend.title = 17, ...) {
+plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 17, axis.text.y = 17, strip.text.x = 17, strip.text.y = 17, legend.text = 17, legend.title = 17, ...) {
   if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
