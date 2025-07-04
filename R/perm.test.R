@@ -65,10 +65,18 @@ perm.test <- function(formula,
   test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, subsample = subsample, ...)
 
   if (is.na(tail)) {
-    if (metric == "Kappa") {
-      tail <- "right"
-    } else if (metric == "RMSE") {
-      tail <- "left"
+    if (!is.null(metricfunc)) {
+      warning("Tail is set to NA, but metricfunc is provided. Please specify the tail direction explicitly.")
+    } else if (!is.null(mlfunc)) {
+      warning("Tail is set to NA, but mlfunc is provided. Please specify the tail direction explicitly.")
+    } else {
+      if (metric == "Kappa") {
+        tail <- "right"
+      } else if (metric == "RMSE") {
+        tail <- "left"
+      } else {
+        stop("Please specify the tail direction for the metric.")
+      }
     }
   }
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)

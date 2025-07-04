@@ -8,7 +8,7 @@
 #' @param plot Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.
 #' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
 #' @param nperm Integer. The number of permutations to perform. Default is 600.
-#' @param nrounds Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
+#' @param nrounds Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.
 #' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
 #' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
 #' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
@@ -174,9 +174,9 @@ CCI.test <- function(formula = NULL,
   }
 
   if (!is.null(metricfunc)) {
-    metric <- "Custom"
+    metric <- deparse(substitute(metricfunc))
   } else if (!is.null(mlfunc)) {
-    metric <- "Custom"
+    metric <- deparse(substitute(mlfunc))
   } else if (metric == "Auto") {
     response_var <- all.vars(formula)[1]
     y <- data[[response_var]]

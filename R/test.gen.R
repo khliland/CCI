@@ -107,12 +107,13 @@ test.gen <- function(formula,
     } else  {
       sub_data <- data
     }
-    if (metric %in% c("RMSE", "Custom")) {
-      inTraining <- sample(1:nrow(sub_data), size = floor(p * N), replace = FALSE)
+
+    if (metric %in% c("Kappa")) {
+      inTraining <- caret::createDataPartition(y = factor(sub_data[[Y]]), p = p, list = FALSE)
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
-    } else if (metric %in% c("Kappa")) {
-      inTraining <- caret::createDataPartition(y = factor(sub_data[[Y]]), p = p, list = FALSE)
+    } else {
+      inTraining <- sample(1:nrow(sub_data), size = floor(p * N), replace = FALSE)
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
     }
