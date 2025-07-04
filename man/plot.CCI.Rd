@@ -10,7 +10,7 @@
   axis.text.x = 17,
   axis.text.y = 17,
   strip.text.x = 17,
-  strip.text.7 = 17,
+  strip.text.y = 17,
   legend.text = 17,
   legend.title = 17,
   ...

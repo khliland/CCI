@@ -44,7 +44,7 @@ formula either Y ~ X | Z or X ~ Y | Z .
 }
 \examples{
 # Example usage
-dat <- sineGaussian_biv(N = 100, a = 2)
+dat <- SineGaussianBiv(N = 100, a = 2)
 
 formula_init <- Y ~ X + Z1 + Z2
 

@@ -28,7 +28,7 @@ NormalData <- function(N){
 #' @importFrom stats rnorm
 #' @return A data frame with columns Z, X, and Y.
 #' @export
-sineGaussian <- function(N, a = 1, d = 0){
+SineGaussian <- function(N, a = 1, d = 0){
   Z = stats::rnorm(N,0,1)
   X = exp(-(Z)^2 / 2) * sin(a * (Z)) + 0.3*stats::rnorm(N,0,0.1)
   Y = exp(-(Z)^2 / 2) * sin(a * (Z)) +  d*X + 0.3*stats::rnorm(N,0,0.1)
@@ -45,7 +45,7 @@ sineGaussian <- function(N, a = 1, d = 0){
 #' @importFrom stats rnorm
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
-sineGaussian_biv <- function(N, a = 1, d = 0){
+SineGaussianBiv <- function(N, a = 1, d = 0){
   Z1 = stats::rnorm(N,0,1)
   Z2 = stats::rnorm(N,0,1)
   X = (exp(-(Z1)^2 / 2) * sin(a * (Z1))) - (exp(-(Z2)^2 / 2) * sin(a * (Z2))) + 0.3*stats::rnorm(N,0,0.1)
@@ -66,7 +66,7 @@ sineGaussian_biv <- function(N, a = 1, d = 0){
 #' @return A data frame with columns Z1, Z2, X, and Y.
 #' @export
 #'
-sineGaussian_noise <- function(N, a = 1, d = 0){
+SineGaussianNoise <- function(N, a = 1, d = 0){
   Z = stats::rnorm(N,0,1)
   X = exp(-(Z)^2 / 2) * sin(a * (Z))*stats::rnorm(N,0,1)
   Y = exp(-(Z)^2 / 2) * sin(a * (Z))*stats::rnorm(N,0,1) + d*X
@@ -555,9 +555,9 @@ NonLinNormalZs <- function(N, d = 0, Zs = 20) {
 #' @export
 #' @importFrom stats rnorm
 #' @examples
-#' head(quadThreshContXSim(100))
+#' head(QuadThresh(100))
 
-quadThreshContXSim <- function(N) {
+QuadThresh <- function(N) {
   Z1 <- stats::rnorm(N)
   Z2 <- stats::rnorm(N)
 
@@ -580,9 +580,9 @@ quadThreshContXSim <- function(N) {
 #' @export
 #' @importFrom stats rnorm
 #' @examples
-#' head(gridPartitionContXSim(100))
+#' head(GridPartition(100))
 #'
-gridPartitionContXSim <- function(N) {
+GridPartition <- function(N) {
   Z1 <- stats::rnorm(N)
   Z2 <- stats::rnorm(N)
 
@@ -604,9 +604,9 @@ gridPartitionContXSim <- function(N) {
 #' @export
 #' @importFrom stats rnorm
 #' @examples
-#' head(polyDecisionContXSim(100))
+#' head(PolyDecision(100))
 #'
-polyDecisionContXSim <- function(N) {
+PolyDecision <- function(N) {
   Z1 <- stats::rnorm(N)
   Z2 <- stats::rnorm(N)
 
@@ -631,9 +631,9 @@ polyDecisionContXSim <- function(N) {
 #' @export
 #'
 #' @examples
-#' head(sinCosThresholdContXSim(100))
+#' head(SinCosThreshold(100))
 
-sinCosThresholdContXSim <- function(N) {
+SinCosThreshold <- function(N) {
   Z1 <- stats::runif(N, -1, 1)
   Z2 <- stats::runif(N, -1, 1)
 
@@ -658,9 +658,9 @@ sinCosThresholdContXSim <- function(N) {
 #' @export
 #'
 #' @examples
-#' head(expLogThresholdContXSim(100))
+#' head(ExpLogThreshold(100))
 
-expLogThresholdContXSim <- function(N) {
+ExpLogThreshold <- function(N) {
   Z1 <- stats::rnorm(N)
   Z2 <- stats::rnorm(N)
 
@@ -684,9 +684,9 @@ expLogThresholdContXSim <- function(N) {
 #' @importFrom stats runif rnorm
 #'
 #' @examples
-#' head(hard_case(100))
+#' head(HardCase(100))
 #'
-hard_case <- function(N) {
+HardCase <- function(N) {
   Z1 <- stats::runif(N, -2, 2)
   Z2 <- stats::runif(N, -2, 2)
 
