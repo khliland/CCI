@@ -28,6 +28,8 @@ QQplot(
 
 \item{legend.text}{Size of legend text}
 
+\item{legend.title}{Size of legend title}
+
 \item{...}{Additional arguments to pass to the \code{test.gen} function.}
 }
 \value{

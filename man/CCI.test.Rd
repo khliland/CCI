@@ -48,7 +48,7 @@ CCI.test(
 
 \item{nperm}{Integer. The number of permutations to perform. Default is 600.}
 
-\item{nrounds}{Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
+\item{nrounds}{Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.}
 
 \item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.}
 

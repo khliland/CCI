@@ -9,6 +9,7 @@
 #' @param num_class Number of categorical classes
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
+#' @param subsample Proportion of the data to be used. Default is 1 (no subsampling).
 #' @param ... Additional arguments passed to xgb.train
 #'
 #' @importFrom xgboost xgb.DMatrix xgb.train

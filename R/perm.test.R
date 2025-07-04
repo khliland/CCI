@@ -3,8 +3,8 @@
 #' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Proportion of data to use for training the model. Default is 0.825.
-#' @param subsampling The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
 #' @param nperm Number of permutations to perform. Default is 500.
+#' @param subsample The proportion of the data to be used. Default is 1 (no subsampling).
 #' @param metric Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.
 #' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
 #' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.

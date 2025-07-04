@@ -5,6 +5,7 @@
 #' @param axis.text.y Size of y-axis text
 #' @param strip.text.x Size of x-axis strip text
 #' @param strip.text.y Size of y-axis strip text
+#' @param legend.title Size of legend title
 #' @param legend.text Size of legend text
 #'
 #' @param ... Additional arguments to pass to the \code{test.gen} function.
@@ -39,6 +40,7 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
   dag_n <- object$dag_n
   N <- nrow(data)
   metric <- object$metric
+  subsample <- object$subsample
   tail <- object$tail
   parametric <- object$parametric
   p <- object$p
@@ -72,6 +74,7 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
                           metric = metric,
                           method = method,
                           nperm = nperm,
+                          subsample = subsample,
                           nrounds = nrounds,
                           N = nrow(data),
                           p = p,
@@ -94,12 +97,12 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
          title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
     ggplot2::theme_minimal() +
-    ggplot2::theme(axis.text.x = element_text(size = 16),
-                   axis.text.y = element_text(size = 16),
-                   strip.text.x = element_text(size = 16),
-                   strip.text.y = element_text(size = 16),
-                   legend.text = element_text(size = 16),
-                   legend.title = element_text(size = 16), legend.position = 'none')
+    ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
+                   axis.text.y = element_text(size = axis.text.y),
+                   strip.text.x = element_text(size = strip.text.x),
+                   strip.text.y = element_text(size = strip.text.y),
+                   legend.text = element_text(size = legend.text),
+                   legend.title = element_text(size = legend.title), legend.position = 'none')
 
   return(ggobj)
 }

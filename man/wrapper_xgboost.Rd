@@ -37,6 +37,8 @@ wrapper_xgboost(
 
 \item{num_class}{Number of categorical classes}
 
+\item{subsample}{Proportion of the data to be used. Default is 1 (no subsampling).}
+
 \item{...}{Additional arguments passed to xgb.train}
 }
 \value{

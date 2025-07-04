@@ -7,6 +7,7 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param method A character string specifying the method to be used for model fitting. Options include "rf" (random forest), "xgboost" (XGBoost), "nnet" (neural network), "gpr" (Gaussian process regression), and "svm" (support vector machine).
 #' @param folds An integer specifying the number of folds for cross-validation. Default is 4.
+#' @param subsample Numeric. The proportion of the data to be used. Default is 1 (i.e., use all data).
 #' @param poly Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditioning variables are included in the model. Default is TRUE.

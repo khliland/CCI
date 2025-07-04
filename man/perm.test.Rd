@@ -36,6 +36,8 @@ perm.test(
 
 \item{nperm}{Number of permutations to perform. Default is 500.}
 
+\item{subsample}{The proportion of the data to be used. Default is 1 (no subsampling).}
+
 \item{metric}{Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.}
 
 \item{method}{The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".}
@@ -65,8 +67,6 @@ perm.test(
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
 
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
-
-\item{subsampling}{The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 }
 \value{
 An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.

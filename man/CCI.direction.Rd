@@ -25,6 +25,8 @@ CCI.direction(
 
 \item{folds}{An integer specifying the number of folds for cross-validation. Default is 4.}
 
+\item{subsample}{Numeric. The proportion of the data to be used. Default is 1 (i.e., use all data).}
+
 \item{poly}{Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.}
 
 \item{degree}{Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.}
