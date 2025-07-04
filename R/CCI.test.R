@@ -164,7 +164,7 @@ CCI.test <- function(formula = NULL,
       if (length(ci_statement$CI$Z) == 0) {
         warning("The formula indicates an unconditional independence statement. Are you sure that you don't need conditioning variables.")
       }
-      formula <- as.formula(paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
+      formula <- as.formula(paste(ci_statement$CI$X, " ~ ", ci_statement$CI$Y, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
   }
   formula <- clean_formula(formula)
