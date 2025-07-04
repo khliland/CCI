@@ -229,8 +229,7 @@ CCI.pretuner <- function(formula,
 
   if (is.null(tuneGrid)) {
   tuneGrid <- switch(method,
-                     rf   = expand.grid(mtry = mtry,
-                                        subsample = subsample),
+                     rf   = expand.grid(mtry = mtry),
                      xgboost = expand.grid(
                        nrounds = nrounds,
                        eta = eta,
@@ -241,8 +240,7 @@ CCI.pretuner <- function(formula,
                        gamma = gamma
                      ),
                      svm = expand.grid(sigma = sigma,
-                                       C = C,
-                                       subsample = subsample),
+                                       C = C),
                      stop("Unsupported method for pretuning.")
   )
   }
