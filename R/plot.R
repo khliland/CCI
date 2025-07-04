@@ -1,6 +1,9 @@
 #' Plot for CCI testing
 #'
 #' @param x Object of class 'CCI'
+#' @param fill_color Color for the histogram fill
+#' @param axis.text.x Size of x-axis text
+#'
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2
@@ -16,7 +19,7 @@
 #' plot(cci)
 
 
-plot.CCI <- function(x,  ...) {
+plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 17, axis.text.y = 17, strip.text.x = 17, strip.text.7 = 17, legend.text = 17, legend.title = 17, ...) {
   if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -32,14 +35,20 @@ plot.CCI <- function(x,  ...) {
   plot <- ggplot2::ggplot(df, ggplot2::aes(x = null_dist)) +
     ggplot2::geom_histogram(ggplot2::aes(y = ggplot2::after_stat(density)),
                             bins = 10,
-                            fill = "lightblue",
+                            fill = fill_color,
                             color = "black",
                             alpha = 0.7) +
     ggplot2::geom_vline(ggplot2::aes(xintercept = test_stat), color = "black", linetype = "dashed", linewidth = 1) +
     ggplot2::labs(title = "Null distribution with test statistic",
          x = "Value",
          y = "Freq.") +
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal() +
+    ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
+                   axis.text.y = element_text(size = axis.text.y),
+                   strip.text.x = element_text(size = strip.text.x),
+                   strip.text.y = element_text(size = strip.text.y),
+                   legend.text = element_text(size = legend.text),
+                   legend.title = element_text(size = legend.title), legend.position = 'none')
 
   if (!missing(...)) {
     additional_layers <- list(...)

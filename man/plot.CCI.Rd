@@ -4,10 +4,24 @@
 \alias{plot.CCI}
 \title{Plot for CCI testing}
 \usage{
-\method{plot}{CCI}(x, ...)
+\method{plot}{CCI}(
+  x,
+  fill_color = "lightblue",
+  axis.text.x = 17,
+  axis.text.y = 17,
+  strip.text.x = 17,
+  strip.text.7 = 17,
+  legend.text = 17,
+  legend.title = 17,
+  ...
+)
 }
 \arguments{
 \item{x}{Object of class 'CCI'}
+
+\item{fill_color}{Color for the histogram fill}
+
+\item{axis.text.x}{Size of x-axis text}
 
 \item{...}{Additional arguments to ggplot2}
 }
