@@ -135,7 +135,6 @@ CCI.test <- function(formula = NULL,
   if ((!is.null(metricfunc) | !is.null(mlfunc)) && is.na(tail)) {
     stop("tail parameter must be either 'left' or 'right'")
   }
-
   if (is.null(formula) & is.null(dag)) {
     status <- "Error: Formula or DAG are missing"
     stop("Formula or dagitty object is missing")
@@ -149,6 +148,7 @@ CCI.test <- function(formula = NULL,
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
+
   if (is.null(num_class) && metric == "Kappa" && !is.null(mlfunc)) {
     num_class <- unique(data[[all.vars(formula)[1]]])
   } else {

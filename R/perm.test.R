@@ -66,9 +66,9 @@ perm.test <- function(formula,
 
   if (is.na(tail)) {
     if (!is.null(metricfunc)) {
-      warning("Tail is set to NA, but metricfunc is provided. Please specify the tail direction explicitly.")
+      warning("Tail is set to NA, but metricfunc is provided. You should specify the tail direction explicitly.")
     } else if (!is.null(mlfunc)) {
-      warning("Tail is set to NA, but mlfunc is provided. Please specify the tail direction explicitly.")
+      warning("Tail is set to NA, but mlfunc is provided. You should specify the tail direction explicitly.")
     } else {
       if (metric == "Kappa") {
         tail <- "right"
