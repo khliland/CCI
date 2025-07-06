@@ -150,10 +150,6 @@ CCI.pretuner <- function(formula,
 
   n_predictors <- length(all.vars(formula[[3]]))
 
-  if (n_predictors > 100) {
-    warning("Formula includes ", n_predictors, " predictors including polynomials and interactions. Tuning may be slow. Consider reducing folds or samples.")
-  }
-
   if (method == "rf") {
     mtry <- seq(1, min(n_predictors, max(5, ceiling(n_predictors / 2))), by = 1)
   }
