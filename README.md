@@ -76,14 +76,14 @@ Using a parametric p-value is usually a good idea, since the empircal derived p-
 
 ## 2. Handling Different Data Types
 One of the main motivation for having a computational test of conditional independence is to be able to test conditional independence using different data types, such as continuous, binary, and categorical data.
-Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, you can adjust the `data_type` parameter to `"continuous"` (default), `"binary"`, or `"categorical"`. 
+Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, you can adjust the `metric` argument to `"RMSE"` (default) or `"Kappa"`. 
 
 In the example below, both `Y` and `X` are binary variables, meaning they only take on values 0 and 1. 
 
 ```r
 set.seed(1985)
 data <- BinaryData(500)
-CCI.test(formula = Y ~ X | Z1 + Z2, data = data, data_type = "binary")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa")
 ```
 If you notice in the example above, the null distribution looks kinda weird. It consist of two peaks, one at around -0.5 and one at 0.5. 
 This is in general not a good sign, and indicate that you should try to change the method.
@@ -91,7 +91,7 @@ The two main method options in CCI.test() are 'rf' and 'xgbosst'. First we can c
 ```r
 set.seed(1985)
 data <- BinaryData(500)
-CCI.test(formula = Y ~ X | Z1 + Z2, data = data, data_type = "binary", method = "xgboost")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa", method = "xgboost")
 ```
 Viola, now the null distribution looks much better, which is what we want. The p-value is 0.72 which is what we expect since `Y` and `X` are conditionally independent given `Z1` and `Z2`.
 
@@ -99,24 +99,19 @@ The third available method is support vector machine (`svm`). `svm` is fast, but
 ```r
 set.seed(1985)
 data <- BinaryData(500)
-CCI.test(formula = Y ~ X | Z1 + Z2, data = data, data_type = "binary", method = "svm")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa", method = "svm")
 ```
-The third data type is categorical data, which is used when `Y` is a categorical variable with more than two levels. `CCI.test()` is designed to handle categorical variables as factor variables. 
+When `Y` is a factor variable,`CCI.test()` automatically handles categorical variables as factor variables. 
 ```r
 set.seed(1945)
 data <- TrigData(500)
 data$Y <-as.factor(data$Y) # Make sure Y is a factor variable
 data$X <-as.factor(data$X) # Make sure X is a factor variable
-CCI.test(formula = Y ~ X | Z2, data = data, data_type = "categorical")
-```
-If `data_type = 'categorical'` when `method = 'xgboost'`, you must also specify the `num_class` argument, which is the number of classes in the categorical variable.
-Like so, 
-```r
-CCI.test(formula = Y ~ X | Z2, data = data, data_type = "categorical", method = "xgboost", num_class = length(unique(data$Y)))
+CCI.test(formula = Y ~ X | Z2, data = data)
 ```
 For completeness, we also see how `svm` performes
 ```r
-CCI.test(formula = Y ~ X | Z2, data = data, data_type = "categorical", method = "svm", nperm = 250)
+CCI.test(formula = Y ~ X | Z2, data = data, method = "svm", nperm = 250)
 ```
 All three methods successfully reject the null hypothesis which is what we want. 
 In the last example we set the argument `nperm = 250`, which means that the null distribution is generated using 250 Monte Carlo samples. 
@@ -126,7 +121,7 @@ The last important argument in `CCI.test()` is the `p` argument, which controls 
 In lagrge datasets, you can set `p` to a lower value, like 0.1, to speed up the process and increase precision.
 ```r
 set.seed(1984)
-data <- sineGaussian(20000, d = 0.3) # d = 0.3 breaks conditional independence Y _||_ X | Z
+data <- SineGaussian(10000, d = 0.3) # d = 0.3 breaks conditional independence Y _||_ X | Z
 CCI.test(formula = Y ~ X | Z, data = data, parametric = T, p = 0.05)
 ```
 There is also a `subsampling` argument which can be set to a value between 0 and 1. This reduces the sample size used for testing in each iteration, speeding up testing. 
@@ -134,7 +129,7 @@ In the example below, even with 2 million observations testing is "fast"" becaus
 ```r
 set.seed(1984)
 data <- sineGaussian(2000000, d = 0.3) # d = 0.3 breaks conditional independence Y _||_ X | Z
-CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25, subsampling = 0.001)
+CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25, subsample = 0.001)
 ```
 
 Finally we show that you can pass on arguments to the machine learning algorithm used in `CCI.test()`. Here is an example of using the `xgboost` method with custom parameters.
@@ -168,12 +163,12 @@ Generally it is best to predict the variable with the best predictive performanc
 
 ```r
 set.seed(1814)
-data <- sineGaussian_biv(N = 1000, a = 1, d = 0.5)
-CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, nrounds = 1000, choose_direction = TRUE, parametric = T)
+data <- SineGaussianBiv(N = 1000, a = 1, d = 0.5)
+CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, nrounds = 800, choose_direction = TRUE, parametric = T)
 ```
 ```r
 set.seed(1814)
-data <- sineGaussian_biv(N = 1000, a = 1, d = 0)
+data <- SineGaussianBiv(N = 1000, a = 1, d = 0)
 CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, parametric = T, nrounds = 1000, choose_direction = T)
 ```
 
