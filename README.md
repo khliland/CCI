@@ -312,7 +312,7 @@ neuralnet_wrapper <- function(formula,
 }
 
 dat <- NonLinNormal(2000)
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet, nperm = 200, size = 10, decay = 0.1, maxit = 200, tail = "left")
+CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet_wrapper, nperm = 200, size = 10, decay = 0.1, maxit = 200, tail = "left")
 ```
 ```r
 caret_wrapper <- function(formula,
