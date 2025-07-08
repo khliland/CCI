@@ -1,7 +1,8 @@
 # Test script for the CCI package
 devtools::check()
+devtools::check_win_devel()
 devtools::build()
-install.packages("CCI_0.1.1.tar.gz", repos = NULL, type = "source")
+# install.packages("CCI_0.1.1.tar.gz", repos = NULL, type = "source")
 devtools::document()
 
 # devtools::install()

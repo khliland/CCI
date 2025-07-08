@@ -23,6 +23,16 @@
 
 \item{axis.text.x}{Size of x-axis text}
 
+\item{axis.text.y}{Size of y-axis text}
+
+\item{strip.text.x}{Size of x-axis strip text}
+
+\item{strip.text.y}{Size of y-axis strip text}
+
+\item{legend.text}{Size of legend text}
+
+\item{legend.title}{Size of legend title}
+
 \item{...}{Additional arguments to ggplot2}
 }
 \value{

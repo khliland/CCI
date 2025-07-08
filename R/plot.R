@@ -3,7 +3,11 @@
 #' @param x Object of class 'CCI'
 #' @param fill_color Color for the histogram fill
 #' @param axis.text.x Size of x-axis text
-#'
+#' @param axis.text.y Size of y-axis text
+#' @param strip.text.x Size of x-axis strip text
+#' @param strip.text.y Size of y-axis strip text
+#' @param legend.text Size of legend text
+#' @param legend.title Size of legend title
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2
