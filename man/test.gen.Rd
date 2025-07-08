@@ -76,7 +76,8 @@ x2 = rnorm(100),
 x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
-result <- test.gen(formula = y ~ x1 | x2 + x3 + x4, metric = "RMSE",
+result <- test.gen(formula = y ~ x1 | x2 + x3 + x4,
+                   metric = "RMSE",
                    data = data)
 hist(result$distribution)
 }

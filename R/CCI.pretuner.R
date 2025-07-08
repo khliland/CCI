@@ -55,6 +55,7 @@
 #' data = data,
 #' samples = 5,
 #' folds = 3,
+#' mtry = 2,
 #' method = "rf")
 #' # Returns a list with best parameters and tuning results
 #' if (requireNamespace("xgboost", quietly = TRUE)) {
@@ -85,7 +86,7 @@ CCI.pretuner <- function(formula,
                          verbose = FALSE,
                          parallel = FALSE,
                          mtry = 1:10,
-                         nrounds = c(50, 100, 200, 300, 400),
+                         nrounds = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
                          eta = seq(0.01, 0.3, by = 0.05),
                          max_depth = 2:6,
                          gamma = c(0,1,2,3),

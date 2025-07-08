@@ -14,7 +14,7 @@
 #' @param ... Additional arguments to be passed to the model fitting function.
 #'
 #' @return A formula object specifying the selected model direction.
-#' @importFrom caret train trainControl
+#' @importFrom caret train trainControl randomForest xgboost svm
 #' @export
 #' @examples
 #' # Example usage
@@ -29,7 +29,7 @@
 #'  folds = 2,
 #'  seed = 1)
 #'
-#'chosen_formula
+#' chosen_formula
 
 
 CCI.direction <- function(formula,
