@@ -5,7 +5,7 @@ devtools::build()
 # install.packages("CCI_0.1.1.tar.gz", repos = NULL, type = "source")
 devtools::document()
 
-# devtools::install()
+devtools::install()
 devtools::load_all()
 library(CCI)
 #-------------------------------------------------------------------------------
