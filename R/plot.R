@@ -23,7 +23,7 @@
 #' plot(cci)
 
 
-plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 17, axis.text.y = 17, strip.text.x = 17, strip.text.y = 17, legend.text = 17, legend.title = 17, ...) {
+plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 13, axis.text.y = 13, strip.text.x = 13, strip.text.y = 13, legend.text = 17, legend.title = 13, ...) {
   if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -40,8 +40,7 @@ plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 17, axis.text.y 
     ggplot2::geom_histogram(ggplot2::aes(y = ggplot2::after_stat(density)),
                             bins = 10,
                             fill = fill_color,
-                            color = "black",
-                            alpha = 0.7) +
+                            color = "black") +
     ggplot2::geom_vline(ggplot2::aes(xintercept = test_stat), color = "black", linetype = "dashed", linewidth = 1) +
     ggplot2::labs(title = "Null distribution with test statistic",
          x = "Value",
