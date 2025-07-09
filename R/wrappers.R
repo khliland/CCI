@@ -115,7 +115,7 @@ wrapper_xgboost <- function(formula,
                               subsample = subsample,
                               verbose = 0)
 
-  predictions <- predict(model, newdata = dtest)
+  predictions <- stats::predict(model, newdata = dtest)
   actual <- y_test
   if (!is.null(metricfunc)) {
     metric <- metricfunc(actual, predictions, ...)
@@ -171,7 +171,7 @@ wrapper_ranger <- function(formula,
     model <- ranger::ranger(formula, data = data[train_indices, ], num.threads = nthread, ...)
   }
 
-  predictions <- predict(model, data = data[test_indices, ])$predictions
+  predictions <- stats::predict(model, data = data[test_indices, ])$predictions
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
@@ -225,7 +225,7 @@ wrapper_svm <- function(formula,
 
   model <- e1071::svm(formula = formula, data = data[train_indices, ], probability = TRUE, ...)
 
-  predictions <- predict(model, newdata = data[test_indices, ], probability = TRUE)
+  predictions <- stats::predict(model, newdata = data[test_indices, ], probability = TRUE)
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {

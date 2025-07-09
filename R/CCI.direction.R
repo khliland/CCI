@@ -15,7 +15,7 @@
 #'
 #' @return A formula object specifying the selected model direction.
 #' @importFrom caret train trainControl
-#' @import randomForest xgboost svm
+#' @import randomForest xgboost kernlab
 #' @export
 #' @examples
 #' # Example usage

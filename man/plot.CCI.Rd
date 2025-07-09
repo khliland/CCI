@@ -4,7 +4,7 @@
 \alias{plot.CCI}
 \title{Plot for CCI testing}
 \usage{
-\method{plot}{CCI}(
+plot.CCI(
   x,
   fill_color = "lightblue",
   axis.text.x = 17,
