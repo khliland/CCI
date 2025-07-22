@@ -7,12 +7,12 @@
 plot.CCI(
   x,
   fill_color = "lightblue",
-  axis.text.x = 17,
-  axis.text.y = 17,
-  strip.text.x = 17,
-  strip.text.y = 17,
+  axis.text.x = 13,
+  axis.text.y = 13,
+  strip.text.x = 13,
+  strip.text.y = 13,
   legend.text = 17,
-  legend.title = 17,
+  legend.title = 13,
   ...
 )
 }
