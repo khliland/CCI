@@ -9,6 +9,12 @@ CCI.direction(
   data,
   method = "rf",
   folds = 4,
+  nrounds = 600,
+  max_depth = 6,
+  eta = 0.3,
+  gamma = 0,
+  colsample_bytree = 1,
+  min_child_weight = 1,
   subsample = 1,
   poly = TRUE,
   degree = 3,
@@ -25,7 +31,19 @@ CCI.direction(
 
 \item{folds}{An integer specifying the number of folds for cross-validation. Default is 4.}
 
-\item{subsample}{Numeric. The proportion of the data to be used. Default is 1 (i.e., use all data).}
+\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 600.}
+
+\item{max_depth}{Integer. The maximum depth of the trees for methods like xgboost. Default is 6.}
+
+\item{eta}{Numeric. The learning rate for methods like xgboost. Default is 0.3.}
+
+\item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node of the tree for methods like xgboost. Default is 0.}
+
+\item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.}
+
+\item{min_child_weight}{Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.}
+
+\item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 
 \item{poly}{Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.}
 

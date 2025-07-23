@@ -18,6 +18,11 @@
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param subsample Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
+#' @param min_child_weight Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.
+#' @param colsample_bytree Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.
+#' @param eta Numeric. The learning rate for methods like xgboost. Default is 0.3.
+#' @param gamma Numeric. The minimum loss reduction required to make a further partition on a leaf node of the tree for methods like xgboost. Default is 0.
+#' @param max_depth Integer. The maximum depth of the trees for methods like xgboost. Default is 6.
 #' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
@@ -191,7 +196,11 @@ CCI.test <- function(formula = NULL,
   } else if (tune && !is.null(mlfunc)) {
     stop("Tuning parameters is not available when using a custom ML function.")
   } else {
-    params <- list()
+    params <- list(max_depth = max_depth,
+                   eta = eta,
+                   gamma = gamma,
+                   colsample_bytree = colsample_bytree,
+                   min_child_weight = min_child_weight)
   }
 
   samples <- NULL

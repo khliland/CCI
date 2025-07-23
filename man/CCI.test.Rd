@@ -22,6 +22,11 @@ CCI.test(
   poly = TRUE,
   degree = 3,
   subsample = 1,
+  min_child_weight = 1,
+  colsample_bytree = 1,
+  eta = 0.3,
+  gamma = 0,
+  max_depth = 6,
   num_class = NULL,
   interaction = TRUE,
   metricfunc = NULL,
@@ -69,6 +74,16 @@ CCI.test(
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
 \item{subsample}{Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).}
+
+\item{min_child_weight}{Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.}
+
+\item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.}
+
+\item{eta}{Numeric. The learning rate for methods like xgboost. Default is 0.3.}
+
+\item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node of the tree for methods like xgboost. Default is 0.}
+
+\item{max_depth}{Integer. The maximum depth of the trees for methods like xgboost. Default is 6.}
 
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
 
