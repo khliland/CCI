@@ -112,24 +112,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #' @return A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost). Returns \code{NULL} for unsupported methods.
 #' @export
 #'
-#' @examples
-#' set.seed(123)
-#' data_generator <-  function(N){
-#' Z1 <- rnorm(N,0,1)
-#' Z2 <- rnorm(N,0,1)
-#' X <- rnorm(N, Z1 + Z2, 1)
-#' Y <- rnorm(N, Z1 + Z2, 1)
-#' df <- data.frame(Z1, Z2, X, Y)
-#' return(df)
-#' }
-#' dat <- data_generator(100)
-#' tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
-#' data = dat,
-#' method = 'xgboost',
-#' samples = 2)
-#' tuned_params <- get_tuned_params(tuned_model$best_param)
-#' print(tuned_params)
-#'
+
 
 get_tuned_params <- function(tuned_model) {
   supported_methods <- c("rf", "xgboost", "svm")
