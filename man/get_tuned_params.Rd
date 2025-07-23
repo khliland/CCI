@@ -15,22 +15,3 @@ A named list of tuned parameters specific to the model method (e.g., \code{mtry}
 \description{
 Get the best parameters after tuning with CCI.tuner
 }
-\examples{
-set.seed(123)
-data_generator <-  function(N){
-Z1 <- rnorm(N,0,1)
-Z2 <- rnorm(N,0,1)
-X <- rnorm(N, Z1 + Z2, 1)
-Y <- rnorm(N, Z1 + Z2, 1)
-df <- data.frame(Z1, Z2, X, Y)
-return(df)
-}
-dat <- data_generator(100)
-tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
-data = dat,
-method = 'xgboost',
-samples = 2)
-tuned_params <- get_tuned_params(tuned_model$best_param)
-print(tuned_params)
-
-}

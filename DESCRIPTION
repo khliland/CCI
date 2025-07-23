@@ -16,7 +16,7 @@ Authors@R:
              comment = c(ORCID = "0000-0001-6468-9423")))
 Description: The CCI (Computational Conditional Independence) package provides tools for performing computational tests 
              for conditional independence between variables in a dataset. The package supports machine learning regression and classification models
-             including random forest, XGBoost and support vector machine. Users can also integrate their own prediction model through a wrapper function interface. 
+             including random forest, xgboost and support vector machine. Users can also integrate their own prediction model through a wrapper function interface. 
              CCI implements permutation in combination with Monte Carlo Cross-Validation in generating null distributions and test statistics, 
              allowing users to assess the significance of observed relationships under the null hypothesis of conditional independence.  
 Imports: ggplot2, dplyr, caret, xgboost, ranger, stats, dagitty, data.table, e1071, rlang, progress
