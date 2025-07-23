@@ -18,18 +18,19 @@
 #' @export
 #' @examples
 #' # Example usage
-#' dat <- SineGaussianBiv(N = 100, a = 2)
-#'
-#' formula_init <- Y ~ X + Z1 + Z2
-#'
-#' chosen_formula <- CCI.direction(
-#'  formula = formula_init,
-#'  data = dat,
-#'  method = "rf",
-#'  folds = 2,
-#'  seed = 1)
-#'
-#' chosen_formula
+#' if (requireNamespace("randomForest", quietly = TRUE)) {
+#'   dat <- SineGaussianBiv(N = 100, a = 2)
+#'   formula_init <- Y ~ X + Z1 + Z2
+#'   chosen_formula <- CCI.direction(
+#'     formula = formula_init,
+#'     data = dat,
+#'     method = "rf",
+#'     folds = 2,
+#'     seed = 1)
+#' } else {
+#'   message("Package 'randomForest' not available; skipping example.")
+#' }
+
 
 
 CCI.direction <- function(formula,

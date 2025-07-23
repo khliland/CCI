@@ -105,15 +105,9 @@ The 'CCI.test' function serves as a wrapper around the 'perm.test' function
 }
 \examples{
 set.seed(123)
-
 data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), y = stats::rnorm(100))
 result <- CCI.test(y ~ x1 | x2, data = data, nperm = 25, interaction = FALSE)
 summary(result)
-# Example: Using xgboost when y is categorical
-data <- data.frame(x1 = stats::rnorm(100), x2 = stats::rnorm(100), x3 = stats::rnorm(100),
-                   y = sample(1:3, 100, replace = TRUE) - 1)
-result <- CCI.test(y ~ x1 | x2 + x3, data = data, method = "xgboost",
-                   metric = "Kappa", nperm = 25, num_class = 3)
 }
 \seealso{
 \code{\link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{CCI.pretuner}}, \code{\link{QQplot}}
