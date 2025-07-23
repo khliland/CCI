@@ -31,10 +31,10 @@
 #' @param C Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).
 #' @param ... Additional arguments to pass to the \code{CCI.tuner} function.
 #'
-#' @importFrom caret train trainControl nearZeroVar
 #' @importFrom dplyr %>%
 #' @importFrom stats model.matrix var cor
 #' @import progress
+#' @import caret
 #'
 #' @return A list containing:
 #' \itemize{

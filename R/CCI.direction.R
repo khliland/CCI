@@ -14,8 +14,7 @@
 #' @param ... Additional arguments to be passed to the model fitting function.
 #'
 #' @return A formula object specifying the selected model direction.
-#' @importFrom caret train trainControl
-#' @import randomForest xgboost kernlab
+#' @import caret
 #' @export
 #' @examples
 #' # Example usage

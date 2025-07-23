@@ -35,7 +35,7 @@
 #' x3 = rnorm(100),
 #' x4 = rnorm(100),
 #' y = rnorm(100))
-#' perm.test(y ~ x1 | x2 + x3 + x4, data = dat)
+#' perm.test(y ~ x1 | x2 + x3 + x4, data = dat, nperm = 25)
 
 perm.test <- function(formula,
                       data,

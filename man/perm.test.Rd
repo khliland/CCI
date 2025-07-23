@@ -81,7 +81,7 @@ x2 = rnorm(100),
 x3 = rnorm(100),
 x4 = rnorm(100),
 y = rnorm(100))
-perm.test(y ~ x1 | x2 + x3 + x4, data = dat)
+perm.test(y ~ x1 | x2 + x3 + x4, data = dat, nperm = 25)
 }
 \seealso{
 \code{\link{print.CCI}}, \code{\link{summary.CCI}},

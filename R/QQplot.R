@@ -18,10 +18,10 @@
 #' @export
 #'
 #' @examples
-#' dat <- data.frame(x1 = rnorm(200), x2 = rnorm(200), y = rnorm(200))
+#' dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
 #' cci <- CCI.test(y ~ x1 | x2,
 #' data = dat,
-#' nperm = 50,
+#' nperm = 25,
 #' interaction = FALSE)
 #' QQplot(cci)
 
