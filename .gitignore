@@ -52,3 +52,4 @@ rsconnect/
 # Mac files
 .DS_Store
 .Rproj.user
+inst/doc

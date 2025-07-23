@@ -122,11 +122,11 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #' df <- data.frame(Z1, Z2, X, Y)
 #' return(df)
 #' }
-#' dat <- data_generator(250)
+#' dat <- data_generator(100)
 #' tuned_model <- CCI.pretuner(formula = Y ~ X + Z1 + Z2,
 #' data = dat,
 #' method = 'xgboost',
-#' samples = 3)
+#' samples = 2)
 #' tuned_params <- get_tuned_params(tuned_model$best_param)
 #' print(tuned_params)
 #'

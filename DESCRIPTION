@@ -19,8 +19,8 @@ Description: The CCI (Computational Conditional Independence) package provides t
              including random forest, XGBoost and support vector machine. Users can also integrate their own prediction model through a wrapper function interface. 
              CCI implements permutation in combination with Monte Carlo Cross-Validation in generating null distributions and test statistics, 
              allowing users to assess the significance of observed relationships under the null hypothesis of conditional independence.  
-Imports: ggplot2, dplyr, caret, xgboost, ranger, stats, dagitty, data.table, e1071, rlang, progress, randomForest, kernlab
-Suggests: testthat
+Imports: ggplot2, dplyr, caret, xgboost, ranger, stats, dagitty, data.table, e1071, rlang, progress
+Suggests: testthat, knitr, rmarkdown
 License: GPL (>= 2)
 URL: https://github.com/khliland/CCI
 BugReports: https://github.com/khliland/CCI/issues
@@ -28,3 +28,4 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr

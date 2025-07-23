@@ -49,24 +49,13 @@
 #'
 #' @examples
 #' set.seed(123)
-#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))
+#' data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = rnorm(100))
 #' # Tune random forest parameters
-#' result <- CCI.pretuner(formula = y ~ x1 | x2,
+#' result <- CCI.pretuner(formula = y ~ x1 | x2 + x3,
 #' data = data,
 #' samples = 5,
 #' folds = 3,
-#' mtry = 2,
 #' method = "rf")
-#' # Returns a list with best parameters and tuning results
-#' if (requireNamespace("xgboost", quietly = TRUE)) {
-#'   # Tune xgboost parameters
-#'   result_xgb <- CCI.pretuner(formula = y ~ x1 | x2,
-#'   data = data,
-#'   samples = 5,
-#'   folds = 3,
-#'   method = "xgboost")
-#' }
-
 
 CCI.pretuner <- function(formula,
                          data,
