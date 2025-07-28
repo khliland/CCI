@@ -12,7 +12,6 @@ test.gen(
   nperm = 60,
   subsample = 1,
   p = 0.8,
-  N = nrow(data),
   poly = TRUE,
   interaction = TRUE,
   degree = 3,
@@ -22,6 +21,7 @@ test.gen(
   metricfunc = NULL,
   mlfunc = NULL,
   num_class = NULL,
+  progress = TRUE,
   ...
 )
 }
@@ -40,8 +40,6 @@ test.gen(
 
 \item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.}
 
-\item{N}{Integer. The total number of observations in the data. Default is the number of rows in the data frame.}
-
 \item{poly}{Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.}
 
 \item{interaction}{Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.}
@@ -59,6 +57,8 @@ test.gen(
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.}
+
+\item{progress}{Function. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.}
 
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
 }

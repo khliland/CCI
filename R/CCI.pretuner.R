@@ -316,7 +316,10 @@ CCI.pretuner <- function(formula,
   if (length(warning_log) > 0) {
     warning("Tuning completed with ", length(warning_log), " warnings. Check $warnings for details.")
   }
+  if (verbose) {
+    cat("Best parameters found:\n")
+    print(best)
+  }
 
-  cat("\n Tuning complete. Best model found.\n")
   return(list(best_param = best, tuning_result = results_df, warnings = warning_log))
 }

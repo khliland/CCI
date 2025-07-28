@@ -39,6 +39,8 @@ CCI.test(
   seed = NA,
   random_grid = TRUE,
   nthread = 1,
+  verbose = FALSE,
+  progress = TRUE,
   ...
 )
 }
@@ -108,6 +110,10 @@ CCI.test(
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+
+\item{verbose}{Logical. If TRUE, additional information is printed during the execution of the function. Default is FALSE.}
+
+\item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
 
 \item{...}{Additional arguments to pass to the \code{perm.test} function.}
 }

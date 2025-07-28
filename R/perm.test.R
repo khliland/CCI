@@ -19,7 +19,7 @@
 #' @param dag A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.
 #' @param dag_n A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.
 #' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
-#'
+#' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
@@ -56,29 +56,58 @@ perm.test <- function(formula,
                       dag = NA,
                       dag_n  = NA,
                       num_class = NULL,
+                      progress = TRUE,
                       ...) {
 
 
-  # Creating the null distribution
-  dist <- test.gen(formula = formula, metric = metric, data = data, method, nperm = nperm, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = TRUE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, subsample = subsample, ...)
-  # Creating the test statistic
-  test_statistic <- test.gen(formula = formula, metric = metric, data = data, method, nperm = 1, poly = poly, interaction = interaction, nrounds = nrounds, p = p, permutation = FALSE, mlfunc = mlfunc, metricfunc = metricfunc, num_class = num_class, subsample = subsample, ...)
 
-  if (is.na(tail)) {
-    if (!is.null(metricfunc)) {
-      warning("Tail is set to NA, but metricfunc is provided. You should specify the tail direction explicitly.")
-    } else if (!is.null(mlfunc)) {
-      warning("Tail is set to NA, but mlfunc is provided. You should specify the tail direction explicitly.")
-    } else {
-      if (metric == "Kappa") {
-        tail <- "right"
-      } else if (metric == "RMSE") {
-        tail <- "left"
-      } else {
-        stop("Please specify the tail direction for the metric.")
-      }
-    }
+  # Creating the null distribution
+  dist <- test.gen(formula = formula,
+                   metric = metric,
+                   data = data,
+                   method = method,
+                   nperm = nperm,
+                   poly = poly,
+                   degree = degree,
+                   interaction = interaction,
+                   nrounds = nrounds,
+                   p = p,
+                   permutation = TRUE,
+                   mlfunc = mlfunc,
+                   metricfunc = metricfunc,
+                   num_class = num_class,
+                   subsample = subsample,
+                   progress = progress,
+                   ...)
+  # Creating the test statistic
+  test_statistic <- test.gen(formula = formula,
+                             metric = metric,
+                             data = data,
+                             method = method,
+                             nperm = 1,
+                             poly = poly,
+                             degree = degree,
+                             interaction = interaction,
+                             nrounds = nrounds,
+                             p = p,
+                             permutation = FALSE,
+                             mlfunc = mlfunc,
+                             metricfunc = metricfunc,
+                             num_class = num_class,
+                             subsample = subsample,
+                             progress = progress,
+                             ...)
+
+
+  if (metric == "Kappa") {
+    tail <- "right"
+  } else if (metric == "RMSE") {
+    tail <- "left"
+  } else {
+    stop("Please specify the tail direction for the metric.")
   }
+
+
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
   status <- "Complete"

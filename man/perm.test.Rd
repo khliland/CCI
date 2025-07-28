@@ -24,6 +24,7 @@ perm.test(
   dag = NA,
   dag_n = NA,
   num_class = NULL,
+  progress = TRUE,
   ...
 )
 }
@@ -65,6 +66,8 @@ perm.test(
 \item{dag_n}{A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.}
 
 \item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
+
+\item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
 
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }

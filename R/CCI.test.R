@@ -36,6 +36,8 @@
 #' @param seed Integer. The seed for tuning. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
+#' @param verbose Logical. If TRUE, additional information is printed during the execution of the function. Default is FALSE.
+#' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
 #' @importFrom dplyr %>%
@@ -87,6 +89,8 @@ CCI.test <- function(formula = NULL,
                      seed = NA,
                      random_grid = TRUE,
                      nthread = 1,
+                     verbose = FALSE,
+                     progress = TRUE,
                      ...) {
 
 
@@ -125,17 +129,12 @@ CCI.test <- function(formula = NULL,
     } else if (is.null(formula)) {
       ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
       names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
-      if (length(ci_statement$CI$Z) == 0) {
-        warning("The formula indicates an unconditional independence statement. Are you sure that you don't need conditioning variables.")
-      }
       formula <- as.formula(paste(ci_statement$CI$X, " ~ ", ci_statement$CI$Y, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
     }
   }
   formula <- clean_formula(formula)
   check_formula(formula, data)
-  if (length(all.vars(formula)) < 3 && interaction) {
-    warning("At least two variables are required in 'Z' to create interaction terms. Returning empty interaction terms.")
-  }
+
 
   if (!is.null(metricfunc)) {
     metric <- deparse(substitute(metricfunc))
@@ -190,6 +189,7 @@ CCI.test <- function(formula = NULL,
                                 poly = poly,
                                 degree = degree,
                                 samples = samples,
+                                verbose = verbose,
                                 ...)
     params <- get_tuned_params(best_params$best_param)
     tune_warning <- best_params$warnings
@@ -230,6 +230,8 @@ CCI.test <- function(formula = NULL,
     mlfunc = mlfunc,
     subsample = subsample,
     num_class = num_class,
+    progress = progress,
+    nthread = nthread,
     params,
     ...
   )
@@ -240,13 +242,10 @@ CCI.test <- function(formula = NULL,
 
   pvalue <- result$p.value
 
-  # Only print the result if not assigned
-  if (sys.nframe() != 0) {
-    # Skip a line
+  if (verbose) {
     cat("\n")
     cat("p-value: ", pvalue, "\n")
   }
-
 
   return(invisible(result))
 }

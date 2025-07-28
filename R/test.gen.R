@@ -10,7 +10,6 @@
 #' @param nperm Integer. The number of generated Monte Carlo samples. Default is 60.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.
 #' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
-#' @param N Integer. The total number of observations in the data. Default is the number of rows in the data frame.
 #' @param poly Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.
 #' @param interaction Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.
@@ -20,6 +19,7 @@
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
 #' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
+#' @param progress Function. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.
 #' @param ... Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.
 #'
 #' @return A list containing the test distribution.
@@ -30,6 +30,7 @@
 #' @importFrom data.table :=
 #' @importFrom utils flush.console combn
 #' @importFrom dplyr mutate across all_of sym
+#' @importFrom progress progress_bar
 #' @export
 #' @examples
 #' set.seed(123)
@@ -51,7 +52,6 @@ test.gen <- function(formula,
                      nperm = 60,
                      subsample = 1,
                      p = 0.8,
-                     N = nrow(data),
                      poly = TRUE,
                      interaction = TRUE,
                      degree = 3,
@@ -61,15 +61,18 @@ test.gen <- function(formula,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      num_class = NULL,
+                     progress = TRUE,
                      ...) {
 
   if (permutation && nperm < 10) {
     stop("nperm can't be less than 10")
   }
+
   if (poly && degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
 
+  N <- nrow(data)
 
   # Parse formula
   Y <- all.vars(formula)[1]
@@ -97,6 +100,19 @@ test.gen <- function(formula,
   }
 
   formula <- build_formula(formula, poly_terms, interaction_terms)
+
+  pb_message <- if (permutation) {
+    "Creating null distribution"
+  } else {
+    "Creating test statistic distribution"
+  }
+
+  pb <- progress::progress_bar$new(
+    format = paste0(pb_message, " [:bar] :percent (:current/:total)"),
+    total = nperm,
+    clear = FALSE,
+    width = 60
+  )
 
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
@@ -172,17 +188,10 @@ test.gen <- function(formula,
       warning("Error in iteration ", iteration, ": ", conditionMessage(e))
       NA
     })
+  if (progress) {
+    pb$tick()
+  }
 
-    step <- max(1, ceiling(nperm / 100))
-    if (iteration %% step == 0 && permutation) {
-      percentage <- (iteration / nperm) * 100
-      cat(sprintf("%s: %d%% complete\r", "Creating null distribution", round(percentage)))
-      flush.console()
-    } else if (iteration %% step == 0 && !permutation && nperm > 9) {
-      percentage <- (iteration / nperm) * 100
-      cat(sprintf("%s: %d%% complete\r", "Creating test statistic distribution", round(percentage)))
-      flush.console()
-    }
   }
 
 
