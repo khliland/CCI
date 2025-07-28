@@ -1,5 +1,6 @@
 ---
 title: "CCI-user-guide"
+author: "Christian Thorjussen"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{CCI-user-guide}
@@ -13,6 +14,14 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+# Introduction
+This vignette demonstrates how to use the 'CCI' package to perform computational conditional independence testing. Conditional independence is a concept within statistics which states that two random variables are independent given that we know the value of a third variable. And it is a fundamental assumption in many statistical and scientific models, for instance in causal models, it is therefor very useful to be able to test these assumptions. Mathematically we can express conditional independence between $Y$ and $X$ given $Z$ as the null hypothesis: $p(Y|X,Z) = p(Y|Z)$, which means that the distribution of $Y$ given $X$ and $Z$ is the same as the distribution of $Y$ given only $Z$. A common notation for this is $Y \perp X | Z$, which reads as "Y is independent (perpendicular) of X given Z". 
+
+The big caveat when it comes to conditional independence testing is that it is an impossible problem. Because the null hypothesis $Y \perp X | Z$ is a composite null hypothesis; the null hypothesis includes all joint distributions where $Y$ and $X$ are independent given $Z$, which is in theory, an infinite set. It is impossible to make a statistical test which covers an infinite set of distributions.   
+
+The approach  computational approach to test for conditional independence is to use the robustness of three based prediction models, such as random forest and gradient boosting, to estimate a null distribution     
+
+So let us see how you can use the 'CCI' package to computationally test for conditional independence. 
 
 ```{r setup}
 library(CCI)
