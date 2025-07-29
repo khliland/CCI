@@ -1,22 +1,15 @@
-# CITATION file for the CCI package
+citHeader("To cite the method used in this package use:")
 
-citation <- function() {
-  # Use the package name and version
-  pkg <- "CCI"
-  ver <- utils::packageVersion(pkg)
-
-  # Provide citation information
-  cat("To cite the CCI package in publications, please use:\n\n")
-  cat("  Thorjussen, C.B.H., & Liland, K.H. (2024). Computational Test for Conditional Independence (CCI).\n")
-  cat("  R package version ", ver, ".\n")
-  cat("  Available from: https://github.com/khliland/CCI\n\n")
-
-  cat("A BibTeX entry for LaTeX users is:\n\n")
-  cat("@Manual{,\n")
-  cat("  title = {Computational Test for Conditional Independence (CCI)},\n")
-  cat("  author = {Christian B. H. Thorjussen and Kristian Hovde Liland},\n")
-  cat("  year = {2024},\n")
-  cat("  note = {R package version ", ver, "},\n", sep = "")
-  cat("  url = {https://github.com/khliland/CCI},\n")
-  cat("}\n")
-}
+bibentry(
+  bibtype = "Article",
+  title = "Computational Test for Conditional Independence",
+  author = c(person("Christian B. H.", "Thorjussen"),
+             person("Kristian Hovde", "Liland"),
+             person("Ingrid", "Maage"),
+             person("Lars Erik", "Solberg")),
+  journal = "Algorithms",
+  year = 2024,
+  volume = 17,
+  number = 8,
+  doi = "10.3390/a17080323"
+)
