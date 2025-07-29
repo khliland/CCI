@@ -39,9 +39,10 @@ library(CCI)
 ```
 The 'CCI' package comes with a set of data generating functions, which can be used to generate data sets with known conditional independence relationships. Thorought this user guide, we will primarly use data generated from these functions, and we will provide short descriptions of the data generating functions as we go along.
 
-# Example 1: Simple conditional independence test with Gaussian data
+# Example 1: Simple conditional independence test with Gaussian data. The 'NormalData' function 
 ```{r setup}
-data <- 
+data <- NormalData(N = 500)
+
 
 ```
 
