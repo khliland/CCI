@@ -3,3 +3,5 @@
 ^\development
 ^CCI\.Rproj$
 development
+^doc$
+^Meta$

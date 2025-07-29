@@ -5,7 +5,7 @@ devtools::document()
 devtools::clean_dll()
 devtools::build(path = "C:/CCI")
 # install.packages("CCI_0.1.1.tar.gz", repos = NULL, type = "source")
-
+devtools::build_vignettes()
 
 devtools::install()
 devtools::load_all()

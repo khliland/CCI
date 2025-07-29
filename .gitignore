@@ -53,3 +53,5 @@ rsconnect/
 .DS_Store
 .Rproj.user
 inst/doc
+/doc/
+/Meta/
