@@ -52,6 +52,8 @@ CCI.direction(
 
 \item{interaction}{Logical. If TRUE, interaction terms of the conditioning variables are included in the model. Default is TRUE.}
 
+\item{verbose}{Logical. If TRUE, prints additional information during the execution. Default is FALSE.}
+
 \item{...}{Additional arguments to be passed to the model fitting function.}
 }
 \value{
