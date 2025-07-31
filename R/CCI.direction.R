@@ -18,6 +18,7 @@
 #' @param poly Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.
 #' @param interaction Logical. If TRUE, interaction terms of the conditioning variables are included in the model. Default is TRUE.
+#' @param verbose Logical. If TRUE, prints additional information during the execution. Default is FALSE.
 #' @param ... Additional arguments to be passed to the model fitting function.
 #'
 #' @return A formula object specifying the selected model direction.
@@ -41,9 +42,11 @@ CCI.direction <- function(formula,
                           poly = TRUE,
                           degree = 3,
                           interaction = TRUE,
+                          verbose = FALSE,
                           ...) {
-  cat("Deciding best direction, Y ~ X | Z or X ~ Y | Z...\n")
-
+  if (verbose) {
+   cat("Deciding best direction, Y ~ X | Z or X ~ Y | Z...\n")
+  }
   org_formula <- formula
   # Parse formula
   Y <- all.vars(formula)[1]
@@ -160,7 +163,9 @@ CCI.direction <- function(formula,
   } else {
     final_formula <- as.formula(paste(X_var, "~", outcome_var, "|", paste(Z_vars, collapse = "+")))
   }
+  if (verbose) {
+    cat("Selected formula:", deparse(final_formula), "\n")
+  }
 
-  cat("Best direction selected:", best_direction, "\n")
   return(final_formula)
 }

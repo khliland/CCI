@@ -172,7 +172,8 @@ CCI.test <- function(formula = NULL,
       folds = 4,
       poly = poly,
       degree = degree,
-      interaction = interaction
+      interaction = interaction,
+      verbose = verbose
     )
   }
   if (tune && is.null(mlfunc)) {

@@ -235,8 +235,10 @@ CCI.pretuner <- function(formula,
   if (random_grid) {
     total <- nrow(tuneGrid)
     sample_n <- min(samples, total)
-    cat("Total combinations in grid:", total, "\n")
-    cat("Randomly sampling", sample_n, "combinations...\n\n")
+    if (verbose) {
+      cat("Total combinations in grid:", total, "\n")
+      cat("Randomly sampling", sample_n, "combinations...\n\n")
+    }
     tuneGrid <- tuneGrid[sample(seq_len(total), sample_n), , drop = FALSE]
   }
 

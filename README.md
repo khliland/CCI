@@ -144,14 +144,15 @@ In the example below, even with 2 million observations testing is "fast"" becaus
 ```r
 set.seed(1984)
 data <- SineGaussian(2000000, d = 0) # d = 0 means conditional independence Y _||_ X | Z
-CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25, subsample = 0.1)
+even_larger_N <- CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25, subsample = 0.001)
+summary(even_larger_N)
 ```
 
 Finally we show that you can pass on arguments to the machine learning algorithm used in `CCI.test()`. Here is an example of using the `xgboost` method with custom parameters.
 ```r
 set.seed(1066)
 dat <- UniformNoise(N = 2000)
-CCI.test(formula = Y ~ X | Z2, 
+complex_test <- CCI.test(formula = Y ~ X | Z2, 
 data = dat, 
 method = "xgboost", 
 parametric = TRUE, 
@@ -166,11 +167,12 @@ colsample_bytree = 0.8,
 gamma = 0.1, 
 nrounds = 100, 
 objective = "reg:pseudohubererror")
+summary(complex_test)
 ```
 
 ### The formula
 As you might have guessed, the formula argument in `CCI.test()` gives the conditional independent statement to test. 
-The condition Y _||_ X | Z1, Z2 is written as `Y ~ X | Z1 + Z2` (alternativly as `Y ~ X + Z1 + Z2`, both is accepted). 
+The condition Y _||_ X | Z1, Z2 is written as `Y ~ X | Z1 + Z2` (alternatively as `Y ~ X + Z1 + Z2`, both is accepted). 
 When `Y` is the dependent variable it means that `Y` is predicted while `X` is permuted to see if it improves predicition performance beyond `Z1` and `Z2`.
 Naturally, the condition Y _||_ X | Z1, Z2 can also be tested by the formula `X ~ Y | Z1 + Z2`. So which way to choose?
 Generally it is best to predict the variable with the best predictive performance. 
@@ -179,12 +181,12 @@ Generally it is best to predict the variable with the best predictive performanc
 ```r
 set.seed(1814)
 data <- SineGaussianBiv(N = 1000, a = 1, d = 0.5)
-CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, nrounds = 800, choose_direction = TRUE, parametric = T)
+summary(CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, nrounds = 800, choose_direction = TRUE, parametric = T))
 ```
 ```r
 set.seed(1814)
 data <- SineGaussianBiv(N = 1000, a = 1, d = 0)
-CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, parametric = T, nrounds = 1000, choose_direction = T)
+summary(CCI.test(formula = Y ~ X | Z1 + Z2, method = 'rf', data = data, parametric = T, nrounds = 1000, choose_direction = T))
 ```
 
 In any statistical test, it might be the case that we have insufficient power and therefor one can not rely on one single p-value. 
@@ -232,12 +234,22 @@ result <- CCI.test(data = data,
                    dag = dag,
                    dag_n = 1,
                    parametric = T)
+summary(result)
 ```
 
 ## 6. Using the `mlfunc` and `metricfunc` arguments 
 Advance users can pass om custom machine learning wrapper functions and performance metrics to the `CCI.test()` function using the `mlfunc` and `metricfunc` arguments, respectively.
 This is intended so that you can use any machine learning algorithm or performance metric of your choice, allowing for greater flexibility and customization in your conditional independence testing.
 The function passed through the `mlfunc` argument should take the following inputs: `formula`, `data`, `train_indices`, `test_indices` and `...`
+- **`formula`**: The formula for the model.
+- **`data`**: The dataset used for training and testing.
+- **`train_indices`**: Indices for the training data.
+- **`test_indices`**: Indices for the test data.
+
+The function should return a numeric value representing the model's performance. 
+
+Here's the general structure of the wrapper functions in pseudo code :
+
 ```
 my_CCI_wrapper <- function(formula, data, train_indices, test_indices,...) {
   train_data <- data[train_indices, ]
@@ -249,65 +261,8 @@ my_CCI_wrapper <- function(formula, data, train_indices, test_indices,...) {
   return(performance)
 }
 ```
+Let's take a look at two examples, the first example uses the `nnet` package to create a neural network wrapper function.
 
-By reducing the number of trees, limiting tree depth, and using a smaller sample fraction, you can significantly speed up the testing process, however, the settings on the machine learning function should ideally be determined by pre tuning. 
-
-Using the `xgboost` option for method, you can pass in various arguments to "fine-tune" the performance of `xgboost`. For example:
-
-```r
-set.seed(69)
-dat <- NonLinNormal(1000)
-CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", parametric = TRUE, nthread = 5, subsample = 0.7, lambda = 0.8, objective = "reg:pseudohubererror", seed = 2)
-```
-In this example:
-
-- **`nthread = 5`**: Uses 5 threads for parallel processing, hopefully speeding up computation (default = 1).
-- **`subsample = 0.7`**: Uses 70% of the data for each boosting round, helping prevent overfitting and speed up computation.
-- **`lambda = 0.8`**: Adds L2 regularization to the weights, making the model more robust.
-- **`objective = "reg:pseudohubererror"`**: Changes the loss function to pseudohuber, which is more resistant to outliers than squared error (the default).
-
-## 7. ️ Custom Performance Metric with `metricfunc`
-
-The CCI package provides default performance metrics, such as RMSE for continuous outcomes and Kappa scores for binary and categorical outcomes. However, if you have a specific performance metric in mind, you can easily define your own using the `metricfunc` argument.
-
-Your custom function should take the following inputs:
-
-- **`data`**: The dataset used for the test.
-- **`model`**: The trained model.
-- **`test_indices`**: Indices for the test data.
-- **`test_matrix`**: (For `xgboost` only) The matrix used for predictions.
-
-The output should be a numeric value representing the performance metric. Here’s an example that calculates the \(R^2\) metric using `xgboost`:
-
-```r
-Rsquare_metric  <- function(data, model, test_indices, test_matrix) {
-    actual <- data[test_indices,][['Y']]
-    pred <- predict(model, newdata = test_matrix)
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
-}
-                  
-set.seed(1914)
-dat <- NonLinNormal(500)
-CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", metricfunc = Rsquare_metric, tail = "right")
-```
-
-**Important:** When using a custom performance metric, you must also specify the `tail` argument:
-- **`tail = "right"`**: Use if higher metric values indicate better model performance.
-- **`tail = "left"`**: Use if lower metric values indicate better model performance.
-
-## 8. Custom Machine Learning Algorithm with `mlfunc`
-
-You can also define a custom machine learning function using the `mlfunc` argument. This allows you to implement any algorithm of your choice, tailored to your specific needs. The custom function should take these inputs:
-
-- **`formula`**: The formula for the model.
-- **`data`**: The dataset used for training and testing.
-- **`train_indices`**: Indices for the training data.
-- **`test_indices`**: Indices for the test data.
-
-The function should return a numeric value representing the model's performance. Here's an example using a neural network and RMSE for performance metric:
 
 ```r
 neuralnet_wrapper <- function(formula,
@@ -327,8 +282,10 @@ neuralnet_wrapper <- function(formula,
 }
 
 dat <- NonLinNormal(2000)
-CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, mlfunc = neuralnet_wrapper, nperm = 200, size = 10, decay = 0.1, maxit = 200, tail = "left")
+nnet_test <- CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, tail = 'left', mlfunc = neuralnet_wrapper, nperm = 200, size = 10, decay = 0.1, maxit = 200)
+summary(nnet_test)
 ```
+In the second exa
 ```r
 caret_wrapper <- function(formula,
                           data,
@@ -361,6 +318,40 @@ caret_wrapper <- function(formula,
 }
 }
 ```
+
+## 7. ️ Custom Performance Metric with `metricfunc`
+
+The CCI package provides default performance metrics, such as RMSE for continuous outcomes and Kappa scores for binary and categorical outcomes. However, if you have a specific performance metric in mind, you can easily define your own using the `metricfunc` argument.
+
+Your custom function should take the following inputs:
+
+- **`data`**: The dataset used for the test.
+- **`model`**: The trained model.
+- **`test_indices`**: Indices for the test data.
+- **`test_matrix`**: (For `xgboost` only) The matrix used for predictions.
+
+The output should be a numeric value representing the performance metric. Here’s an example that calculates the \(R^2\) metric using `xgboost`:
+
+```r
+Rsquare_metric  <- function(data, model, test_indices, test_matrix) {
+    actual <- data[test_indices,][['Y']]
+    pred <- predict(model, newdata = test_matrix)
+    sst <- sum((actual - mean(actual))^2)
+    ssr <- sum((actual - pred)^2)
+    metric <- 1 - (ssr / sst)
+    return(metric)
+}
+                  
+set.seed(1914)
+dat <- NonLinNormal(500)
+CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", metricfunc = Rsquare_metric, tail = "right")
+```
+
+**Important:** When using a custom performance metric, you should also specify the `tail` argument:
+- **`tail = "right"`**: Use if higher metric values indicate better model performance.
+- **`tail = "left"`**: Use if lower metric values indicate better model performance.
+
+
 
 ## 10. More Examples
 

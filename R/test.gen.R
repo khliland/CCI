@@ -72,8 +72,6 @@ test.gen <- function(formula,
     stop("Degree of 0 or less is not allowed")
   }
 
-  N <- nrow(data)
-
   # Parse formula
   Y <- all.vars(formula)[1]
   X <- all.vars(formula[[3]])[1]
@@ -121,8 +119,10 @@ test.gen <- function(formula,
       stop("Subsample must be between 0 and 1.")
     } else if (subsample < 1) {
       sub_data <- data[sample(nrow(data), size = round(nrow(data) * subsample)), ]
+      N <- nrow(sub_data)
     } else  {
       sub_data <- data
+      N <- nrow(sub_data)
     }
 
     if (metric %in% c("Kappa")) {

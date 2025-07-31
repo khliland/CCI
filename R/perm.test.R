@@ -103,7 +103,7 @@ perm.test <- function(formula,
     tail <- "right"
   } else if (metric == "RMSE") {
     tail <- "left"
-  } else {
+  } else if (is.na(tail)) {
     stop("Please specify the tail direction for the metric.")
   }
 

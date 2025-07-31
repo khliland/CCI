@@ -19,6 +19,7 @@ CCI.direction(
   poly = TRUE,
   degree = 3,
   interaction = TRUE,
+  verbose = FALSE,
   ...
 )
 }
