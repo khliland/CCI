@@ -76,7 +76,6 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
                           nperm = nperm,
                           subsample = subsample,
                           nrounds = nrounds,
-                          N = nrow(data),
                           p = p,
                           degree = degree,
                           poly = poly,
