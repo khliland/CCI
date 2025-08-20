@@ -116,7 +116,11 @@ CCI.test <- function(formula = NULL,
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
-
+  if !is.null(dag) {
+    if (!requireNamespace("dagitty", quietly = TRUE)) {
+      stop("Package 'dagitty' is required for this function. Please install it.")
+    }
+  }
   if (is.null(num_class) && metric == "Kappa" && !is.null(mlfunc)) {
     num_class <- unique(data[[all.vars(formula)[1]]])
   } else {
