@@ -116,7 +116,7 @@ CCI.test <- function(formula = NULL,
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
-  if !is.null(dag) {
+  if (!is.null(dag)) {
     if (!requireNamespace("dagitty", quietly = TRUE)) {
       stop("Package 'dagitty' is required for this function. Please install it.")
     }
@@ -221,7 +221,6 @@ CCI.test <- function(formula = NULL,
     data = data,
     p = p,
     nperm = nperm,
-    dag = dag,
     dag_n = dag_n,
     nrounds = nrounds,
     metric = metric,
