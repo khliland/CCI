@@ -133,7 +133,6 @@ perm.test <- function(formula,
               test.statistic = test_statistic,
               tail = tail,
               p.value =  p.value,
-              dag = dag,
               dag_n = dag_n,
               additional_args = additional_args
               )
