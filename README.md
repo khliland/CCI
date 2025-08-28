@@ -209,32 +209,92 @@ Next we will show the various functionality in CCI.test()
 
 ## 3. Testing CI in dagitty DAGs
 
-As we have seen above, the absolute bare minimum arguments which need to be provided are `formula` and `data`. 
-Instead of the formula we can also test conditional independence statements directly from a dagitty DAG. 
-For that we must use the `dag` argument in `CCI.test()`. 
-The specific statement you want to test is determined by the `dag_n` argument (with the default being `1`). 
-When `dag` is define, we do not need to specify `formula`, if you do, this will overwrite the `dag_n` argument. 
+Conditional independence testing is central in validating a causal model with the data. 
+In the example below we load data from the study, we use the dagitty package to draw out a causal model extract 
+conditional independence statements. reclassifying them to formulas, and loop through the formulas list using parallel processing. 
 
-Here’s an example:
+Here’s the example:
+NB this chunck of code is computationally demanding and takes several minutes to execute!
 
 ```r
 library(dagitty)
+library(parallel)
+library(pbapply)
 
-set.seed(1984)
-data <- NonLinNormal(500)
-
-dag <- dagitty('dag {
-  Z1 -> X
-  Z1 -> Y
-  Z2 -> X
-  Z2 -> Y
+protein_data <- read.csv("https://raw.githubusercontent.com/ankurankan/2020-dagitty-manual/master/protocol3/protein_signal.csv")
+protein_dag <- dagitty('dag {
+bb="-3.736,-5.393,3.689,5.453"
+Akt [pos="0.881,2.671"]
+Erk [pos="2.736,0.697"]
+Jnk [pos="0.891,-1.981"]
+Mek [pos="2.730,-1.760"]
+P38 [pos="1.404,-1.802"]
+PIP2 [pos="-1.518,3.028"]
+PIP3 [pos="-0.384,-0.815"]
+PKA [pos="1.995,-2.989"]
+PKC [pos="2.222,-4.779"]
+Plcg [pos="-1.534,-2.264"]
+Raf [pos="2.705,-3.304"]
+Mek -> Erk
+PIP2 -> PKC [pos="-3.404,-5.120"]
+PIP2 -> Plcg
+PIP3 -> Akt
+PIP3 -> PIP2
+PIP3 -> Plcg
+PKA -> Akt
+PKA -> Erk
+PKA -> Jnk
+PKA -> Mek
+PKA -> P38
+PKA -> Raf
+PKC -> Jnk [pos="0.813,-3.535"]
+PKC -> Mek [pos="3.269,-3.745"]
+PKC -> P38 [pos="1.041,-3.188"]
+PKC -> Raf
+Plcg -> PKC
+Raf -> Mek
 }')
+# Plot the DAG
+plot(protein_dag)
+# Run CCI test
+conditions <- impliedConditionalIndependencies(protein_dag)
+# Create formula list from conditions 
 
-result <- CCI.test(data = data,
-                   dag = dag,
-                   dag_n = 1,
-                   parametric = T)
-summary(result)
+formulas <- list()
+for (i in 1:length(conditions)) {
+  cond <- conditions[[i]]
+  lhs <- cond$X
+  rhs <- cond$Y
+  set <- cond$Z
+  if (length(set) == 0) {
+    # No conditioning set
+  } else {
+    formula <- as.formula(paste(lhs, "~", rhs, "|", paste(set, collapse = " + ")))
+  }
+  
+  formulas[[i]] <- formula
+}
+# remove duplicated rows  in formulas
+formulas <- unique(formulas)
+
+cl <- makeCluster(detectCores() - 1)
+clusterEvalQ(cl, c(library('CCI')))
+clusterExport(cl,  varlist=c('formulas', 'protein_data'), envir=environment())
+
+results <- pblapply(cl = cl, X = 1:55, function(i) {
+  
+p <- CCI.test(formula   = formulas[[i]],
+    data      = protein_data, 
+    parametric = TRUE,
+    seed      = i
+  )$p.value
+  
+  data.frame(
+    test = i, 
+    p_value = p)
+})
+p
+
 ```
 
 ## 6. Using the `mlfunc` and `metricfunc` arguments 
