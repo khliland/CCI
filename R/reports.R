@@ -33,8 +33,6 @@ summary.CCI <- function(object, ...) {
     method = object$MLfunc,
     formula = object$formula,
     nperm = object$nperm,
-    dag = object$dag,
-    dag_n = object$dag_n,
     tail = object$tail,
     p.value = object$p.value,
     metric = object$metric,

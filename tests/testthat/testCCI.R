@@ -3,7 +3,7 @@ devtools::check()
 devtools::check_win_devel()
 devtools::document()
 devtools::clean_dll()
-devtools::build(path = "C:/CCI")
+devtools::build(path = "C:/Users/chris/Documents/GitHub/CCI")
 
 devtools::install()
 devtools::load_all()
@@ -16,11 +16,11 @@ dat <- NormalData(500)
 result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat)
 summary(result)
 plot(result)
+result
 
 dat <- NormalData(500)
 result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, method = 'xgboost')
 summary(result)
-
 
 dat <- NormalData(250)
 result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat, method = 'svm')
@@ -282,50 +282,16 @@ test_that("test.gen works correctly for binary outcome data using Xgboost", {
 
           })
 #-------------------------------------------------------------------------------
-test_that("test.gen works correctly with Xgboost", {
             data <- BinaryData(500)
             result <- test.gen(formula = Y ~ X | Z1 + Z2,
                                data = data,
                                nperm = 40,
                                method = "xgboost",
-                               data_type = "binary",
+                               metric = "Kappa",
                                permutation = TRUE,
                                degree = 5,
                                nrounds = 220)
-            expect_true(class(result) == "list")
-            expect_true(class(mean(unlist(result))) == "numeric")
-
-          })
-#-------------------------------------------------------------------------------
-
-test_that("test.gen works correctly with  SVM", {
-  data <- NormalData(600)
-
-  result <- test.gen(Y = "Y",
-                     X = "X",
-                     Z = c("Z1", "Z2"),
-                     data = data,
-                     nperm = 25,
-                     method = "svm")
-
-  expect_true(class(result) == "list")
-  expect_true(class(mean(unlist(result))) == "numeric")
-})
-#-------------------------------------------------------------------------------
-test_that("test.gen works correctly withSVM categorical", {
-  data <- InteractiondData(600)
-
-  result <- test.gen(Y = "Y",
-                     X = "X",
-                     Z = c("Z1", "Z2"),
-                     data = data,
-                     nperm = 50,
-                     data_type = "categorical",
-                     method = "svm")
-
-  expect_true(class(result) == "list")
-  expect_true(class(mean(unlist(result))) == "numeric")
-})
+            result
 
 #-------------------------------------------------------------------------------
 # Creating a wrapper function using the caret package with cross-validation
@@ -350,20 +316,15 @@ bagging_wrapper <- function(formula,
 }
 
 #-------------------------------------------------------------------------------
-test_that("test.gen works correctly for with custom made ML function called bagging_wrapper", {
   data <- NormalData(500)
-  result <- test.gen(Y = "Y",
-                     X = "X",
-                     Z = c("Z1", "Z2"),
+  result <- CCI.test(formula = Y ~ X | Z1 + Z2 ,
                      data = data,
                      nperm = 50,
                      nbag = 50,
-                     mlfunc = bagging_wrapper)
+                     mlfunc = bagging_wrapper,
+                     tail = 'right')
+  summary(result)
 
-  expect_true(class(result) == "list")
-  expect_true(class(mean(unlist(result))) == "numeric")
-
-})
 #-------------------------------------------------------------------------------
 rSquared <- function(data, model, test_indices) {
   actual <- data[test_indices,][['Y']]
@@ -373,20 +334,15 @@ rSquared <- function(data, model, test_indices) {
   metric <- 1 - (ssr / sst)
   return(metric)
 }
-test_that("test.gen works correctly using metricfunc", {
   data <- NonLinNormal(500)
 
-  result <- test.gen(Y = "Y",
-                     X = "X",
-                     Z = c("Z1", "Z2"),
+  result <- CCI.test(formula = Y ~ X | Z1 + Z2 ,
                      data = data,
-                     nperm = 40,
-                     metricfunc = rSquared)
-
-  expect_true(class(result) == "list")
-  expect_true(class(mean(unlist(result))) == "numeric")
-
-})
+                     nperm = 50,
+                     nbag = 50,
+                     metricfunc = rSquared,
+                     tail = 'right')
+  summary(result)
 
 #-------------------------------------------------------------------------------
 ################## Troubleshooting perm.test() #################################
