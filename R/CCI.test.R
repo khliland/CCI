@@ -9,8 +9,6 @@
 #' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
 #' @param nperm Integer. The number of permutations to perform. Default is 600.
 #' @param nrounds Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.
-#' @param dag An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.
-#' @param dag_n Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.
 #' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
 #' @param print_result Logical. If TRUE, the function will print the result of the test. Default is TRUE.
@@ -41,7 +39,6 @@
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
 #' @importFrom dplyr %>%
-#' @importFrom dagitty impliedConditionalIndependencies
 #' @importFrom caret train trainControl createDataPartition
 #'
 #' @return Invisibly returns the result of \code{perm.test}, which is an object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
@@ -62,8 +59,6 @@ CCI.test <- function(formula = NULL,
                      p = 0.5,
                      nperm = 60,
                      nrounds = 600,
-                     dag = NULL,
-                     dag_n = 1,
                      metric = "Auto",
                      method = 'rf',
                      choose_direction = FALSE,
@@ -103,39 +98,24 @@ CCI.test <- function(formula = NULL,
   if ((!is.null(metricfunc) | !is.null(mlfunc)) && is.na(tail)) {
     stop("tail parameter must be either 'left' or 'right'")
   }
-  if (is.null(formula) & is.null(dag)) {
-    status <- "Error: Formula or DAG are missing"
-    stop("Formula or dagitty object is missing")
+  if (is.null(formula)) {
+    stop("Formula is missing")
   }
-  if (!is.null(dag) & !inherits(dag, "dagitty")) {
-    stop("DAG needs to be of class dagitty.")
-  }
+  
   if (tune && (folds < 1 || tune_length < 1)) {
     stop("folds and tune_length must be positive integers.")
   }
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
-  if (!is.null(dag)) {
-    if (!requireNamespace("dagitty", quietly = TRUE)) {
-      stop("Package 'dagitty' is required for this function. Please install it.")
-    }
-  }
+  
   if (is.null(num_class) && metric == "Kappa" && !is.null(mlfunc)) {
     num_class <- unique(data[[all.vars(formula)[1]]])
   } else {
     num_class <- num_class
   }
 
-  if (!is.null(dag)) {
-    if (!is.null(formula)) {
-      formula = as.formula(formula)
-    } else if (is.null(formula)) {
-      ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
-      names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
-      formula <- as.formula(paste(ci_statement$CI$X, " ~ ", ci_statement$CI$Y, "|", paste(ci_statement$CI$Z, collapse = "+ ")))
-    }
-  }
+  formula = as.formula(formula)
   formula <- clean_formula(formula)
   check_formula(formula, data)
 
@@ -221,8 +201,6 @@ CCI.test <- function(formula = NULL,
     data = data,
     p = p,
     nperm = nperm,
-    dag_n = dag_n,
-    dag = dag,
     nrounds = nrounds,
     metric = metric,
     degree = degree,

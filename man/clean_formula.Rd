@@ -19,6 +19,4 @@ The function checks if the formula uses the '+' operator for additive models and
 \examples{
 clean_formula(y ~ x | z + v)
 clean_formula(y ~ x + z + v)
-# Error: The formula is not of the right format
-try(clean_formula(y ~ x))
 }

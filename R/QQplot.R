@@ -36,8 +36,6 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
   nrounds <- object$nrounds
   method <- object$MLfunc
   formula <- object$formula
-  dag <- object$dag
-  dag_n <- object$dag_n
   N <- nrow(data)
   metric <- object$metric
   subsample <- object$subsample
@@ -54,16 +52,7 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
     stop("p and N must be numeric values.")
   }
 
-  if (!is.null(dag)) {
-    if (!is.null(formula)) {
-      formula = gsub("\\s+", " ", formula)
-    } else if (is.null(formula)) {
-      ci_statement <- dagitty::impliedConditionalIndependencies(dag)[dag_n]
-      names(ci_statement)[names(ci_statement) == dag_n] <- "CI"
-      formula <- paste(ci_statement$CI$Y, " ~ ", ci_statement$CI$X, "|", paste(ci_statement$CI$Z, collapse = ", "))
-    }
-  }
-
+  formula = as.formula(formula)
   formula <- clean_formula(formula)
   check_formula(formula, data)
 

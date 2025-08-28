@@ -37,8 +37,7 @@ check_formula <- function(formula, data) {
 #' @examples
 #' clean_formula(y ~ x | z + v)
 #' clean_formula(y ~ x + z + v)
-#' # Error: The formula is not of the right format
-#' try(clean_formula(y ~ x))
+
 
 clean_formula <- function(formula) {
   formula_terms <- attr(stats::terms(formula), "term.labels")

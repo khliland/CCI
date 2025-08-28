@@ -12,8 +12,6 @@ CCI.test(
   p = 0.5,
   nperm = 60,
   nrounds = 600,
-  dag = NULL,
-  dag_n = 1,
   metric = "Auto",
   method = "rf",
   choose_direction = FALSE,
@@ -56,10 +54,6 @@ CCI.test(
 \item{nperm}{Integer. The number of permutations to perform. Default is 600.}
 
 \item{nrounds}{Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.}
-
-\item{dag}{An optional DAGitty object for specifying a Directed Acyclic Graph (DAG) to use for conditional independence testing. Default is NA.}
-
-\item{dag_n}{Integer. If a DAGitty object is provided, specifies which conditional independence test to perform. Default is 1.}
 
 \item{metric}{Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".}
 
