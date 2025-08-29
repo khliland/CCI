@@ -1,12 +1,15 @@
 #' QQ-plot for multiple testing in CCI
 #'
 #' @param object Object of class 'CCI'
+#' @param title.size Size of the plot title
 #' @param axis.text.x Size of x-axis text
 #' @param axis.text.y Size of y-axis text
 #' @param strip.text.x Size of x-axis strip text
 #' @param strip.text.y Size of y-axis strip text
 #' @param legend.title Size of legend title
 #' @param legend.text Size of legend text
+#' @param axis.title.x Size of x-axis title
+#' @param axis.title.y Size of y-axis title
 #'
 #' @param ... Additional arguments to pass to the \code{test.gen} function.
 #'
@@ -25,7 +28,17 @@
 #' interaction = FALSE)
 #' QQplot(cci)
 
-QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17, strip.text.y = 17, legend.text = 17, legend.title = 17, ...) {
+QQplot <- function(object, 
+                   title.size = 14,
+                   axis.text.x = 13, 
+                   axis.text.y = 13, 
+                   strip.text.x = 13, 
+                   strip.text.y = 13, 
+                   legend.text = 13, 
+                   legend.title = 13,
+                   axis.title.x = 13,
+                   axis.title.y = 13,
+                   ...) {
   if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -85,12 +98,16 @@ QQplot <- function(object, axis.text.x = 17, axis.text.y = 17, strip.text.x = 17
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
          title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
     ggplot2::theme_minimal() +
-    ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
-                   axis.text.y = element_text(size = axis.text.y),
-                   strip.text.x = element_text(size = strip.text.x),
-                   strip.text.y = element_text(size = strip.text.y),
-                   legend.text = element_text(size = legend.text),
-                   legend.title = element_text(size = legend.title), legend.position = 'none')
+    gggplot2::theme(axis.text.x = element_text(size = axis.text.x),
+                    axis.text.y = element_text(size = axis.text.y),
+                    strip.text.x = element_text(size = strip.text.x),
+                    strip.text.y = element_text(size = strip.text.y),
+                    legend.text = element_text(size = legend.text),
+                    legend.title = element_text(size = legend.title),
+                    axis.title.x = element_text(size = axis.title.x),
+                    axis.title.y = element_text(size = axis.title.y),
+                    plot.title = element_text(size = title.size, face = "bold"), 
+                    legend.position = 'none')
 
   return(ggobj)
 }
