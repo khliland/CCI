@@ -7,12 +7,15 @@
 \method{plot}{CCI}(
   x,
   fill_color = "lightblue",
+  title.size = 14,
   axis.text.x = 13,
   axis.text.y = 13,
   strip.text.x = 13,
   strip.text.y = 13,
   legend.text = 13,
   legend.title = 13,
+  axis.title.x = 13,
+  axis.title.y = 13,
   ...
 )
 }
@@ -20,6 +23,8 @@
 \item{x}{Object of class 'CCI'}
 
 \item{fill_color}{Color for the histogram fill}
+
+\item{title.size}{Size of the plot title}
 
 \item{axis.text.x}{Size of x-axis text}
 
@@ -32,6 +37,10 @@
 \item{legend.text}{Size of legend text}
 
 \item{legend.title}{Size of legend title}
+
+\item{axis.title.x}{Size of x-axis title}
+
+\item{axis.title.y}{Size of y-axis title}
 
 \item{...}{Additional arguments to ggplot2}
 }

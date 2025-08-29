@@ -6,17 +6,22 @@
 \usage{
 QQplot(
   object,
-  axis.text.x = 17,
-  axis.text.y = 17,
-  strip.text.x = 17,
-  strip.text.y = 17,
-  legend.text = 17,
-  legend.title = 17,
+  title.size = 14,
+  axis.text.x = 13,
+  axis.text.y = 13,
+  strip.text.x = 13,
+  strip.text.y = 13,
+  legend.text = 13,
+  legend.title = 13,
+  axis.title.x = 13,
+  axis.title.y = 13,
   ...
 )
 }
 \arguments{
 \item{object}{Object of class 'CCI'}
+
+\item{title.size}{Size of the plot title}
 
 \item{axis.text.x}{Size of x-axis text}
 
@@ -29,6 +34,10 @@ QQplot(
 \item{legend.text}{Size of legend text}
 
 \item{legend.title}{Size of legend title}
+
+\item{axis.title.x}{Size of x-axis title}
+
+\item{axis.title.y}{Size of y-axis title}
 
 \item{...}{Additional arguments to pass to the \code{test.gen} function.}
 }
