@@ -8,6 +8,8 @@
 #' @param strip.text.y Size of y-axis strip text
 #' @param legend.text Size of legend text
 #' @param legend.title Size of legend title
+#' @param axis.title.x Size of x-axis title
+#' @param axis.title.y Size of y-axis title
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2
