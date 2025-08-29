@@ -24,7 +24,17 @@
 #' plot(cci)
 
 
-plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 13, axis.text.y = 13, strip.text.x = 13, strip.text.y = 13, legend.text = 13, legend.title = 13, ...) {
+plot.CCI <- function(x, 
+                     fill_color = "lightblue", 
+                     axis.text.x = 13, 
+                     axis.text.y = 13, 
+                     strip.text.x = 13, 
+                     strip.text.y = 13, 
+                     legend.text = 13, 
+                     legend.title = 13,
+                     axis.title.x = 13,
+                     axis.title.y = 13,
+                     ...) {
   if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -33,7 +43,7 @@ plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 13, axis.text.y 
   # Extracting the null distribution and test statistic
   null_dist <- unlist(x$null.distribution)
   test_stat <- unlist(x$test.statistic)
-
+  xTitle <- x$metric
   # Create a data frame for ggplot2
   df <- data.frame(null_dist = null_dist)
 
@@ -45,7 +55,7 @@ plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 13, axis.text.y 
                             color = "black") +
     ggplot2::geom_vline(ggplot2::aes(xintercept = test_stat), color = "black", linetype = "dashed", linewidth = 1) +
     ggplot2::labs(title = "Null distribution with test statistic",
-         x = "Value",
+         x = xTitle,
          y = "Freq.") +
     ggplot2::theme_minimal() +
     ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
@@ -53,7 +63,10 @@ plot.CCI <- function(x, fill_color = "lightblue", axis.text.x = 13, axis.text.y 
                    strip.text.x = element_text(size = strip.text.x),
                    strip.text.y = element_text(size = strip.text.y),
                    legend.text = element_text(size = legend.text),
-                   legend.title = element_text(size = legend.title), legend.position = 'none')
+                   legend.title = element_text(size = legend.title),
+                   axis.title.x = element_text(size = axis.title.x),
+                   axis.title.y = element_text(size = axis.title.y),
+                   legend.position = 'none')
 
   additional_layers <- list(...)
   if (all(vapply(additional_layers, inherits, logical(1), what = "gg"))) {

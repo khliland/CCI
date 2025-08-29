@@ -15,7 +15,7 @@ citation("CCI")
 dat <- NormalData(500)
 result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat)
 summary(result)
-plot(result)
+plot(result, axis.title.x = 16, axis.title.y = 16)
 result
 
 dat <- NormalData(500)
