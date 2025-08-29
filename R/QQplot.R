@@ -98,7 +98,7 @@ QQplot <- function(object,
     ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
          title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
     ggplot2::theme_minimal() +
-    gggplot2::theme(axis.text.x = element_text(size = axis.text.x),
+    ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
                     axis.text.y = element_text(size = axis.text.y),
                     strip.text.x = element_text(size = strip.text.x),
                     strip.text.y = element_text(size = strip.text.y),
