@@ -1,7 +1,7 @@
 Package: CCI
 Type: Package
 Title: Computational Test for Conditional Independence
-Version: 0.3.1
+Version: 0.3.2
 Date: 2025-08-28
 Authors@R: 
     c(person(given = "Christian B. H.",

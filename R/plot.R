@@ -27,7 +27,8 @@
 
 
 plot.CCI <- function(x, 
-                     fill_color = "lightblue", 
+                     fill_color = "lightblue",
+                     title.size = 14,
                      axis.text.x = 13, 
                      axis.text.y = 13, 
                      strip.text.x = 13, 
@@ -68,6 +69,7 @@ plot.CCI <- function(x,
                    legend.title = element_text(size = legend.title),
                    axis.title.x = element_text(size = axis.title.x),
                    axis.title.y = element_text(size = axis.title.y),
+                   plot.title = element_text(size = title.size, face = "bold"), 
                    legend.position = 'none')
 
   additional_layers <- list(...)
