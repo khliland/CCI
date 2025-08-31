@@ -11,6 +11,7 @@
 #' @param legend.title Size of legend title
 #' @param axis.title.x Size of x-axis title
 #' @param axis.title.y Size of y-axis title
+#' @param base_size Base font size
 #' @param ... Additional arguments to ggplot2
 #'
 #' @import ggplot2
@@ -38,6 +39,7 @@ plot.CCI <- function(x,
                      legend.title = 13,
                      axis.title.x = 13,
                      axis.title.y = 13,
+                     base_size = 13,
                      ...) {
   if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
@@ -61,7 +63,7 @@ plot.CCI <- function(x,
     ggplot2::labs(title = "Null distribution with test statistic",
          x = xTitle,
          y = "Freq.") +
-    ggplot2::theme_minimal() +
+    ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
                    axis.text.y = element_text(size = axis.text.y),
                    strip.text.x = element_text(size = strip.text.x),

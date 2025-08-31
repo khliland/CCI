@@ -16,6 +16,7 @@
   legend.title = 13,
   axis.title.x = 13,
   axis.title.y = 13,
+  base_size = 13,
   ...
 )
 }
@@ -41,6 +42,8 @@
 \item{axis.title.x}{Size of x-axis title}
 
 \item{axis.title.y}{Size of y-axis title}
+
+\item{base_size}{Base font size}
 
 \item{...}{Additional arguments to ggplot2}
 }
