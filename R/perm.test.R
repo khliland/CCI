@@ -136,6 +136,6 @@ perm.test <- function(formula,
               additional_args = additional_args
               )
 
-  class(obj) <- c("CCI", "list")
+  class(obj) <- c("CCI", "htest")
   return(obj)
 }
