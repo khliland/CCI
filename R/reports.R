@@ -2,7 +2,6 @@
 #' @title Print and summary methods for the CCI class
 #'
 #' @param x Object of class 'CCI'
-#' @param object Object of class 'CCI'
 #' @param ... Additional arguments to print/summary
 #'
 #' @return The print methods have no return value, the summary methods return

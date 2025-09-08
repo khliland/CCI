@@ -13,8 +13,6 @@
 \item{x}{Object of class 'CCI'}
 
 \item{...}{Additional arguments to print/summary}
-
-\item{object}{Object of class 'CCI'}
 }
 \value{
 The print methods have no return value, the summary methods return
