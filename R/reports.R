@@ -11,34 +11,35 @@
 #' @seealso \code{\link{perm.test}},
 #' \code{\link{plot.CCI}}, \code{\link{QQplot}}
 #' @export
+#' @export
 print.summary.CCI <- function(x, ...) {
-
-  cat(paste0("Computational conditional independence test using '", x$method, "'.\n")) #Fix so compatible with custom made functions
-  cat("Null hypothesis: ", deparse(x$formula), "\n")
-  cat("Number of Monte Carlo samples: ", x$nperm, "\n")
-  cat("Performance Metric: ", x$metric, "\n")
-  cat("Test Statistic: ", format(unlist(x$test.statistic), digits = 3), "\n")
-  cat("P-value: ", format(x$p.value, digits = 5), "\n")
-  cat("Tail: ", x$tail, "\n")
-
+  cat("\nComputational Conditional Independence Test\n")
+  cat("--------------------------------------------\n")
+  cat("Method:   ", x$method, "\n")
+  cat("Formula:  ", x$data.name, "\n")
+  cat("Permutations: ", x$parameter, "\n")
+  cat("Metric:   ", x$metric, "\n")
+  cat("Tail:     ", x$tail, "\n")
+  cat("Statistic:", format(x$statistic, digits = 4), "\n")
+  cat("P-value:  ", format.pval(x$p.value, digits = 4), "\n\n")
+  
   invisible(x)
 }
 
-
 #' @export
-#' @rdname reports
-
 summary.CCI <- function(object, ...) {
+  # Make summary mimic htest structure
   summary_list <- list(
-    method = object$MLfunc,
-    formula = object$formula,
-    nperm = object$nperm,
-    tail = object$tail,
-    p.value = object$p.value,
-    metric = object$metric,
-    null.distribution = object$null.distribution,
-    test.statistic = object$test.statistic
+    statistic = object$test.statistic,
+    parameter = object$nperm,   # could also be 'NULL' if not applicable
+    p.value   = object$p.value,
+    method    = paste("CCI test using", object$MLfunc),
+    data.name = deparse(object$formula),
+    metric    = object$metric,
+    tail      = object$tail,
+    null.distribution = object$null.distribution
   )
-  class(summary_list) <- "summary.CCI"
+  class(summary_list) <- c("summary.CCI", "htest")
   return(summary_list)
 }
+

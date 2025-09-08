@@ -8,8 +8,6 @@
 \title{Print and summary methods for the CCI class}
 \usage{
 \method{print}{summary.CCI}(x, ...)
-
-\method{summary}{CCI}(object, ...)
 }
 \arguments{
 \item{x}{Object of class 'CCI'}

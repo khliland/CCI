@@ -81,7 +81,6 @@ plot.CCI <- function(x,
       plot <- plot + layer
     }
   }
-  print(plot)
   return(plot)
 }
 

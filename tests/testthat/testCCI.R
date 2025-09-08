@@ -8,13 +8,16 @@ devtools::build(path = "C:/Users/chris/Documents/GitHub/CCI")
 devtools::install()
 devtools::load_all()
 library(CCI)
+library(CIsimdata)
 citation("CCI")
+#\
 #-------------------------------------------------------------------------------
 # Basic tests CCI.test()
 #-------------------------------------------------------------------------------
 dat <- NormalData(500)
 result <- CCI.test(formula = Y ~ X + Z1 + Z2, data = dat)
 summary(result)
+
 plot(result, axis.title.x = 16, axis.title.y = 16)
 QQplot(result)
 
