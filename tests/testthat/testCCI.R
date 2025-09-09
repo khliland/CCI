@@ -1,4 +1,5 @@
 # Test script for the CCI package
+usethis::use_data(dataset, overwrite = TRUE)
 devtools::check()
 devtools::check_win_devel()
 devtools::document()
