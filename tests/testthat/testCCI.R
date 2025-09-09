@@ -1,3 +1,7 @@
+# Import package from GitHub
+devtools::install_github("ChristianBHT/CIsimdata")
+library(CIsimdata)
+
 # Test script for the CCI package
 set.seed(1984)
 NormalData <- NormalData(400)
