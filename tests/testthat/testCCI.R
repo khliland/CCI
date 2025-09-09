@@ -1,5 +1,34 @@
 # Test script for the CCI package
-usethis::use_data(dataset, overwrite = TRUE)
+set.seed(1984)
+NormalData <- NormalData(400)
+usethis::use_data(NormalData, overwrite = TRUE)
+
+set.seed(1994)
+PolyData <- PolyData(600)
+usethis::use_data(PolyData, overwrite = TRUE)
+
+set.seed(1)
+UniformNoise_large <- UniformNoise(20000)
+usethis::use_data(UniformNoise_large, overwrite = TRUE)
+
+set.seed(1814)
+PoissonNoise <- PoissonNoise(1000)
+usethis::use_data(PoissonNoise, overwrite = TRUE)
+
+set.seed(1969)
+ExponentialNoise <- ExponentialNoise(1000)
+usethis::use_data(ExponentialNoise, overwrite = TRUE)
+
+set.seed(1914)
+NonLinNormal <- NonLinNormal(500)
+usethis::use_data(NonLinNormal, overwrite = TRUE)
+
+NonLinNormalZs_d0 <- NonLinNormalZs(N = 1000, d = 0, Zs = 15)
+usethis::use_data(NonLinNormalZs_d0, overwrite = TRUE)
+
+NonLinNormalZs_d05 <- NonLinNormalZs(N = 1000, d = 0.5, Zs = 15)
+usethis::use_data(NonLinNormalZs_d05, overwrite = TRUE)
+
 devtools::check()
 devtools::check_win_devel()
 devtools::document()
