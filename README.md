@@ -554,6 +554,3 @@ CCI.test(formula = Y ~ X | Y_lag1 + Y_lag2 + Time, p = 0.5, nperm = 200, data = 
 
 
 
-
-
-

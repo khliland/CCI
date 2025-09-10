@@ -20,7 +20,6 @@ test.gen(
   permutation = FALSE,
   metricfunc = NULL,
   mlfunc = NULL,
-  num_class = NULL,
   progress = TRUE,
   ...
 )
@@ -30,9 +29,9 @@ test.gen(
 
 \item{data}{Data frame. The data containing the variables used.}
 
-\item{method}{Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.}
+\item{method}{Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or "svm" for Support Vector Machine.}
 
-\item{metric}{Character. The type of metric: can be "RMSE", "Kappa" or "Custom. Default is 'RMSE'}
+\item{metric}{Character. The type of metric: can be "RMSE" or "Kappa". Default is 'RMSE'}
 
 \item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 60.}
 
@@ -52,13 +51,11 @@ test.gen(
 
 \item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
 
-\item{metricfunc}{Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.}
+\item{metricfunc}{Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.}
 
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
-\item{num_class}{Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.}
-
-\item{progress}{Function. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.}
+\item{progress}{Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.}
 
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
 }

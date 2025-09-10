@@ -23,7 +23,6 @@ perm.test(
   nthread = 1,
   dag = NA,
   dag_n = NA,
-  num_class = NULL,
   progress = TRUE,
   ...
 )
@@ -39,7 +38,7 @@ perm.test(
 
 \item{subsample}{The proportion of the data to be used. Default is 1 (no subsampling).}
 
-\item{metric}{Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.}
+\item{metric}{Type of metric: "RMSE" or "Kappa". Default is 'RMSE'.}
 
 \item{method}{The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".}
 
@@ -64,8 +63,6 @@ perm.test(
 \item{dag}{A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.}
 
 \item{dag_n}{A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.}
-
-\item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
 
 \item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
 

@@ -13,7 +13,6 @@ wrapper_xgboost(
   nrounds = 500,
   metricfunc = NULL,
   nthread = 1,
-  num_class = NULL,
   subsample = 1,
   ...
 )
@@ -34,8 +33,6 @@ wrapper_xgboost(
 \item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
 
 \item{nthread}{Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.}
-
-\item{num_class}{Number of categorical classes}
 
 \item{subsample}{Proportion of the data to be used. Default is 1 (no subsampling).}
 

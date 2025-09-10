@@ -8,14 +8,12 @@
 CCI.test(
   formula = NULL,
   data,
-  plot = TRUE,
   p = 0.5,
   nperm = 60,
   nrounds = 600,
   metric = "Auto",
   method = "rf",
   choose_direction = FALSE,
-  print_result = TRUE,
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
@@ -25,7 +23,6 @@ CCI.test(
   eta = 0.3,
   gamma = 0,
   max_depth = 6,
-  num_class = NULL,
   interaction = TRUE,
   metricfunc = NULL,
   mlfunc = NULL,
@@ -47,8 +44,6 @@ CCI.test(
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
-\item{plot}{Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.}
-
 \item{p}{Numeric. Proportion of data used for training the model. Default is 0.5.}
 
 \item{nperm}{Integer. The number of permutations to perform. Default is 600.}
@@ -60,8 +55,6 @@ CCI.test(
 \item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
 
 \item{choose_direction}{Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.}
-
-\item{print_result}{Logical. If TRUE, the function will print the result of the test. Default is TRUE.}
 
 \item{parametric}{Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.}
 
@@ -81,8 +74,6 @@ CCI.test(
 
 \item{max_depth}{Integer. The maximum depth of the trees for methods like xgboost. Default is 6.}
 
-\item{num_class}{Integer. The number of classes for categorical data (used in xgboost). Default is NULL.}
-
 \item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
 
 \item{metricfunc}{Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
@@ -99,7 +90,7 @@ CCI.test(
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
 
-\item{seed}{Integer. The seed for tuning. Default is NA.}
+\item{seed}{Integer. Set the seed for reproducing results. Default is NA.}
 
 \item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
 

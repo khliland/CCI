@@ -5,8 +5,8 @@
 #'
 #' @param formula Formula specifying the relationship between dependent and independent variables.
 #' @param data Data frame. The data containing the variables used.
-#' @param metric Character. The type of metric: can be "RMSE", "Kappa" or "Custom. Default is 'RMSE'
-#' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or '"svm" for Support Vector Machine.
+#' @param metric Character. The type of metric: can be "RMSE" or "Kappa". Default is 'RMSE'
+#' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or "svm" for Support Vector Machine.
 #' @param nperm Integer. The number of generated Monte Carlo samples. Default is 60.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.
 #' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
@@ -14,12 +14,11 @@
 #' @param interaction Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.
 #' @param nrounds Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 500.
-#' @param num_class Integer. The number of classes for categorical data (used in xgboost and lightgbm). Default is NULL.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
-#' @param metricfunc Function. A custom metric function provided by the user. The function must take arguments: \code{data}, \code{model}, \code{test_indices}, and \code{test_matrix}, and return a single value performance metric. Default is NULL.
+#' @param metricfunc Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
-#' @param progress Function. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.
+#' @param progress Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.
 #' @param ... Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.
 #'
 #' @return A list containing the test distribution.
@@ -60,7 +59,6 @@ test.gen <- function(formula,
                      permutation = FALSE,
                      metricfunc = NULL,
                      mlfunc = NULL,
-                     num_class = NULL,
                      progress = TRUE,
                      ...) {
 
@@ -80,7 +78,7 @@ test.gen <- function(formula,
     Z <- NULL
   }
   if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
-    warning("Polynomial terms are not supported for factor variables. Polynomial terms will not be included. If you want polynomial terms you need pass in factor variables as several binary dummy variables.")
+    warning("Polynomial terms are not supported for factor variables. Polynomial terms will be skipped. To include them, convert factors to dummy variables first.")
     poly <- FALSE
   }
 
@@ -105,17 +103,20 @@ test.gen <- function(formula,
     "Creating test statistic distribution"
   }
 
-  pb <- progress::progress_bar$new(
-    format = paste0(pb_message, " [:bar] :percent (:current/:total)"),
-    total = nperm,
-    clear = FALSE,
-    width = 60
-  )
+  if (progress) {
+    pb <- progress::progress_bar$new(
+      format = paste0(pb_message, " [:bar] :percent (:current/:total)"),
+      total = nperm,
+      clear = FALSE,
+      width = 60
+    )
+  }
+
 
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
   for (iteration in 1:nperm) {
-    if ((subsample <= 0 || subsample > 1) && method != "xgboost") {
+    if (subsample <= 0 || subsample > 1) {
       stop("Subsample must be between 0 and 1.")
     } else if (subsample < 1) {
       sub_data <- data[sample(nrow(data), size = round(nrow(data) * subsample)), ]
@@ -154,7 +155,6 @@ test.gen <- function(formula,
           train_indices,
           test_indices,
           metric = metric,
-          num_class = num_class,
           metricfunc = metricfunc,
           nrounds = nrounds,
           subsample = subsample,
@@ -195,6 +195,5 @@ test.gen <- function(formula,
   }
 
 
-  null_object <- list(distribution = null)
-  return(null_object)
+  return(list(distribution = null))
 }

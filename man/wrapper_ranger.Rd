@@ -12,6 +12,7 @@ wrapper_ranger(
   metric,
   metricfunc = NULL,
   nthread = 1,
+  num.trees,
   ...
 )
 }

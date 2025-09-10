@@ -5,7 +5,7 @@
 #' @param p Proportion of data to use for training the model. Default is 0.825.
 #' @param nperm Number of permutations to perform. Default is 500.
 #' @param subsample The proportion of the data to be used. Default is 1 (no subsampling).
-#' @param metric Type of metric: "RMSE", "Kappa" or "Custom". Default is 'RMSE'.
+#' @param metric Type of metric: "RMSE" or "Kappa". Default is 'RMSE'.
 #' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
 #' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
 #' @param parametric Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.
@@ -18,7 +18,6 @@
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param dag A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.
 #' @param dag_n A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.
-#' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
 #' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
@@ -55,7 +54,6 @@ perm.test <- function(formula,
                       nthread = 1,
                       dag = NA,
                       dag_n  = NA,
-                      num_class = NULL,
                       progress = TRUE,
                       ...) {
 
@@ -75,7 +73,6 @@ perm.test <- function(formula,
                    permutation = TRUE,
                    mlfunc = mlfunc,
                    metricfunc = metricfunc,
-                   num_class = num_class,
                    subsample = subsample,
                    progress = progress,
                    ...)
@@ -93,7 +90,6 @@ perm.test <- function(formula,
                              permutation = FALSE,
                              mlfunc = mlfunc,
                              metricfunc = metricfunc,
-                             num_class = num_class,
                              subsample = subsample,
                              progress = progress,
                              ...)
@@ -107,7 +103,12 @@ perm.test <- function(formula,
     stop("Please specify the tail direction for the metric.")
   }
 
-
+  metric_label <- if (!is.null(metricfunc)) {
+    deparse(substitute(metricfunc))
+  } else {
+    metric
+  }
+  
   p.value <- get_pvalues(unlist(dist), unlist(test_statistic), parametric, tail)
 
   status <- "Complete"
@@ -127,7 +128,7 @@ perm.test <- function(formula,
               nrounds = nrounds,
               subsample = subsample,
               train_test_ratio = p,
-              metric = metric,
+              metric = metric_label,
               parametric = parametric,
               null.distribution = dist,
               test.statistic = test_statistic,

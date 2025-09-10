@@ -5,13 +5,11 @@
 #'
 #' @param formula Model formula or a DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
-#' @param plot Logical, indicating if a plot of the null distribution with the test statistic should be generated. Default is TRUE.
 #' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
 #' @param nperm Integer. The number of permutations to perform. Default is 600.
 #' @param nrounds Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.
 #' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
-#' @param print_result Logical. If TRUE, the function will print the result of the test. Default is TRUE.
 #' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
@@ -21,7 +19,6 @@
 #' @param eta Numeric. The learning rate for methods like xgboost. Default is 0.3.
 #' @param gamma Numeric. The minimum loss reduction required to make a further partition on a leaf node of the tree for methods like xgboost. Default is 0.
 #' @param max_depth Integer. The maximum depth of the trees for methods like xgboost. Default is 6.
-#' @param num_class Integer. The number of classes for categorical data (used in xgboost). Default is NULL.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
@@ -31,7 +28,7 @@
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
 #' @param samples Integer. The number of samples to use for tuning. Default is 35.
-#' @param seed Integer. The seed for tuning. Default is NA.
+#' @param seed Integer. Set the seed for reproducing results. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param verbose Logical. If TRUE, additional information is printed during the execution of the function. Default is FALSE.
@@ -55,14 +52,12 @@
 
 CCI.test <- function(formula = NULL,
                      data,
-                     plot = TRUE,
                      p = 0.5,
                      nperm = 60,
                      nrounds = 600,
                      metric = "Auto",
                      method = 'rf',
                      choose_direction = FALSE,
-                     print_result = TRUE,
                      parametric = FALSE,
                      poly = TRUE,
                      degree = 3,
@@ -72,7 +67,6 @@ CCI.test <- function(formula = NULL,
                      eta = 0.3,
                      gamma = 0,
                      max_depth = 6,
-                     num_class = NULL,
                      interaction = TRUE,
                      metricfunc = NULL,
                      mlfunc = NULL,
@@ -109,11 +103,7 @@ CCI.test <- function(formula = NULL,
     stop("You can only use one of mlfunc or metricfunc.")
   }
   
-  if (is.null(num_class) && metric == "Kappa" && !is.null(mlfunc)) {
-    num_class <- unique(data[[all.vars(formula)[1]]])
-  } else {
-    num_class <- num_class
-  }
+
 
   formula = as.formula(formula)
   formula <- clean_formula(formula)
@@ -134,10 +124,10 @@ CCI.test <- function(formula = NULL,
       } else {
           stop("Could not determine an appropriate metric automatically. Please specify the 'metric' explicitly.")
     }
-  } else if (metric == "RMSE" || metric == "Kappa" || metric == "Custom") {
+  } else if (metric == "RMSE" || metric == "Kappa" ) {
     metric <- metric
   } else {
-    stop("Invalid metric specified. Use 'Auto', 'RMSE', 'Kappa' or 'Custom'")
+    stop("Invalid metric specified. Use 'Auto', 'RMSE' or 'Kappa' (or  set a custom metricfunc).")
   }
 
 
@@ -212,7 +202,6 @@ CCI.test <- function(formula = NULL,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
     subsample = subsample,
-    num_class = num_class,
     progress = progress,
     nthread = nthread,
     params,

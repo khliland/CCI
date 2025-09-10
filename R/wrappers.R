@@ -6,7 +6,6 @@
 #' @param test_indices Indices for training data
 #' @param nrounds Number of boosting rounds
 #' @param metric Type of performance metric
-#' @param num_class Number of categorical classes
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
 #' @param subsample Proportion of the data to be used. Default is 1 (no subsampling).
@@ -29,7 +28,6 @@ wrapper_xgboost <- function(formula,
                             nrounds = 500,
                             metricfunc = NULL,
                             nthread = 1,
-                            num_class = NULL,
                             subsample = 1,
                             ...) {
 
@@ -70,7 +68,7 @@ wrapper_xgboost <- function(formula,
   } else if (metric == "RMSE") {
     data_type <- "continuous"
   } else if (is.numeric(train_label) && length(unique(train_label)) == 1) {
-    data_type <- "cateogorical"
+    data_type <- "categorical"
   } else if (length(unique(train_label)) > 6 && metric == 'Kappa') {
     data_type <- "categorical"
     warning("More than 6 classes detected. It might be better to use RMSE as the metric for this data.")
@@ -78,12 +76,14 @@ wrapper_xgboost <- function(formula,
   else {
     data_type <- "categorical"
   }
-  if (data_type == "categorical" && is.null(num_class)) {
-    num_class <- length(unique(train_label))
+  if (data_type == "categorical") {
+    num_class <- length(unique(data[[all.vars(formula)[1]]]))
+  } else {
+    num_class <- NULL
   }
-
+ 
   args <- list(...)
-  if (!"object" %in% names(args)) {
+  if (!"objective" %in% names(args)) {
   params <- list(
     objective = switch(data_type,
                        continuous = "reg:squarederror",
@@ -118,23 +118,23 @@ wrapper_xgboost <- function(formula,
   predictions <- stats::predict(model, newdata = dtest)
   actual <- y_test
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(actual, predictions, ...)
+    metric_value <- metricfunc(actual, predictions, ...)
   } else if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
-    metric <- sqrt(mean((predictions - actual)^2))
+    metric_value <- sqrt(mean((predictions - actual)^2))
   } else if (params$objective %in% "binary:logistic") {
     pred_class <- ifelse(predictions > 0.5, 1, 0)
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
-    metric <- conf_matrix$overall[2]
+    metric_value <- conf_matrix$overall[2]
   } else if (params$objective %in% "multi:softprob") {
     levels <- levels(factor(train_label))
     predictions <- matrix(predictions, ncol=num_class, byrow=TRUE)
     pred_class <- max.col(predictions) - 1
     conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels), factor(test_label, levels = levels)), silent = TRUE)
-    metric <- conf_matrix$overall[2]
+    metric_value <- conf_matrix$overall[2]
   } else {
     stop("Objective function for XGBoost is not supported")
   }
-  return(metric)
+  return(metric_value)
 }
 
 #' Random Forest wrapper for CCI
@@ -162,36 +162,37 @@ wrapper_ranger <- function(formula,
                            metric,
                            metricfunc = NULL,
                            nthread = 1,
+                           num.trees,
                            ...) {
   if (metric %in% c("Kappa")) {
-    model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, num.trees = num.trees, ...)
   } else if (metric %in% "RMSE") {
-    model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, num.trees = num.trees, ...)
   } else {
-    model <- ranger::ranger(formula, data = data[train_indices, ], num.threads = nthread, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], num.threads = nthread, num.trees = num.trees, ...)
   }
 
   predictions <- stats::predict(model, data = data[test_indices, ])$predictions
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(actual, predictions, ...)
+    metric_value <- metricfunc(actual, predictions, ...)
   } else if (metric %in% c("Kappa")) {
     if (nlevels(factor(actual)) > 2) {
       pred_class <- apply(predictions, 1, which.max)
       pred_class <- factor(pred_class, levels = 1:nlevels(factor(actual)), labels = levels(factor(actual)))
       cm <- caret::confusionMatrix(pred_class, factor(actual))
-      metric <- cm$overall["Kappa"]
+      metric_value <- cm$overall["Kappa"]
     } else {
       pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
       cm <- caret::confusionMatrix(factor(pred_class), factor(actual))
-      metric <- cm$overall["Kappa"]
+      metric_value <- cm$overall["Kappa"]
       }
     } else if (metric == "RMSE") {
-    metric <- sqrt(mean((predictions - actual)^2))
+      metric_value <- sqrt(mean((predictions - actual)^2))
   }
 
-  return(metric)
+  return(metric_value)
 }
 
 #' SVM wrapper for CCI
@@ -229,17 +230,17 @@ wrapper_svm <- function(formula,
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
   if (!is.null(metricfunc)) {
-    metric <- metricfunc(actual, predictions, ...)
+    metric_value <- metricfunc(actual, predictions, ...)
   } else if (metric == "RMSE") {
-    metric <- sqrt(mean((predictions - actual)^2))
+    metric_value <- sqrt(mean((predictions - actual)^2))
   } else if (metric %in% c("Kappa")) {
     pred_class <- factor(predictions, levels = levels(factor(actual)))
     cm <- caret::confusionMatrix(pred_class, factor(actual))
-    metric <- cm$overall["Kappa"]
+    metric_value <- cm$overall["Kappa"]
   } else {
     stop("Unsupported metric for SVM wrapper.")
   }
 
-  return(metric)
+  return(metric_value)
 }
 
