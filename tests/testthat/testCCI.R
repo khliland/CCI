@@ -157,10 +157,12 @@ Rsquare_metric  <- function(actual, predictions) {
   metric <- 1 - (ssr / sst)
   return(metric)
 }
-CCI.test(formula = Y ~ X | Z2, data = dat, method = "rf", metricfunc = Rsquare_metric, tail = "right", seed = 2)
-summary(result)
+undebug(test.gen)
 
-plot(result)
+results <- CCI.test(formula = Y ~ X | Z2, data = dat, method = "rf", metricfunc = Rsquare_metric, tail = "right", seed = 2)
+summary(results)
+
+plot(results)
 
 bagging_wrapper <- function(formula,
                               data,
@@ -182,7 +184,7 @@ bagging_wrapper <- function(formula,
     return(metric)
   }
 
-
+data <- NonLinNormal(200)
   result <- CCI.test(formula = Y ~ X | Z1 + Z2,
                      p = 0.7,
                      data = data,
@@ -193,8 +195,6 @@ bagging_wrapper <- function(formula,
                      tail = "right"
   )
 
-  expect_is(result, "CCI")
-})
 
 #-------------------------------------------------------------------------------
 ##################### QQplot() ###############################

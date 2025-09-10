@@ -207,7 +207,10 @@ CCI.test <- function(formula = NULL,
     params,
     ...
   )
-  result$metric <- metric
+  if (!is.null(metricfunc)) {
+    result$metric <- deparse(substitute(metricfunc))
+  }
+  
   if (tune) {
     result$warnings <- tune_warning
   }
