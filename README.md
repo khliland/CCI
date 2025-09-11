@@ -393,18 +393,16 @@ Your custom function should take the following inputs:
 The output should be a numeric value representing the performance metric. Here’s an example that calculates the \(R^2\) metric using `xgboost`:
 
 ```r
-Rsquare_metric  <- function(data, model, test_indices, test_matrix) {
-    actual <- data[test_indices,][['Y']]
-    pred <- predict(model, newdata = test_matrix)
-    sst <- sum((actual - mean(actual))^2)
-    ssr <- sum((actual - pred)^2)
-    metric <- 1 - (ssr / sst)
-    return(metric)
+Rsquare_metric  <- function(actual, predictions) {
+  sst <- sum((actual - mean(actual))^2)
+  ssr <- sum((actual - predictions)^2)
+  metric <- 1 - (ssr / sst)
+  return(metric)
 }
-                  
-set.seed(1914)
-dat <- NonLinNormal(500)
-CCI.test(formula = Y ~ X | Z2, data = dat, method = "xgboost", metricfunc = Rsquare_metric, tail = "right")
+
+
+results <- CCI.test(formula = Y ~ X | Z2, data = dat, method = "rf", metricfunc = Rsquare_metric, tail = "right", seed = 2, verbose = T)
+
 ```
 
 **Important:** When using a custom performance metric, you should also specify the `tail` argument:

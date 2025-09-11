@@ -40,13 +40,13 @@ CCI.test(
 )
 }
 \arguments{
-\item{formula}{Model formula or a DAGitty object specifying the relationship between dependent and independent variables.}
+\item{formula}{Model formula specifying the relationship between dependent and independent variables. (Ex: Y ~ X | Z1 + Z2 for Y \emph{||} X | Z1, Z2)}
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
 \item{p}{Numeric. Proportion of data used for training the model. Default is 0.5.}
 
-\item{nperm}{Integer. The number of permutations to perform. Default is 600.}
+\item{nperm}{Integer. The number of permutations to perform. Default is 60.}
 
 \item{nrounds}{Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.}
 
@@ -84,7 +84,7 @@ CCI.test(
 
 \item{tune}{Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.}
 
-\item{samples}{Integer. The number of samples to use for tuning. Default is 35.}
+\item{samples}{Integer. Number of hyperparameter combinations used in tuning. Default is 35.}
 
 \item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 5.}
 

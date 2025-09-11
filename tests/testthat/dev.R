@@ -1,0 +1,5 @@
+devtools::check()
+devtools::check_win_devel()
+devtools::document()
+devtools::clean_dll()
+devtools::build()

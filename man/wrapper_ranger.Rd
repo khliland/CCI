@@ -31,6 +31,8 @@ wrapper_ranger(
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
+\item{num.trees}{Integer. The number of trees to grow in the random forest.}
+
 \item{...}{Additional arguments passed to the \code{ranger} function.}
 }
 \value{

@@ -3,10 +3,10 @@
 #' The `CCI.test` function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
 #' The 'CCI.test' function serves as a wrapper around the 'perm.test' function
 #'
-#' @param formula Model formula or a DAGitty object specifying the relationship between dependent and independent variables.
+#' @param formula Model formula specifying the relationship between dependent and independent variables. (Ex: Y ~ X | Z1 + Z2 for Y _||_ X | Z1, Z2)  
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
-#' @param nperm Integer. The number of permutations to perform. Default is 600.
+#' @param nperm Integer. The number of permutations to perform. Default is 60.
 #' @param nrounds Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.
 #' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
@@ -27,7 +27,7 @@
 #' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
-#' @param samples Integer. The number of samples to use for tuning. Default is 35.
+#' @param samples Integer. Number of hyperparameter combinations used in tuning. Default is 35.
 #' @param seed Integer. Set the seed for reproducing results. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.

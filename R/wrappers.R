@@ -146,6 +146,7 @@ wrapper_xgboost <- function(formula,
 #' @param metric Character string indicating the type of performance metric. Can be "RMSE" for regression, "Kappa" for binary classification, or multiclass classification.
 #' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
+#' @param num.trees Integer. The number of trees to grow in the random forest. 
 #' @param ... Additional arguments passed to the `ranger` function.
 #'
 #' @importFrom ranger ranger
