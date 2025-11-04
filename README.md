@@ -48,7 +48,7 @@ t <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data)
 summary(t)
 ```
 The output for this test should look something like this:
-
+```r
 Computational Conditional Independence Test
 --------------------------------------------
 Method:    CCI test using rf 
@@ -58,7 +58,7 @@ Metric:    RMSE
 Tail:      left 
 Statistic: 1.144 
 P-value:   0.9344 
-
+```
 
 The output tells us that you have performed a computational test of conditional independence using Random Forest  (`rf`) as the base machine learning algorithm, testing the condition `Y ~ X | Z1 + Z2`.
 The performance metric used to build the null distribution and the test statistic is Root Mean Square Error (RMSE), indicating that `Y` is a continuous variable.
