@@ -74,7 +74,7 @@ In the previous example we tested a true null hypothesis, for completeness, we w
 summary(CCI.test(formula = Y ~ X | Z1, data = data, parametric = TRUE))
 ```
 The output of the last test should look something like this: 
-
+```r
 Computational Conditional Independence Test
 --------------------------------------------
 Method:    CCI test using rf 
@@ -84,7 +84,7 @@ Metric:    RMSE
 Tail:      left 
 Statistic: 1.293 
 P-value:   0.003011 
-
+```
 At significant level 0.05 the test rejects the null hypothesis of `Y ~ X | Z1`, since the p-value is less than 0.05.
 We also added in the argument parametric = TRUE, which means that the p-value is calculated assuming that the null distribution is Gaussian.
 The default way of calculating a p-value is empirically, which means that the p-value is calculated by comparing the test statistic to the null distribution.
@@ -254,6 +254,7 @@ data <- NonLinNormal(N = 600)
 summary(CCI.test(formula = Y ~ X | Z1, method = 'rf', data = data, nrounds = 800, choose_direction = TRUE, parametric = T, seed = 1985))
 ```
 The output from the test:
+```r
 Computational Conditional Independence Test
 --------------------------------------------
 **Method:    CCI test using rf 
@@ -263,11 +264,13 @@ Computational Conditional Independence Test
 **Tail:      left 
 **Statistic: 1.347 
 **P-value:   6.509e-05 
+```
 Even though we input the formula as `Y ~ X | Z1`, the function automatically changed it to `X ~ Y | Z1` since `X` had better predictive performance than `Y` given `Z1`.
 ```r
 summary(CCI.test(formula = Y ~ X | Z1, method = 'rf', data = data, nrounds = 800, parametric = T, seed = 1985))
 ```
 Not including choose direction gives:
+```r
 Computational Conditional Independence Test
 --------------------------------------------
 **Method:    CCI test using rf 
@@ -276,7 +279,8 @@ Computational Conditional Independence Test
 **Metric:    RMSE 
 **Tail:      left 
 **Statistic: 35.38 
-**P-value:   0.1701 
+**P-value:   0.1701
+```
 Not setting 'choose_direction = TRUE' gives a different result, failing to reject the null hypothesis. Should you then always set 'choose_direction = TRUE'?
 choose_direction = TRUE is a good idea in many cases, however, it relies on `Y` and `X` being the same data type. In some cases, for instance with different data types, 
 it might be better to test both directions manually and see if they agree.
@@ -367,6 +371,7 @@ p <- CCI.test(formula   = formulas[[i]],
 results_df <- do.call(rbind, results)
 print(results_df)
 ```
+```r
 The results looks something like this:
       [,1]                  
  [1,] "X1 ~ X4 | X2 + X3"   
@@ -389,7 +394,7 @@ The results looks something like this:
 [18,] "0.795932362518178"   
 [19,] "X4 ~ X6 | X2 + X3"   
 [20,] "0.764899344816845"  
-
+```
 Testing reveals that the rejected null hypothesis at significance level 0.05 is `X1 ~ X6 | X5`, `X1 ~ X6 | X2 + X3`, `X2 ~ X6 | X5` and `X3 ~ X6 | X5`. 
 The conditions `X2 ~ X6 | X5` and `X3 ~ X6 | X5` are rejected since `X1` is a common cause of `X2`, `X3` and `X6`.
 
