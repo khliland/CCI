@@ -107,7 +107,6 @@ wrapper_xgboost <- function(formula,
 
   params <- params[!sapply(params, is.null)]
 
-
   model <- xgboost::xgb.train(data = dtrain,
                               params = params,
                               nthread = nthread,
