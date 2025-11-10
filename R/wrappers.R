@@ -116,6 +116,13 @@ wrapper_xgboost <- function(formula,
 
   predictions <- stats::predict(model, newdata = dtest)
   actual <- y_test
+  
+  bad_idx <- is.infinite(predictions) | is.infinite(actual)
+  if (any(bad_idx)) {
+    predictions <- predictions[!bad_idx]
+    actual <- actual[!bad_idx]
+  }
+  
   if (!is.null(metricfunc)) {
     metric_value <- metricfunc(actual, predictions, ...)
   } else if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
@@ -175,6 +182,12 @@ wrapper_ranger <- function(formula,
   predictions <- stats::predict(model, data = data[test_indices, ])$predictions
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
 
+  bad_idx <- is.infinite(predictions) | is.infinite(actual)
+  if (any(bad_idx)) {
+    predictions <- predictions[!bad_idx]
+    actual <- actual[!bad_idx]
+  }
+  
   if (!is.null(metricfunc)) {
     metric_value <- metricfunc(actual, predictions, ...)
   } else if (metric %in% c("Kappa")) {
@@ -228,7 +241,13 @@ wrapper_svm <- function(formula,
 
   predictions <- stats::predict(model, newdata = data[test_indices, ], probability = TRUE)
   actual <- data[test_indices, ][[all.vars(formula)[1]]]
-
+  
+  bad_idx <- is.infinite(predictions) | is.infinite(actual)
+  if (any(bad_idx)) {
+    predictions <- predictions[!bad_idx]
+    actual <- actual[!bad_idx]
+  }
+  
   if (!is.null(metricfunc)) {
     metric_value <- metricfunc(actual, predictions, ...)
   } else if (metric == "RMSE") {

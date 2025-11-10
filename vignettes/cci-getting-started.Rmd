@@ -1,0 +1,123 @@
+---
+title: "cci-getting-started"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cci-getting-started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(CCI)
+```
+# Overview
+
+The CCI package provides a computational test for conditional independence (CI) that leverages machine learning and Monte Carlo resampling.
+We test statements of the form 𝑌⊥ X ∣𝑍 by comparing predictive performance under permutation to build an empirical (or parametric) null.
+
+This vignette shows:
+- how to run a basic CI test,
+- how CCI adapts to outcome type (continuous vs. categorical),
+- how to interpret output and visualize the null distribution,
+- a few practical knobs: metric, nperm, p, choose_direction.
+
+Throught these examples, we use simulated data where the ground truth is known.
+## Basic test
+The function below generates a data set where `Y` is conditionally independent of `X` given `Z1` and `Z2`. The functions are linear 
+so it should be easy to test conditional independence using traditional statistical tests as well.
+```{r}
+NormalData <- function(N){
+  Z1 <- stats::rnorm(N,0,1)
+  Z2 <- stats::rnorm(N,0,1)
+  X <- stats::rnorm(N, Z1 + Z2, 1)
+  Y <- stats::rnorm(N, Z1 + Z2, 1)
+
+  df <- data.frame(Z1, Z2, X, Y)
+  return(df)
+}
+```
+The simplest line of code needed to test the hypothesis `Y _||_ X | Z1, Z2` is: 
+```{r}
+set.seed(123)
+dat <- NormalData(500)
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat))
+```
+This runs a conditional independence test using the default settings: random forests as the machine learning method, RMSE as the metric. 
+The default settings is quit robust and works well in many scenarios, but the user can customize them as needed (examples below).
+```{r}
+HardCase <- function(N) {
+  Z1 <- stats::runif(N, -2, 2)
+  Z2 <- stats::runif(N, -2, 2)
+  hZ <- sin(Z1) * cos(Z2)
+  X <- hZ + 0.2 * stats::rnorm(N)
+  Y <- hZ^2 + 0.2 * stats::rnorm(N)
+  data.frame(X, Y, Z1, Z2)
+}
+```
+
+```{r}
+set.seed(1)
+dat <- HardCase(500)
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat))
+summary(CCI.test(Y ~ X | Z1, data = dat)) # Shouid be rejected
+```
+
+## Adapting to outcome type
+CCI automatically adapts to the outcome type. For continuous outcomes, it uses regression methods and metrics RMSE; for categorical outcomes, it uses classification methods and metrics Kappa.
+```{r}
+ExpLogThreshold <- function(N) {
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
+  X <- exp(Z1) + Z2 + stats::rnorm(N, 0, 0.2)
+  Y <- ifelse(log(abs(Z1) + 1) + Z2 > 0.5, "Goblin",
+              ifelse(log(abs(Z1) + 1) + Z2 > 0, "Orc",
+                     ifelse(log(abs(Z1) + 1) > -0.5, "Troll", "Elf")))
+  return(data.frame(Z1, Z2, X, Y))
+}
+```
+By setting the outcome `Y` as a factor, CCI recognizes it as a classification problem and automatically switches to classification methods and metrics.
+```{r}
+set.seed(123)
+dat <- ExpLogThreshold(500)
+dat$Y <- as.factor(dat$Y)
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat))
+summary(CCI.test(Y ~ X | Z1, data = dat)) 
+```
+The user can also manually specify the metric to use via the `metric` argument.
+```{r}
+set.seed(123)
+dat <- ExpLogThreshold(500)
+dat$Y <- as.numeric(as.factor(dat$Y))
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat, metric = "Kappa"))
+```
+## Visualizing the null distribution
+The null distribution can be visualized using the `plot` function.
+```{r}
+set.seed(13)
+dat <- NormalData(500)
+cci <- CCI.test(Y ~ X | Z1 + Z2, data = dat)
+summary(cci)
+plot(cci)
+```
+The dashed line indicates the observed test statistic, while the histogram represents the null distribution generated through permutations.
+## Practical knobs
+### Choosing method
+The user can choose the machine learning method via the `method` argument. Supported methods include "rf" (random forests), "xgboost", and support vector machines "svm". Users should also use the `seed` argument to ensure reproducibility when using stochastic methods.
+```{r}
+summary(CCI.test(Y ~ X | Z1, data = dat, method = "xgboost", seed = 99))
+summary(CCI.test(Y ~ X | Z1, data = dat, method = "svm", seed = 99))
+```
+A third argument which beneficial should be set to TRUE is the parametric argument. This will compute a parametric p-value based on the null distribution being approximately Gaussian. 
+```{r}
+summary(CCI.test(Y ~ X | Z1, data = dat, method = "xgboost", seed = 99, parametric = TRUE))
+```
+
+
+

@@ -24,7 +24,7 @@ library(CCI)
 In order to show the functionality of the CCI package we will generate various different synthetic data sets 
 that can be used to test conditional independence. We will define functions for this purpose as we go. 
 
-The function below generates a dataset where `Y` is conditionally independent of `X` given `Z1` and `Z2`. The functions are linear 
+The function below generates a data set where `Y` is conditionally independent of `X` given `Z1` and `Z2`. The functions are linear 
 so it should be easy to test conditional independence using traditional statistical tests as well.
 ```r
 NormalData <- function(N){
