@@ -181,6 +181,27 @@ test.gen <- function(formula,
           metricfunc = metricfunc,
           ...
         )
+      } else if (method == "KNN") {
+        wrapper_knn(
+          formula,
+          resampled_data,
+          train_indices,
+          test_indices,
+          metric = metric,
+          metricfunc = metricfunc,
+          ...
+        )
+      } else if (method == "CatBoost") {
+        wrapper_catboost(
+          formula,
+          resampled_data,
+          train_indices,
+          test_indices,
+          metric = metric,
+          metricfunc = metricfunc,
+          nrounds = nrounds,
+          ...
+        )
       } else {
         stop("Method chosen is not supported: ", method)
       }
