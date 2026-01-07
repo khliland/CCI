@@ -53,7 +53,7 @@
 CCI.test <- function(formula = NULL,
                      data,
                      p = 0.5,
-                     nperm = 60,
+                     nperm = 160,
                      nrounds = 600,
                      metric = "Auto",
                      method = 'rf',
