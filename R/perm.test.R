@@ -95,7 +95,7 @@ perm.test <- function(formula,
                              ...)
 
 
-  if (metric == "Kappa") {
+  if (metric %in% c("Kappa", "LogLoss")) {
     tail <- "right"
   } else if (metric == "RMSE") {
     tail <- "left"

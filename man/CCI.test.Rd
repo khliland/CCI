@@ -52,7 +52,7 @@ CCI.test(
 
 \item{metric}{Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".}
 
-\item{method}{Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'}
+\item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", support vector machine 'svm' and K-nearest neighbour 'KNN'. Default is "rf".}
 
 \item{choose_direction}{Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.}
 

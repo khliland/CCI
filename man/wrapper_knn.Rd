@@ -14,6 +14,8 @@ wrapper_knn(
   k = 15,
   center = TRUE,
   scale. = TRUE,
+  eps = 1e-15,
+  positive = NULL,
   ...
 )
 }
@@ -35,6 +37,10 @@ wrapper_knn(
 \item{center}{Logical, center features using training means (default TRUE)}
 
 \item{scale.}{Logical, scale features using training sds (default TRUE)}
+
+\item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
+
+\item{positive}{Character. The positive class label for binary classification (used in LogLoss). Default is NULL.}
 
 \item{...}{Ignored (for API consistency)}
 }

@@ -10,7 +10,7 @@
 #' @param nrounds Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.
 #' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
-#' @param method Character. Specifies the machine learning method to use. Supported methods include generlaized linear models "lm", random forest "rf", and extreme gradient boosting "xgboost", etc. Default is "rf".#'
+#' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", support vector machine 'svm' and K-nearest neighbour 'KNN'. Default is "rf".
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param subsample Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
@@ -124,10 +124,10 @@ CCI.test <- function(formula = NULL,
       } else {
           stop("Could not determine an appropriate metric automatically. Please specify the 'metric' explicitly.")
     }
-  } else if (metric == "RMSE" || metric == "Kappa" ) {
+  } else if (metric == "RMSE" || metric == "Kappa" || metric == "LogLoss" ) {
     metric <- metric
   } else {
-    stop("Invalid metric specified. Use 'Auto', 'RMSE' or 'Kappa' (or  set a custom metricfunc).")
+    stop("Invalid metric specified. Use 'Auto', 'RMSE', 'Kappa' or 'LogLoss' (or set a custom metricfunc).")
   }
 
 

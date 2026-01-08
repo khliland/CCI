@@ -1,2 +1,7 @@
 10/11/2025 - Changes in wrappers to handle inf and -inf predictions
-13/11/2025 - Added in wrapper for KNN. Not functional (yet)
+08/01/2026 - Several improvements.
+- Added in wrapper for KNN.
+- Added LogLoss to all wrappers. 
+- Update XGBoost wrapper to be compatibale with expected updates. 
+- Nperm set to 160.
+- Summary output is cleaner

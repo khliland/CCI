@@ -1,7 +1,7 @@
 Package: CCI
 Type: Package
 Title: Computational Test for Conditional Independence
-Version: 0.3.5
+Version: 0.3.6
 Date: 2025-08-28
 Authors@R: 
     c(person(given = "Christian B. H.",
@@ -15,7 +15,7 @@ Authors@R:
              email = "kristian.liland@nmbu.no",
              comment = c(ORCID = "0000-0001-6468-9423")))
 Description: Tool for performing computational testing for conditional independence between variables in a dataset. 'CCI' implements permutation in combination with Monte Carlo Cross-Validation in generating null distributions and test statistics. For more details see Computational Test for Conditional Independence (2024) <doi:10.3390/a17080323>.   
-Imports: ggplot2, dplyr, caret, xgboost, ranger, stats,  data.table, e1071, rlang, progress, FNN
+Imports: ggplot2, dplyr, caret, xgboost, ranger, stats,  data.table, e1071, rlang, progress, FNN, class
 Suggests: testthat, knitr, rmarkdown
 License: GPL (>= 2)
 URL: https://github.com/khliland/CCI

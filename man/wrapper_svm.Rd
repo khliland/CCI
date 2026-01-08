@@ -11,6 +11,7 @@ wrapper_svm(
   test_indices,
   metric,
   metricfunc = NULL,
+  eps = 1e-15,
   ...
 )
 }
@@ -23,9 +24,11 @@ wrapper_svm(
 
 \item{test_indices}{Indices for testing data}
 
-\item{metric}{Type of metric ("RMSE" or "Kappa")}
+\item{metric}{Type of metric ("RMSE", "Kappa" or "Log Loss")}
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric.}
+
+\item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
 
 \item{...}{Additional arguments passed to e1071::svm}
 }
