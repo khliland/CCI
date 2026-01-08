@@ -13,6 +13,7 @@ wrapper_ranger(
   metricfunc = NULL,
   nthread = 1,
   num.trees,
+  eps = 1e-15,
   ...
 )
 }
@@ -25,13 +26,15 @@ wrapper_ranger(
 
 \item{test_indices}{A vector of indices specifying the rows in \code{data} to be used as the test set.}
 
-\item{metric}{Character string indicating the type of performance metric. Can be "RMSE" for regression, "Kappa" for binary classification, or multiclass classification.}
+\item{metric}{Type of metric ("RMSE", "Kappa" or "Log Loss")}
 
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
 \item{num.trees}{Integer. The number of trees to grow in the random forest.}
+
+\item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
 
 \item{...}{Additional arguments passed to the \code{ranger} function.}
 }
