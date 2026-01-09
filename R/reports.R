@@ -21,6 +21,7 @@ print.summary.CCI <- function(x, ...) {
   cat("Tail:     ", x$tail, "\n")
   cat("Statistic:", format(x$statistic, digits = 4), "\n")
   cat("P-value:  ", format.pval(x$p.value, digits = 4), "\n\n")
+  cat("Subsample:  ", format(x$subsample, digits = 2), "\n")
   
   invisible(x)
 }
@@ -36,7 +37,8 @@ summary.CCI <- function(object, ...) {
     data.name = deparse(object$formula),
     metric    = object$metric,
     tail      = object$tail,
-    null.distribution = object$null.distribution
+    null.distribution = object$null.distribution,
+    subsample = object$subsample
   )
   class(summary_list) <- c("summary.CCI", "htest")
   return(summary_list)

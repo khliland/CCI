@@ -109,7 +109,7 @@ CCI.test <- function(formula = NULL,
   if (subsample == "Auto") {
     n <- nrow(data)
     if (n > 1000) {
-      subsample <- 1000/n
+      subsample <- 1 / ((n / 1000) ^ 0.75)
     } else if (subsample == "Yes") {
       subsample <- subsample_set
     } else if (subsample == "No") {
@@ -121,7 +121,7 @@ CCI.test <- function(formula = NULL,
       cat("Subsample set to: ", subsample, "\n")
     }
   }
-
+  
   formula = as.formula(formula)
   formula <- clean_formula(formula)
   check_formula(formula, data)

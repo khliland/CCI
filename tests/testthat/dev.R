@@ -4,7 +4,8 @@ devtools::check_win_devel()
 devtools::document()
 devtools::clean_dll()
 devtools::build()
-devtools::build_vignettes()
+devtools::build_vignettes
+# remove.packages("CCI")
 devtools::install()
 
 library(CCI)
@@ -19,11 +20,13 @@ summary(result)
 QQplot(result)
 plot(result)
 
+data <- NormalData(2500)
 result <- CCI.test(Y ~ X | Z1,
                    data = data,
                    seed = 1,
                    method = "xgboost")
 summary(result)
+result
 
 result <- CCI.test(Y ~ X | Z1,
                    data = data,
