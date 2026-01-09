@@ -4,7 +4,7 @@ Title: Computational Test for Conditional Independence
 Version: 0.3.6
 Date: 2025-08-28
 Authors@R: 
-    c(person(given = "Christian B. H.",
+    c(person(given = "Christian",
              family = "Thorjussen",
              role = c("aut", "cre"),
              email = "christianbern@gmail.com",

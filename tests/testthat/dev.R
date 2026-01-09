@@ -11,7 +11,7 @@ library(CCI)
 library(CIsimdata)
 # Testing of functions
 set.seed(123)
-data <- NormalData(500)
+data <- NormalData(1500)
 result <- CCI.test(Y ~ X | Z1 + Z2,
                    data = data,
                    seed = 1)

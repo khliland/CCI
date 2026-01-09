@@ -13,7 +13,8 @@
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", support vector machine 'svm' and K-nearest neighbour 'KNN'. Default is "rf".
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
-#' @param subsample Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).
+#' @param subsample Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"
+#' @param subsample_set Numeric. If `subsample` is set to "Yes", this parameter defines the proportion of data to use for subsampling. Default is NA.
 #' @param min_child_weight Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.
 #' @param colsample_bytree Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.
 #' @param eta Numeric. The learning rate for methods like xgboost. Default is 0.3.
@@ -61,7 +62,8 @@ CCI.test <- function(formula = NULL,
                      parametric = FALSE,
                      poly = TRUE,
                      degree = 3,
-                     subsample = 1,
+                     subsample = "Auto",
+                     subsample_set,
                      min_child_weight = 1,
                      colsample_bytree = 1,
                      eta = 0.3,
@@ -103,7 +105,22 @@ CCI.test <- function(formula = NULL,
     stop("You can only use one of mlfunc or metricfunc.")
   }
   
-
+  # Set subsample as a function of sample size, starting when sample size > 1000
+  if (subsample == "Auto") {
+    n <- nrow(data)
+    if (n > 1000) {
+      subsample <- 1000/n
+    } else if (subsample == "Yes") {
+      subsample <- subsample_set
+    } else if (subsample == "No") {
+      subsample <- 1
+    } else {
+      stop("Invalid subsample option. Use 'Auto', 'Yes' or 'No'.")
+    }
+    if (verbose) {
+      cat("Subsample set to: ", subsample, "\n")
+    }
+  }
 
   formula = as.formula(formula)
   formula <- clean_formula(formula)
