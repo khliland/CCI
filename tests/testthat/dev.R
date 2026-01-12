@@ -12,10 +12,12 @@ library(CCI)
 library(CIsimdata)
 # Testing of functions
 set.seed(123)
-data <- NormalData(1500)
+data <- NormalData(500)
 result <- CCI.test(Y ~ X | Z1 + Z2,
                    data = data,
-                   seed = 1)
+                   seed = 1,
+                   subsample = 'No')
+
 summary(result)
 QQplot(result)
 plot(result)
@@ -26,7 +28,6 @@ result <- CCI.test(Y ~ X | Z1,
                    seed = 1,
                    method = "xgboost")
 summary(result)
-result
 
 result <- CCI.test(Y ~ X | Z1,
                    data = data,

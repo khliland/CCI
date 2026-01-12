@@ -110,7 +110,10 @@ CCI.test <- function(formula = NULL,
     n <- nrow(data)
     if (n > 1000) {
       subsample <- 1 / ((n / 1000) ^ 0.75)
-    } else if (subsample == "Yes") {
+    } else {
+      subsample <- 1
+    }
+  } else if (subsample == "Yes") {
       subsample <- subsample_set
     } else if (subsample == "No") {
       subsample <- 1
@@ -120,7 +123,7 @@ CCI.test <- function(formula = NULL,
     if (verbose) {
       cat("Subsample set to: ", subsample, "\n")
     }
-  }
+  
   
   formula = as.formula(formula)
   formula <- clean_formula(formula)

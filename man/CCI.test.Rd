@@ -17,7 +17,8 @@ CCI.test(
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
-  subsample = 1,
+  subsample = "Auto",
+  subsample_set,
   min_child_weight = 1,
   colsample_bytree = 1,
   eta = 0.3,
@@ -62,7 +63,9 @@ CCI.test(
 
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
-\item{subsample}{Numeric. The proportion of data to use for subsampling. Default is 1 (no subsampling).}
+\item{subsample}{Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"}
+
+\item{subsample_set}{Numeric. If \code{subsample} is set to "Yes", this parameter defines the proportion of data to use for subsampling. Default is NA.}
 
 \item{min_child_weight}{Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.}
 
