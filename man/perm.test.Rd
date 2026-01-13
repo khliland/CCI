@@ -21,9 +21,14 @@ perm.test(
   metricfunc = NULL,
   mlfunc = NULL,
   nthread = 1,
-  dag = NA,
-  dag_n = NA,
   progress = TRUE,
+  k = 15,
+  center = TRUE,
+  scale. = TRUE,
+  eps = 1e-15,
+  positive = NULL,
+  kernel = "optimal",
+  distance = 2,
   ...
 )
 }
@@ -60,13 +65,23 @@ perm.test(
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
+\item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
+
+\item{k}{Integer. The number of nearest neighbors to use for local permutation schemes. Default is 15.}
+
+\item{center}{Logical. If TRUE, the data is centered before model fitting. Default is TRUE.}
+
+\item{scale.}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
+
+\item{eps}{Numeric. A small value added to avoid division by zero. Default is 1e-15.}
+
+\item{positive}{Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.}
+
+\item{...}{Additional arguments to pass to the machine learning model fitting function.}
+
 \item{dag}{A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.}
 
 \item{dag_n}{A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.}
-
-\item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
-
-\item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }
 \value{
 An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.

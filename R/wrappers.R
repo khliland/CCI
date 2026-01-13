@@ -464,29 +464,30 @@ wrapper_svm <- function(formula,
   return(metric_value)
 }
 
-
-#' k-Nearest Neighbors (KNN) wrapper for CCI
+#' k-Nearest Neighbors (KNN) wrapper for CCI (kknn-based)
 #'
 #' @param formula Model formula
 #' @param data Data frame
 #' @param train_indices Indices for training rows
 #' @param test_indices Indices for test rows
-#' @param metric Performance metric: "RMSE" (regression) or "Kappa" (classification)
+#' @param metric Performance metric: "RMSE" (regression), "Kappa" (classification), or "LogLoss" (classification)
 #' @param metricfunc Optional custom metric function: function(actual, predictions, ...)
 #' @param k Integer, number of neighbors (default 15)
-#' @param center Logical, center features using training means (default TRUE)
-#' @param scale. Logical, scale features using training sds (default TRUE)
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
 #' @param positive Character. The positive class label for binary classification (used in LogLoss). Default is NULL.
-#' @param ... Ignored (for API consistency)
+#' @param kernel Character. Weighting kernel for kknn. Default "optimal".
+#' @param distance Numeric. Minkowski distance parameter. 2 = Euclidean. Default 2.
+#' @param ... Additional arguments passed to kknn::kknn (e.g., ykernel, na.action)
 #'
-#' @importFrom class knn
-#' @importFrom FNN knn.reg
+#' @importFrom kknn kknn 
 #' @importFrom stats model.matrix
 #' @importFrom caret confusionMatrix
 #'
 #' @return Numeric performance metric
 #' @export
+
+# NOTE! This function was written by AI after seeing the other wrapper functions!!
+
 wrapper_knn <- function(formula,
                         data,
                         train_indices,
@@ -494,12 +495,11 @@ wrapper_knn <- function(formula,
                         metric,
                         metricfunc = NULL,
                         k = 15,
-                        center = TRUE,
-                        scale. = TRUE,
                         eps = 1e-15,
                         positive = NULL,
-                        ...
-                        ) {
+                        kernel = "optimal",
+                        distance = 2,
+                        ...) {
   # Parse vars
   y_name <- all.vars(formula)[1]
   x_names <- all.vars(formula)[-1]
@@ -511,7 +511,7 @@ wrapper_knn <- function(formula,
   } else if (metric %in% "RMSE") {
     y <- as.numeric(y)
   } else {
-    stop("metric must be 'RMSE' (regression), 'Kappa' (classification), or 'LogLoss' (binary classification).")
+    stop("metric must be 'RMSE' (regression), 'Kappa' (classification), or 'LogLoss' (classification).")
   }
   
   # Design matrices using one-hot for factors; build ONCE to keep same columns
@@ -526,22 +526,6 @@ wrapper_knn <- function(formula,
   X_test  <- X_all[test_indices, , drop = FALSE]
   y_train <- y[train_indices]
   y_test  <- y[test_indices]
-  
-  # Optional standardization using TRAIN stats
-  if (isTRUE(center) || isTRUE(scale.)) {
-    cm <- colMeans(X_train, na.rm = TRUE)
-    cs <- apply(X_train, 2, sd)
-    cs[cs == 0 | is.na(cs)] <- 1
-    
-    if (isTRUE(center)) {
-      X_train <- sweep(X_train, 2, cm, FUN = "-")
-      X_test  <- sweep(X_test,  2, cm, FUN = "-")
-    }
-    if (isTRUE(scale.)) {
-      X_train <- sweep(X_train, 2, cs, FUN = "/")
-      X_test  <- sweep(X_test,  2, cs, FUN = "/")
-    }
-  }
   
   # Remove rows with Inf in features or outcomes (defensive)
   bad_train <- rowSums(!is.finite(X_train)) > 0 | !is.finite(if (metric == "RMSE") y_train else as.numeric(y_train))
@@ -562,62 +546,85 @@ wrapper_knn <- function(formula,
     k <- nrow(X_train)
   }
   
-  # User metric function override
+  # Helper: build data frames for kknn from model.matrix (keeps encoding consistent)
+  train_df <- data.frame(y = y_train, X_train, check.names = FALSE)
+  test_df  <- data.frame(y = y_test,  X_test,  check.names = FALSE)
+  
+  # Fit kknn model
+  # Note: kknn uses "kmax"; setting kmax = k yields exactly k neighbors.
+  fit <- kknn::kknn(
+    formula = y ~ .,
+    train   = train_df,
+    test    = test_df,
+    k    = k,
+    kernel  = kernel,
+    distance = distance,
+    ...
+  )
+  
+  # Predictions
+  if (metric == "RMSE") {
+    preds <- as.numeric(fitted(fit))
+  } else {
+    preds <- as.character(fitted(fit))  # class labels
+    preds <- factor(preds, levels = levels(factor(y_train)))
+  }
+  
+  # Custom metric function override
   if (!is.null(metricfunc)) {
-    if (metric == "RMSE") {
-      preds <- FNN::knn.reg(train = X_train, test = X_test, y = as.numeric(y_train), k = k)$pred
-      return(metricfunc(y_test, preds, ...))
-    } else if (metric %in% c("Kappa", "LogLoss")) {
-      preds <- class::knn(train = X_train, test = X_test, cl = y_train, k = k, prob = TRUE)
-      return(metricfunc(y_test, preds, ...))
-    }
+    return(metricfunc(y_test, preds, ...))
   }
   
   # Built-in metrics
   if (metric == "RMSE") {
-    preds <- FNN::knn.reg(train = X_train, test = X_test, y = as.numeric(y_train), k = k)$pred
     keep <- is.finite(preds) & is.finite(y_test)
-    rmse <- sqrt(mean((preds[keep] - y_test[keep])^2))
-    return(rmse)
+    return(sqrt(mean((preds[keep] - y_test[keep])^2)))
     
   } else if (metric == "Kappa") {
-    preds <- class::knn(train = X_train, test = X_test, cl = y_train, k = k, prob = TRUE)
-    preds_f  <- factor(preds, levels = levels(y_train))
-    y_test_f <- factor(y_test, levels = levels(y_train))
-    cm <- caret::confusionMatrix(preds_f, y_test_f)
+    y_test_f <- factor(y_test, levels = levels(preds))
+    cm <- caret::confusionMatrix(preds, y_test_f)
     return(unname(cm$overall["Kappa"]))
     
   } else if (metric == "LogLoss") {
-    # LogLoss requires binary outcome with class::knn probabilities
-    y_train <- droplevels(y_train)
+    y_train <- droplevels(as.factor(y_train))
     y_test  <- factor(y_test, levels = levels(y_train))
     
-    if (nlevels(y_train) != 2L) {
-      stop("LogLoss in this wrapper is implemented only for binary classification. For multiclass probabilities, use kknn (kknn::train.kknn) or another KNN implementation.")
-    }
+    prob_mat <- fit$prob
+    if (is.null(prob_mat)) stop("kknn did not return class probabilities; cannot compute LogLoss.")
     
-    preds <- class::knn(train = X_train, test = X_test, cl = y_train, k = k, prob = TRUE)
-    prob_win <- attr(preds, "prob")
-    if (is.null(prob_win)) stop("class::knn did not return 'prob' attribute; cannot compute LogLoss.")
-    
-    # Determine positive class
+    # Align columns with training levels
     lvls <- levels(y_train)
-    pos <- if (!is.null(positive)) {
-      if (!positive %in% lvls) stop("`positive` must be one of: ", paste(lvls, collapse = ", "))
-      positive
+    if (!all(lvls %in% colnames(prob_mat))) {
+      common <- intersect(lvls, colnames(prob_mat))
+      if (length(common) < 2L) stop("Could not align probability columns with class levels for LogLoss.")
+      lvls <- common
+      y_test <- factor(y_test, levels = lvls)
+      prob_mat <- prob_mat[, lvls, drop = FALSE]
     } else {
-      lvls[2]  # default convention
+      prob_mat <- prob_mat[, lvls, drop = FALSE]
     }
     
-    # Reconstruct P(Y = pos)
-    p_pos <- ifelse(preds == pos, prob_win, 1 - prob_win)
-    p_pos <- pmin(pmax(p_pos, eps), 1 - eps)
+    # Clip probabilities for stability
+    prob_mat <- pmin(pmax(prob_mat, eps), 1 - eps)
     
-    y_bin <- as.integer(y_test == pos)
-    ll <- -mean(y_bin * log(p_pos) + (1 - y_bin) * log(1 - p_pos))
-    return(ll)
-    
-  } else {
-    stop("Unsupported metric.")
+    if (nlevels(y_train) == 2L) {
+      pos <- if (!is.null(positive)) {
+        if (!positive %in% lvls) stop("`positive` must be one of: ", paste(lvls, collapse = ", "))
+        positive
+      } else {
+        lvls[2]
+      }
+      p_pos <- prob_mat[, pos]
+      y_bin <- as.integer(y_test == pos)
+      return(-mean(y_bin * log(p_pos) + (1 - y_bin) * log(1 - p_pos)))
+    } else {
+      # Multiclass log loss: -mean(log p_trueclass)
+      idx <- cbind(seq_along(y_test), as.integer(y_test))
+      p_true <- prob_mat[idx]
+      return(-mean(log(p_true)))
+    }
   }
+  
+  stop("Unsupported metric.")
 }
+

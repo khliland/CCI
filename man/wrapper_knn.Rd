@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{wrapper_knn}
 \alias{wrapper_knn}
-\title{k-Nearest Neighbors (KNN) wrapper for CCI}
+\title{k-Nearest Neighbors (KNN) wrapper for CCI (kknn-based)}
 \usage{
 wrapper_knn(
   formula,
@@ -12,10 +12,10 @@ wrapper_knn(
   metric,
   metricfunc = NULL,
   k = 15,
-  center = TRUE,
-  scale. = TRUE,
   eps = 1e-15,
   positive = NULL,
+  kernel = "optimal",
+  distance = 2,
   ...
 )
 }
@@ -28,25 +28,29 @@ wrapper_knn(
 
 \item{test_indices}{Indices for test rows}
 
-\item{metric}{Performance metric: "RMSE" (regression) or "Kappa" (classification)}
+\item{metric}{Performance metric: "RMSE" (regression), "Kappa" (classification), or "LogLoss" (classification)}
 
 \item{metricfunc}{Optional custom metric function: function(actual, predictions, ...)}
 
 \item{k}{Integer, number of neighbors (default 15)}
 
-\item{center}{Logical, center features using training means (default TRUE)}
-
-\item{scale.}{Logical, scale features using training sds (default TRUE)}
-
 \item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
 
 \item{positive}{Character. The positive class label for binary classification (used in LogLoss). Default is NULL.}
 
-\item{...}{Ignored (for API consistency)}
+\item{kernel}{Character. Weighting kernel for kknn. Default "optimal".}
+
+\item{distance}{Numeric. Minkowski distance parameter. 2 = Euclidean. Default 2.}
+
+\item{...}{Additional arguments passed to kknn::kknn (e.g., ykernel, na.action)}
+
+\item{center}{Logical, center features using training means (default TRUE)}
+
+\item{scale.}{Logical, scale features using training sds (default TRUE)}
 }
 \value{
 Numeric performance metric
 }
 \description{
-k-Nearest Neighbors (KNN) wrapper for CCI
+k-Nearest Neighbors (KNN) wrapper for CCI (kknn-based)
 }

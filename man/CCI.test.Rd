@@ -32,6 +32,13 @@ CCI.test(
   samples = 35,
   folds = 5,
   tune_length = 10,
+  k = 15,
+  center = TRUE,
+  scale. = TRUE,
+  eps = 1e-15,
+  positive = NULL,
+  kernel = "optimal",
+  distance = 2,
   seed = NA,
   random_grid = TRUE,
   nthread = 1,
@@ -92,6 +99,20 @@ CCI.test(
 \item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 5.}
 
 \item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
+
+\item{k}{Integer. The number of nearest neighbors to use for KNN method. Default is 15.}
+
+\item{center}{Logical. If TRUE, the data will be centered before fitting the model}
+
+\item{scale.}{Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.}
+
+\item{eps}{Numeric. A small value to avoid division by zero in some calculations.}
+
+\item{positive}{Character. The name of the positive class (KNN) in the data, used for classification tasks. Default is NULL.}
+
+\item{kernel}{Character. The kernel type to use for KNN method. Default is "optimal".}
+
+\item{distance}{Numeric. The distance metric to use for KNN method. Default is 2 (Euclidean distance).}
 
 \item{seed}{Integer. Set the seed for reproducing results. Default is NA.}
 

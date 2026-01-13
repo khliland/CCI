@@ -28,7 +28,14 @@
 #' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
+#' @param k Integer. The number of nearest neighbors to use for KNN method. Default is 15.
+#' @param center Logical. If TRUE, the data will be centered before fitting the model
+#' @param scale. Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.
+#' @param eps Numeric. A small value to avoid division by zero in some calculations.
+#' @param positive Character. The name of the positive class (KNN) in the data, used for classification tasks. Default is NULL.
+#' @param kernel Character. The kernel type to use for KNN method. Default is "optimal".
 #' @param samples Integer. Number of hyperparameter combinations used in tuning. Default is 35.
+#' @param distance Numeric. The distance metric to use for KNN method. Default is 2 (Euclidean distance). 
 #' @param seed Integer. Set the seed for reproducing results. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
@@ -77,6 +84,13 @@ CCI.test <- function(formula = NULL,
                      samples = 35,
                      folds = 5,
                      tune_length = 10,
+                     k = 15,
+                     center = TRUE,
+                     scale. = TRUE,
+                     eps = 1e-15,
+                     positive = NULL,
+                     kernel = "optimal",
+                     distance = 2,
                      seed = NA,
                      random_grid = TRUE,
                      nthread = 1,
@@ -224,6 +238,13 @@ CCI.test <- function(formula = NULL,
     subsample = subsample,
     progress = progress,
     nthread = nthread,
+    k = k,
+    center = center,
+    scale. = scale,
+    eps = eps,
+    positive = positive,
+    kernel = kernel,
+    distance = distance,
     params,
     ...
   )

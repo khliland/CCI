@@ -82,7 +82,15 @@ QQplot <- function(object,
                           degree = degree,
                           poly = poly,
                           interaction = interaction,
+                          k = k,
+                          center = center,
+                          scale. = scale,
+                          eps = eps,
+                          positive = positive,
+                          kernel = kernel,
+                          distance = distance,
                           additional_args,
+                          
                           ...)
 
   test_stats <- unlist(test_result$distribution)

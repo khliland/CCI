@@ -21,6 +21,13 @@ test.gen(
   metricfunc = NULL,
   mlfunc = NULL,
   progress = TRUE,
+  k = 15,
+  center = TRUE,
+  scale. = TRUE,
+  eps = 1e-15,
+  positive = NULL,
+  kernel = "optimal",
+  distance = 2,
   ...
 )
 }

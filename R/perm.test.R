@@ -19,6 +19,11 @@
 #' @param dag A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.
 #' @param dag_n A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.
 #' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
+#' @param k Integer. The number of nearest neighbors to use for local permutation schemes. Default is 15.
+#' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
+#' @param scale. Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
+#' @param eps Numeric. A small value added to avoid division by zero. Default is 1e-15.
+#' @param positive Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
@@ -52,9 +57,14 @@ perm.test <- function(formula,
                       metricfunc = NULL,
                       mlfunc = NULL,
                       nthread = 1,
-                      dag = NA,
-                      dag_n  = NA,
                       progress = TRUE,
+                      k = 15,
+                      center = TRUE,
+                      scale. = TRUE,
+                      eps = 1e-15,
+                      positive = NULL,
+                      kernel = "optimal",
+                      distance = 2,
                       ...) {
 
 
@@ -75,6 +85,13 @@ perm.test <- function(formula,
                    metricfunc = metricfunc,
                    subsample = subsample,
                    progress = progress,
+                   k = k,
+                   center = center,
+                   scale. = scale,
+                   eps = eps,
+                   positive = positive,
+                   kernel = kernel,
+                   distance = distance,
                    ...)
   # Creating the test statistic
   test_statistic <- test.gen(formula = formula,
@@ -92,6 +109,13 @@ perm.test <- function(formula,
                              metricfunc = metricfunc,
                              subsample = subsample,
                              progress = progress,
+                             k = k,
+                             center = center,
+                             scale. = scale,
+                             eps = eps,
+                             positive = positive,
+                             kernel = kernel,
+                             distance = distance,
                              ...)
 
 

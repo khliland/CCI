@@ -60,6 +60,13 @@ test.gen <- function(formula,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      progress = TRUE,
+                     k = 15,
+                     center = TRUE,
+                     scale. = TRUE,
+                     eps = 1e-15,
+                     positive = NULL,
+                     kernel = "optimal",
+                     distance = 2,
                      ...) {
 
   if (permutation && nperm < 10) {
@@ -111,7 +118,28 @@ test.gen <- function(formula,
       width = 60
     )
   }
-
+  
+  # Scaling and centering data (optional)
+  x_names <- all.vars(formula)[-1]
+  
+  if (isTRUE(center) || isTRUE(scale.)) {
+    
+    X_mat <- data[, x_names, drop = FALSE]
+    
+    if (isTRUE(center)) {
+      cm <- colMeans(X_mat, na.rm = TRUE)
+      X_mat <- sweep(X_mat, 2, cm, "-")
+    }
+    
+    if (isTRUE(scale.)) {
+      cs <- apply(X_mat, 2, sd)
+      cs[cs == 0 | is.na(cs)] <- 1
+      X_mat <- sweep(X_mat, 2, cs, "/")
+    }
+    
+    data[, x_names] <- X_mat
+  }
+  
 
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
@@ -126,6 +154,7 @@ test.gen <- function(formula,
       N <- nrow(sub_data)
     }
 
+    # Create training and testing indices
     if (metric %in% c("Kappa")) {
       inTraining <- caret::createDataPartition(y = factor(sub_data[[Y]]), p = p, list = FALSE)
       train_indices <- inTraining
@@ -135,10 +164,10 @@ test.gen <- function(formula,
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
     }
-
+    # Permute X if generating null distribution
     resampled_data <- sub_data
     if (permutation) {
-      resampled_data <- sub_data %>% mutate(!!X := sample(!!sym(X)))
+      resampled_data <- sub_data %>% mutate(!!X := sample(.data[[X]]))
     }
 
     # Apply machine learning method
@@ -189,6 +218,11 @@ test.gen <- function(formula,
           test_indices,
           metric = metric,
           metricfunc = metricfunc,
+          k = k,
+          eps = eps,
+          positive = positive,
+          kernel = kernel,
+          distance = distance,
           ...
         )
       } else {
