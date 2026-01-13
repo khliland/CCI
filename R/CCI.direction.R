@@ -112,6 +112,7 @@ CCI.direction <- function(formula,
                          rf = "rf",
                          xgboost = "xgbTree",
                          svm = "svmRadial",
+                         KNN = "kknn",
                          stop("Unsupported method"))
 
 

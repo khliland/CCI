@@ -121,23 +121,27 @@ test.gen <- function(formula,
   
   # Scaling and centering data (optional)
   x_names <- all.vars(formula)[-1]
-  
+  num_x <- x_names[sapply(data[, x_names, drop = FALSE],
+                          function(z) is.numeric(z) && !is.factor(z))]
   if (isTRUE(center) || isTRUE(scale.)) {
     
-    X_mat <- data[, x_names, drop = FALSE]
-    
-    if (isTRUE(center)) {
-      cm <- colMeans(X_mat, na.rm = TRUE)
-      X_mat <- sweep(X_mat, 2, cm, "-")
+    if (length(num_x) > 0L) {
+      
+      X_mat <- data[, num_x, drop = FALSE]
+      
+      if (isTRUE(center)) {
+        cm <- colMeans(X_mat, na.rm = TRUE)
+        X_mat <- sweep(X_mat, 2, cm, "-")
+      }
+      
+      if (isTRUE(scale.)) {
+        cs <- apply(X_mat, 2, sd, na.rm = TRUE)
+        cs[cs == 0 | is.na(cs)] <- 1
+        X_mat <- sweep(X_mat, 2, cs, "/")
+      }
+      
+      data[, num_x] <- X_mat
     }
-    
-    if (isTRUE(scale.)) {
-      cs <- apply(X_mat, 2, sd)
-      cs[cs == 0 | is.na(cs)] <- 1
-      X_mat <- sweep(X_mat, 2, cs, "/")
-    }
-    
-    data[, x_names] <- X_mat
   }
   
 

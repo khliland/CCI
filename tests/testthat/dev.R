@@ -27,11 +27,12 @@ summary(result)
 QQplot(result)
 plot(result)
 
-data <- NormalData(2500)
-result <- CCI.test(Y ~ X | Z1,
+data <- BinaryData(5000)
+result <- CCI.test(Y ~ X | Z1 ,
                    data = data,
                    seed = 1,
-                   method = "KNN")
+                   method = "KNN",
+                   choose_direction = TRUE)
 summary(result)
 
 result <- CCI.test(Y ~ X | Z1,
@@ -522,7 +523,7 @@ data.frame(
   expected = ifelse(names(pvals_svm) %in% should_reject, "reject", "not reject")
 )
 
-
+# End of tests
 
 
 run_scenarios_SineGaussianBiv <- function(n = 700, seed_data = 123, seed_test = 1, method = NULL) {
@@ -612,10 +613,10 @@ run_scenarios_SineGaussianBiv <- function(n = 700, seed_data = 123, seed_test = 
   out
 }
 # Example run
-results_rf <- run_scenarios_SineGaussianNoise(method = "rf")
-results_xgb <- run_scenarios_SineGaussianNoise(method = "xgboost")
-results_knn <- run_scenarios_SineGaussianNoise(method = "KNN")
-results_svm <- run_scenarios_SineGaussianNoise(method = "svm")
+results_rf <- run_scenarios_SineGaussianBiv(method = "rf")
+results_xgb <- run_scenarios_SineGaussianBiv(method = "xgboost")
+results_knn <- run_scenarios_SineGaussianBiv(method = "KNN")
+results_svm <- run_scenarios_SineGaussianBiv(method = "svm")
 
 pvals_rf <- sapply(results_rf, function(x) x$result$p.value)
 pvals_xgb <- sapply(results_xgb, function(x) x$result$p.value)
@@ -659,6 +660,7 @@ data.frame(
   reject = pvals_svm < alpha,
   expected = ifelse(names(pvals_svm) %in% should_reject, "reject", "not reject")
 )
+
 
 
 

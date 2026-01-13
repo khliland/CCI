@@ -43,10 +43,6 @@ wrapper_knn(
 \item{distance}{Numeric. Minkowski distance parameter. 2 = Euclidean. Default 2.}
 
 \item{...}{Additional arguments passed to kknn::kknn (e.g., ykernel, na.action)}
-
-\item{center}{Logical, center features using training means (default TRUE)}
-
-\item{scale.}{Logical, scale features using training sds (default TRUE)}
 }
 \value{
 Numeric performance metric
