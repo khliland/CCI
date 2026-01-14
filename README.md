@@ -53,11 +53,13 @@ Computational Conditional Independence Test
 --------------------------------------------
 Method:    CCI test using rf 
 Formula:   Y ~ X | Z1 + Z2 
-Permutations:  60 
+Permutations:  160 
 Metric:    RMSE 
 Tail:      left 
-Statistic: 1.144 
-P-value:   0.9344 
+Statistic: 1.127 
+P-value:   0.9068 
+
+Subsample:   1 
 ```
 
 The output tells us that you have performed a computational test of conditional independence using Random Forest  (`rf`) as the base machine learning algorithm, testing the condition `Y ~ X | Z1 + Z2`.
@@ -79,11 +81,13 @@ Computational Conditional Independence Test
 --------------------------------------------
 Method:    CCI test using rf 
 Formula:   Y ~ X | Z1 
-Permutations:  60 
+Permutations:  160 
 Metric:    RMSE 
 Tail:      left 
-Statistic: 1.293 
-P-value:   0.003011 
+Statistic: 1.253 
+P-value:   5.89e-05 
+
+Subsample:   1 
 ```
 At significant level 0.05 the test rejects the null hypothesis of `Y ~ X | Z1`, since the p-value is less than 0.05.
 We also added in the argument parametric = TRUE, which means that the p-value is calculated assuming that the null distribution is Gaussian.
@@ -117,9 +121,10 @@ summary(cci_test)
 plot(cci_test)
 ```
 If you notice in the example above, the null distribution looks kinda weird. It consist of two peaks, one at around -0.5 and one at 0.5. 
-This is in general not a good sign, and indicate that you should try to change the method.
-The CCI package comes with three build in machie learning methods for testing, Random Forest 'rf', Extreme Gradient Boosting 'xgboost' and Support Vector Machines 'svm'.
-If Random Forest fails, one should can change the method to XGBoost, like this: 
+This is in general not a good sign, and indicate that the learner is struggeling to make good predictions, in such cases one should try to change the method.
+The CCI package comes with four build in machine learning methods for testing, Random Forest 'rf', Extreme Gradient Boosting 'xgboost', K-nearest neighbour 'KNN' and Support Vector Machines 'svm'.
+
+When the default learner Random Forest fails, one should give priority to XGBoost, like this: 
 ```r
 test_w_xgb <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa", method = "xgboost")
 summary(test_w_xgb)
@@ -127,15 +132,31 @@ plot(test_w_xgb)
 ```
 Viola, now the null distribution looks much better, which is what we want. The p-value is 0.75 which is ok since `Y` and `X` are by construction conditionally independent given `Z1` and `Z2`.
 
-The third available method is support vector machine (`svm`). `svm` is very fast in small and medium data sets, 
-but not as robust as `rf` and `xgboost`.
+The learner support vector machine (`svm`) might work better in small data sets, 
+compared to the tree based learners `rf` and `xgboost`.
+
+Using 'svm' in small data sets, we set the nperm argument to 400 to get a more precise null distribution. that the null distribution is generated using 150 Monte Carlo samples. 
+
 ```r
 set.seed(1985)
-data <- BinaryData(500)
-test_w_svm <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa", method = "svm")
+data <- BinaryData(200)
+test_w_svm <- CCI.test(formula = Y ~ X | Z1, data = data, metric = "Kappa", method = "svm", nperm = 400)
 summary(test_w_svm)
 plot(test_w_svm)
 ```
+
+In large samples 'rf', 'xgboost' and 'svm' are all very slow and computationally demanding. Using the learner 'KNN' us by far the fastest
+method for large data sets. Here is an example of using 'KNN' for testing conditional independence in a large binary data set. However, as with 'svm', 'KNN' is not as robust is 'rf' and 'xgboost', so be careful when using it.
+```r
+set.seed(1985)
+data <- BinaryData(20000)
+test_w_knn <- CCI.test(formula = Y ~ X | Z1, data = data, metric = "Kappa", method = "KNN")
+summary(test_w_knn)
+plot(test_w_knn)
+```
+In the example above, the Subsample line in the output is set to 0.11. In large samples, the CCI.test automatically subsets the data to achieve faster testing. 
+This can be turn of by setting the argument `subsample = "No"` in the CCI.test() function.
+
 When you are dealing with character variables representing categories, you can convert these variables into factor variable. 
 'CCI.test' use metric = "Kappa", automatically.
 
@@ -163,15 +184,9 @@ data$Y <-as.factor(data$Y) # Make sure Y is a factor variable
 factor_test <- CCI.test(formula = Y ~ X | Z1, data = data)
 summary(factor_test)
 ```
-Let's see how `svm` performes
-```r
-test_svm_factor <- CCI.test(formula = Y ~ X | Z2, data = data, method = "svm", nperm = 150, seed = 1)
-summary(test_svm_factor)
-```
-In this case both methods successfully reject the null hypothesis which is what we want. 
-In the last example we set the argument `nperm = 150`, which means that the null distribution is generated using 150 Monte Carlo samples. 
-The default `nperm` value is 60, which will usually be enough. In some cases increasing the number of samples to get a more precise null distribution at the cost of longer computation time.
-We also set the seed parameter to 1, which ensures that the random number generation is reproducible. In everyday testing, setting the seed is a good idea. 
+
+The default `nperm` value is 160, which will usually be enough. In some cases increasing the number of samples to get a more precise null distribution at the cost of longer computation time.
+We also set the seed parameter to 1, which ensures that the random number generation is reproducible. Setting the seed is a good idea. 
 
 So now we have handled the `metric` and `nperm` arguments. An important argument in `CCI.test()` is the `p` argument, which controls the proportion of data used for training the model in each Monte Carlo Sample.
 Default value is 0.5, but it is often a good idea to increase this value to 0.7 or 0.8.
@@ -190,12 +205,13 @@ set.seed(1986)
 data <- SineGaussian(800, d = 0.5) # d = 0.5 breaks conditional independence Y _||_ X | Z
 summary(CCI.test(formula = Y ~ X | Z, p = 0.8, nrounds = 1000, data = data, parametric = T, seed = 3))
 ```
-There is also a `subsampling` argument which can be set to a value between 0 and 1. This reduces the sample size used for testing in each iteration, speeding up testing. 
-In the example below, even with 2 million observations testing is "fast"" because we only use 0.1% of the data for training the model in each iteration.
+
+In the example below, even with 2 million observations and using the random forest learner, runtime for one test is acceptable,
+because the CCI.test function is automatically sub-samples and only use about 0.3 % of the data for training the model in each iteration.
 ```r
 set.seed(1984)
 data <- SineGaussian(2000000, d = 0.5) 
-summary(CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25, subsample = 0.001))
+summary(CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25))
 ```
 
 You can pass on arguments to the machine learning algorithm used in `CCI.test()`. Here is an example of using the `xgboost` method with custom parameters.
@@ -219,7 +235,6 @@ method = "xgboost",
 parametric = TRUE, 
 p = 0.25,
 nthread = 5, 
-subsample = 0.7, 
 alpha = 0.3, 
 eta = 0.1, 
 max_depth = 6, 
@@ -257,13 +272,15 @@ The output from the test:
 ```r
 Computational Conditional Independence Test
 --------------------------------------------
-**Method:    CCI test using rf 
-**Formula:   X ~ Y | Z1 
-**Permutations:  60 
-**Metric:    RMSE 
-**Tail:      left 
-**Statistic: 1.347 
-**P-value:   6.509e-05 
+Method:    CCI test using rf 
+Formula:   X ~ Y | Z1 
+Permutations:  160 
+Metric:    RMSE 
+Tail:      left 
+Statistic: 1.247 
+P-value:   1.499e-08 
+
+Subsample:   1
 ```
 Even though we input the formula as `Y ~ X | Z1`, the function automatically changed it to `X ~ Y | Z1` since `X` had better predictive performance than `Y` given `Z1`.
 ```r
@@ -273,17 +290,19 @@ Not including choose direction gives:
 ```r
 Computational Conditional Independence Test
 --------------------------------------------
-**Method:    CCI test using rf 
-**Formula:   Y ~ X | Z1 
-**Permutations:  60 
-**Metric:    RMSE 
-**Tail:      left 
-**Statistic: 35.38 
-**P-value:   0.1701
+Method:    CCI test using rf 
+Formula:   Y ~ X | Z1 
+Permutations:  160 
+Metric:    RMSE 
+Tail:      left 
+Statistic: 22.2 
+P-value:   0.05876 
+
+Subsample:   1 
 ```
 Not setting 'choose_direction = TRUE' gives a different result, failing to reject the null hypothesis. Should you then always set 'choose_direction = TRUE'?
-choose_direction = TRUE is a good idea in many cases, however, it relies on `Y` and `X` being the same data type. In some cases, for instance with different data types, 
-it might be better to test both directions manually and see if they agree.
+choose_direction = TRUE is a good idea in many cases, however, the decision on predicting `Y` or `X` is determined by comparing RMSE, which, for instance with different data types, might not be the best way to decide which variable to predict.
+Unfortunatley, this is a weakness of the indirect way CCI is testing independence, by comparing out of sample predictions. In some cases, it might be better to test both directions manually and see if they agree.
 
 ## 2.1. QQ-plots of p-values
 In any statistical test, it might be the case that we have insufficient power and therefor one can not rely on one single p-value. 
@@ -361,7 +380,8 @@ results <- sapply(X = 1:length(formulas), function(i) {
 p <- CCI.test(formula   = formulas[[i]],
     data      = data, 
     parametric = TRUE,
-    seed      = i
+    seed      = i,
+    method = 'KNN'
   )$p.value
   
   data.frame(
@@ -375,25 +395,25 @@ print(results_df)
 The results looks something like this:
       [,1]                  
  [1,] "X1 ~ X4 | X2 + X3"   
- [2,] "0.801104088237935"   
+ [2,] "0.206164617120084"   
  [3,] "X1 ~ X5 | X2 + X3"   
- [4,] "0.573497167385236"   
+ [4,] "0.484597383038517"   
  [5,] "X1 ~ X6 | X5"        
- [6,] "9.0489090219566e-27" 
+ [6,] "2.78088375816534e-17"
  [7,] "X1 ~ X6 | X2 + X3"   
- [8,] "0.00028052810872208" 
+ [8,] "0.152848951218739"   
  [9,] "X2 ~ X3 | X1"        
-[10,] "0.254112291902073"   
+[10,] "0.0741838421103421"  
 [11,] "X2 ~ X6 | X5"        
-[12,] "7.58983980211691e-13"
+[12,] "0.000222402185375476"
 [13,] "X3 ~ X6 | X5"        
-[14,] "9.58536122533411e-08"
+[14,] "8.22978537578748e-06"
 [15,] "X4 ~ X5 | X2 + X3"   
-[16,] "0.447290410293313"   
+[16,] "0.0438917941548344"  
 [17,] "X4 ~ X6 | X5"        
-[18,] "0.795932362518178"   
+[18,] "0.21551154136803"    
 [19,] "X4 ~ X6 | X2 + X3"   
-[20,] "0.764899344816845"  
+[20,] "0.847667824630129"  
 ```
 Testing reveals that the rejected null hypothesis at significance level 0.05 is `X1 ~ X6 | X5`, `X1 ~ X6 | X2 + X3`, `X2 ~ X6 | X5` and `X3 ~ X6 | X5`. 
 The conditions `X2 ~ X6 | X5` and `X3 ~ X6 | X5` are rejected since `X1` is a common cause of `X2`, `X3` and `X6`.
@@ -482,7 +502,7 @@ caret_wrapper <- function(formula,
 ```r
 # Testing using k-nearest neighbors from caret
 dat <- NonLinNormal(2000)
-summary(CCI.test(formula = Y ~ X | Z1, data = dat, tail = 'left', mlfunc = caret_wrapper, caret_method = "knn", caret_data_type = "continuous", nperm = 100, seed = 2))
+summary(CCI.test(formula = Y ~ X | Z1, data = dat, tail = 'left', mlfunc = caret_wrapper, caret_method = "knn", caret_data_type = "continuous", seed = 2))
 ```
 
 ## 7. ️ Custom Performance Metric with `metricfunc`
@@ -538,12 +558,12 @@ cor(data$Y, data$X) # Showing the correlation between Y and X, indicating that t
 
 # Inputing Time as a conditioning variables for general trends.
 data <- na.omit(data)
-summary(CCI.test(formula = X ~ Y | X_lag1 + Time, data = data, p = 0.7, nperm = 100, method = "xgboost", parametric = TRUE))
-summary(CCI.test(formula = Y ~ X | X_lag1 + X_lag2 + Time, p = 0.7, nperm = 100, data = data, method = "xgboost", parametric = TRUE))
+summary(CCI.test(formula = X ~ Y | X_lag1 + Time, data = data, method = "xgboost", parametric = TRUE))
+summary(CCI.test(formula = Y ~ X | X_lag1 + X_lag2 + Time, data = data, method = "xgboost", parametric = TRUE))
 
 data$Y_lag1 <- c(NA, data$Y[-length(data$Y)])  
 data$Y_lag2 <- c(NA, NA, data$Y[-(length(data$Y)-1):-(length(data$Y))])
-summary(CCI.test(formula = Y ~ X | Y_lag1 + Y_lag2 + Time, p = 0.7, nperm = 100, data = data, method = "xgboost", parametric = TRUE))
+summary(CCI.test(formula = Y ~ X | Y_lag1 + Y_lag2 + Time, data = data, method = "xgboost", parametric = TRUE))
 ```
 
 

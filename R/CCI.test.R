@@ -35,7 +35,7 @@
 #' @param positive Character. The name of the positive class (KNN) in the data, used for classification tasks. Default is NULL.
 #' @param kernel Character. The kernel type to use for KNN method. Default is "optimal".
 #' @param samples Integer. Number of hyperparameter combinations used in tuning. Default is 35.
-#' @param distance Numeric. The distance metric to use for KNN method. Default is 2 (Euclidean distance). 
+#' @param distance Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.
 #' @param seed Integer. Set the seed for reproducing results. Default is NA.
 #' @param random_grid Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.

@@ -112,7 +112,7 @@ CCI.test(
 
 \item{kernel}{Character. The kernel type to use for KNN method. Default is "optimal".}
 
-\item{distance}{Numeric. The distance metric to use for KNN method. Default is 2 (Euclidean distance).}
+\item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
 
 \item{seed}{Integer. Set the seed for reproducing results. Default is NA.}
 

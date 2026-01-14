@@ -58,6 +58,13 @@ QQplot <- function(object,
   degree <- object$degree
   poly <- object$poly
   interaction <- object$interaction
+  k = object$k
+  center = object$center
+  scale. = object$scale
+  eps = object$eps
+  positive = object$positive
+  kernel = object$kernel
+  distance = object$distance
   additional_args <- object$additional_args
 
   # Ensure p and N are numeric

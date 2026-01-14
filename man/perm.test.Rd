@@ -67,7 +67,7 @@ perm.test(
 
 \item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
 
-\item{k}{Integer. The number of nearest neighbors to use for local permutation schemes. Default is 15.}
+\item{k}{Integer. The number of nearest neighbors for the "KNN" method. Default is 15.}
 
 \item{center}{Logical. If TRUE, the data is centered before model fitting. Default is TRUE.}
 
@@ -77,11 +77,11 @@ perm.test(
 
 \item{positive}{Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.}
 
+\item{kernel}{Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".}
+
+\item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
+
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
-
-\item{dag}{A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.}
-
-\item{dag_n}{A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.}
 }
 \value{
 An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.

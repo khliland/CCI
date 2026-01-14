@@ -480,7 +480,7 @@ wrapper_svm <- function(formula,
 #' @param ... Additional arguments passed to kknn::kknn (e.g., ykernel, na.action)
 #'
 #' @importFrom kknn kknn 
-#' @importFrom stats model.matrix
+#' @importFrom stats model.matrix fitted
 #' @importFrom caret confusionMatrix
 #'
 #' @return Numeric performance metric

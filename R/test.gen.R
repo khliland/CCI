@@ -19,6 +19,13 @@
 #' @param metricfunc Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
 #' @param progress Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.
+#' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
+#' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
+#' @param scale. Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
+#' @param eps Numeric. A small value added to avoid division by zero. Default is 1e-15.
+#' @param positive Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
+#' @param kernel Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".
+#' @param distance Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.
 #' @param ... Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.
 #'
 #' @return A list containing the test distribution.

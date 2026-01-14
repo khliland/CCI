@@ -16,14 +16,14 @@
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
-#' @param dag A DAGitty object specifying the directed acyclic graph for the variables. Default is NA.
-#' @param dag_n A character string specifying the name of the node in the DAGitty object to be used for conditional independence testing. Default is NA.
 #' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
-#' @param k Integer. The number of nearest neighbors to use for local permutation schemes. Default is 15.
+#' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
 #' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
 #' @param scale. Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
 #' @param eps Numeric. A small value added to avoid division by zero. Default is 1e-15.
 #' @param positive Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
+#' @param kernel Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".
+#' @param distance Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.
 #' @param ... Additional arguments to pass to the machine learning model fitting function.
 #'
 #' @return An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.

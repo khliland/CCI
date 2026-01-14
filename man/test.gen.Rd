@@ -64,6 +64,20 @@ test.gen(
 
 \item{progress}{Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.}
 
+\item{k}{Integer. The number of nearest neighbors for the "KNN" method. Default is 15.}
+
+\item{center}{Logical. If TRUE, the data is centered before model fitting. Default is TRUE.}
+
+\item{scale.}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
+
+\item{eps}{Numeric. A small value added to avoid division by zero. Default is 1e-15.}
+
+\item{positive}{Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.}
+
+\item{kernel}{Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".}
+
+\item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
+
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
 }
 \value{
