@@ -1,7 +1,9 @@
 10/11/2025 - Changes in wrappers to handle inf and -inf predictions
-08/01/2026 - Several improvements.
-- Added in wrapper for KNN.
-- Added LogLoss to all wrappers. 
-- Update XGBoost wrapper to be compatibale with expected updates. 
-- Nperm set to 160.
+14/01/2026 - New Version updloaded to CRAN
+Several updates
+- Added in wrapper for KNN
+- Added LogLoss to all wrappers 
+- Update XGBoost 
+- Nperm set to 160
+- Added functionality for automatically setting subsample in large samples
 - Summary output is cleaner
