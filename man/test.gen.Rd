@@ -11,13 +11,15 @@ test.gen(
   metric,
   nperm = 60,
   subsample = 1,
-  p = 0.8,
+  p = 0.5,
   poly = TRUE,
   interaction = TRUE,
   degree = 3,
   nrounds = 600,
   nthread = 1,
   permutation = FALSE,
+  robust = TRUE,
+  k_clusters = 20,
   metricfunc = NULL,
   mlfunc = NULL,
   progress = TRUE,
@@ -44,7 +46,7 @@ test.gen(
 
 \item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 
-\item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.}
+\item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.}
 
 \item{poly}{Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.}
 
@@ -57,6 +59,10 @@ test.gen(
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 
 \item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
+
+\item{robust}{Logical. If TRUE, uses k-means clustering to create strata for permutation. Default is TRUE.}
+
+\item{k_clusters}{Integer. The number of clusters to use for k-means clustering. Default is 20.}
 
 \item{metricfunc}{Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.}
 
@@ -79,6 +85,8 @@ test.gen(
 \item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
 
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
+
+\item{seed}{Integer. An optional random seed for reproducibility. Default is NULL.}
 }
 \value{
 A list containing the test distribution.

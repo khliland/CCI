@@ -18,6 +18,8 @@ perm.test(
   interaction = TRUE,
   degree = 3,
   tail = NA,
+  robust = TRUE,
+  k_cluster = 20,
   metricfunc = NULL,
   mlfunc = NULL,
   nthread = 1,
@@ -58,6 +60,10 @@ perm.test(
 \item{degree}{The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
 \item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
+
+\item{robust}{Logical. If TRUE, uses a robust method for permutation. Default is TRUE.}
+
+\item{k_cluster}{Integer. The number of clusters to use for the robust permutation method. Default is 20.}
 
 \item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
 

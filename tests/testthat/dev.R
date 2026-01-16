@@ -1,18 +1,18 @@
 Sys.setenv(TMPDIR = tempdir())
 devtools::check()
+devtools::check(cran = TRUE)
 devtools::check_win_devel()
 devtools::document()
 devtools::clean_dll()
 devtools::build()
-devtools::build_vignettes
-# remove.packages("CCI")
+devtools::build_vignettes(quiet = FALSE)
+usethis::use_vignette("Testing-CI-with-CCI")
 devtools::install()
 
 library(CCI)
 library(dplyr)
 library(CIsimdata)
 # Testing of functions
-debug(test.gen)
 set.seed(123)
 data <- NormalData(500)
 result <- CCI.test(Y ~ X | Z1 + Z2,
@@ -44,6 +44,7 @@ QQplot(CCI_obj)
 CCI_obj <- CCI.test(formula = Y ~ X | Z2, data = data, nperm = 200, parametric = T)
 QQplot(CCI_obj) 
 
+data <- PoissonNoise(500)
 result <- CCI.test(Y ~ X | Z1,
                    data = data,
                    seed = 1,
@@ -953,14 +954,66 @@ data.frame(
 
 
 
+simulate_discrete <- function(
+    n = 1000,
+    K = 10,          # number of strata (levels of Z)
+    sigma_y = 1.0,
+    sigma_x = 0.5,
+    seed = NULL
+) {
+  if (!is.null(seed)) set.seed(seed)
+  
+  Z <- sample.int(K, n, replace = TRUE)
+  
+  # g(Z): only depends on Z (so Y is independent of X given Z)
+  gZ <- sin(2 * pi * Z / K) + 0.8 * (Z %% 3 == 0) - 0.4 * (Z %% 4 == 0)
+  
+  # X depends on Z -> creates marginal correlation between X and Y through Z
+  # but no direct X->Y effect after conditioning on Z.
+  X <- as.numeric(scale(gZ)[, 1] + rnorm(n, sd = sigma_x))
+  
+  # Y depends on Z only
+  Y <- gZ + rnorm(n, sd = sigma_y)
+  
+  data.frame(Y = Y, X = X, Z = factor(Z))
+}
 
+results_list <- list()
+for (i in c(1:200)) {
+  data <- simulate_discrete(n = 700, K = 10)
+  res <- CCI.test(Y ~ X | Z, data = data, seed = i)
+  results_list[[i]] <- res$p.value
+}
+pvals <- unlist(results_list)
+# pvals less tna 0.05
+mean(pvals < 0.05)
+hist(pvals, breaks = 10)
 
+simulate_correlated_data <- function(n = 500, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  Z <- rnorm(n)
+  X <- 0.95 * Z + rnorm(n, sd = 0.3)  
+  Y <- 2 * Z + rnorm(n)
+  return(data.frame(Y = Y, X = X, Z = Z))
+}
 
-
-
-
-
-
+results_list <- list()
+for (i in c(1:100)) {
+  data <- simulate_correlated_data(n = 500, seed = 1)
+  res <- CCI.test(Y ~ X | Z, data = data, seed = i)
+  results_list[[i]] <- res$p.value
+}
+pvals <- unlist(results_list)
+# pvals less tna 0.05
+mean(pvals < 0.05)
+hist(pvals, breaks = 10)
+simulate_independent_data <- function(n = 500, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  Z <- rnorm(n)
+  X <- rnorm(n)  
+  Y <- rnorm(n)
+  return(data.frame(Y = Y, X = X, Z = Z))
+}
 
 
 

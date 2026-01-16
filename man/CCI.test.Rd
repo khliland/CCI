@@ -17,6 +17,8 @@ CCI.test(
   parametric = FALSE,
   poly = TRUE,
   degree = 3,
+  robust = TRUE,
+  k_cluster = 20,
   subsample = "Auto",
   subsample_set,
   min_child_weight = 1,
@@ -69,6 +71,10 @@ CCI.test(
 \item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
 
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+
+\item{robust}{Logical. If TRUE, uses a robust method for permutation. Default is TRUE.}
+
+\item{k_cluster}{Integer. The number of clusters to use for the robust permutation method. Default is 20.}
 
 \item{subsample}{Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"}
 

@@ -1,0 +1,173 @@
+---
+title: "Conditional Independence Testing with CCI"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+csl: https://www.zotero.org/styles/apa
+vignette: >
+  %\VignetteIndexEntry{Conditional Independence Testing with CCI}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(CCI)
+```
+# Introduction
+
+The **CCI** package implements computational tests for conditional independence as proposed in @Thorjussen2024. To test the hypothesis \( Y \ind X \mid Z \), the method evaluates whether \( X \) provides additional out-of-sample predictive information about \( Y \) beyond \( Z \). Under conditional independence, no such improvement is expected. Formally, under the null hypothesis, a predictive model \( f_Y(x,z) = \mathbf{E}[Y \mid X=x, Z=z] \) should perform equivalently when \( X \) is replaced by an independent permutation \( X^* \), i.e.
+\[
+\mathbf{E}[Y \mid X=x, Z=z] = \mathbf{E}[Y \mid X^*=x, Z=z].
+ \]
+ Predictive performance metrics (e.g. RMSE) are used to compare models based on \( X \) and \( X^* \), yielding a test of conditional independence.
+\[
+    H_0: Y \perp X | Z \Rightarrow M(f_Y(X^*, Z)) = M(f_Y(X, Z)), \\
+    H_1: Y \not\perp X | Z \Rightarrow M(f_Y(X^*, Z)) \neq M(f_Y(X, Z)). 
+\]
+Where $M$ is a performance metric such as RMSE. 
+
+In order to compare \[\mathbf{E}[Y \mid X^*=x, Z=z]\] with \[\mathbf{E}[Y \mid X=x, Z=z]\], CCI builds a null distribution by Monte Carlo cross validation. Monte Carlo cross validation repeatedly splits the data into training and test sets, fits the model on the training set, and evaluates the performance on the test set. By permuting \( X \) multiple times, CCI generates a distribution of performance metrics under the null hypothesis of conditional independence. The observed performance metric is then compared to this null distribution to compute a p-value.
+
+The CCI test is an indirect test, which replaces the problem of testing conditional independence with the problem of evaluating predictive performance. The CCI approach achieves two main goals, firstly it avoids difficult assumptions when testing conditional independence using permutations, such as exchangeability and assymptotic behaviour of test statistics; which makes it robust in terms of type I error control. Secondly, it facilitates a general testing framework for various different data types and structures, for instance testing conditional independence between two categorical variables. However, the downside of this approach is that it requires more computational resources and in many cases have a long runtime compared to most other CI tests. It can have moderate or low statistical power in small samples, particularly in complex data and the results can be sensitive to the choice of machine learning method and hyperparameters.
+
+The CCI testing relies mainly in tree based machine learning models to construct the null distribution. Tree based models are flexible and can capture complex relationships in the data, making them suitable for a wide range of applications. And they are proven to be robust in predicting out-of-sample, even though trained deeply on the train data. 
+
+Throught these examples, we use simulated data where the ground truth is known.
+## how to run a basic conditional independence test using CCI
+The function below generates a data set where `Y` is conditionally independent of `X` given `Z1` and `Z2`. The functions are linear 
+so it should be easy to test conditional independence using any statistical test for conditional independence.
+```{r}
+NormalData <- function(N){
+  Z1 <- stats::rnorm(N,0,1)
+  Z2 <- stats::rnorm(N,0,1)
+  X <- stats::rnorm(N, Z1 + Z2, 1)
+  Y <- stats::rnorm(N, Z1 + Z2, 1)
+
+  df <- data.frame(Z1, Z2, X, Y)
+  return(df)
+}
+```
+The `CCI.test()` function is the main testing function, required inputs are `formula` and `data`. If we want to test the hypothesis `Y _||_ X | Z1, Z2`, this is written as `formula = Y ~ X | Z1 + Z2`.  
+```{r}
+set.seed(123)
+data <- NormalData(400)
+simple_test <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, seed = 42) # Setting seed for reproducibility
+simple_test
+```
+The results produce a p-value of 0.81; we do not reject the null. If we remove `Z1` or `Z2` from the conditioning set, we should reject the null hypothesis since `Y` and `X` are dependent given only one of the `Z` variables. Now we wrapp the output inside a `summary()` function to get a more detailed output.
+```{r}
+fail_test <- CCI.test(formula = Y ~ X | Z1, data = data, seed = 42) 
+summary(fail_test)
+```
+The detailed output gives us the method of testing, which is `CCI test using rf`, meaning we are using the CCI method with a random forest learner. The formula states that we are testing the condition `Y ~ X | Z1`. Permutations indicate the number of Monte Carlo samples which where used to create the null distribution (160 is default). The perfromance metric $M$ is RMSE, which is the default metric for continuous outcomes. `Tail: left` means that when the test statistic is to the left of the bulk of the null distribution (lower RMSE is better), then it means that including $X$ improves the prediction of $Y$ beyond $X^*$ and $Z1$. The value of the test statisic is 1.317 and the calculated p-value is 0.006211. Note that the calculate p-value is empirical, and has the lowest possible value, i.e. 1/161 = 0.006211. `Subsample: 1` means that the whole sample where used in each Monte Carlo run to produce the null distribution. 
+
+If we want to use `xgboost` instead of random forest, we can set the argument `method = "xgboost"`. We also set some other arguments, `nperm = 250` means that instead of the default 160 Monte Carlo iterations, we now perform 250, this will give a more precises p-value. `parametric = TRUE` means that the p-value is calculated assuming the null distribution is Gaussian. The `nrounds = 400` argument sets the number of rounds (trees) for methods `xgboost` and `rf` (default is 600). We also pass in some hyperparameter settings for the XGBoost algorithm. 
+
+```{r}
+summary(CCI.test(formula = Y ~ X | Z1, 
+                 data = data, 
+                 method = 'xgboost',
+                 nperm = 250,
+                 parametric = TRUE,
+                 nrounds = 400,
+                 min_child_weight = 2,
+                 colsample_bytree = 2,
+                 eta = 0.1,
+                 max_depth = 10,
+                 seed = 42))
+```
+### Visualizing the null distribution
+The null distribution can be visualized using the `plot` function.
+```{r}
+set.seed(13)
+dat <- NormalData(500)
+cci <- CCI.test(Y ~ X | Z1 + Z2, data = dat, seed = 1)
+plot(cci)
+```
+
+## CCI in large samples
+Let's generate some difficult data. 
+```{r}
+HardCase <- function(N) {
+  Z1 <- stats::runif(N, -2, 2)
+  Z2 <- stats::runif(N, -2, 2)
+  hZ <- sin(Z1) * cos(Z2)
+  X <- hZ + 0.2 * stats::rnorm(N)
+  Y <- hZ^2 + 0.2 * stats::rnorm(N)
+  data.frame(X, Y, Z1, Z2)
+}
+```
+
+Even with 5000 samples, the default settings in CCI starts to become slow. 
+```{r}
+set.seed(1)
+data <- HardCase(5000)
+tic <- Sys.time()
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data))
+toc <- Sys.time()
+toc - tic
+```
+The most efficient way of speeding up the runtime is the use the method `KNN`.
+```{r}
+tic <- Sys.time()
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = "KNN"))
+toc <- Sys.time()
+toc - tic
+```
+However, the KNN method is not as robust as the tree based methods. If you notice the summary output above, the subsample line is now changed to 0.3, meaning that when testing conditional independence, only 30% of the data is used in each Monte Carlo iteration, however, it is a different 30 % for each iteration. This is automatically set to speed up the testing runtime. However, when using `KNN` it is often not necessary unless the sample is very large. In the example below we set the `subsample` argument to `"No"`, meaning no sub-sampling will occur (except what's inside the learner default settings).   
+
+```{r}
+tic <- Sys.time()
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = "KNN", subsample = "No"))
+toc <- Sys.time()
+toc - tic
+```
+In the last example, test with 50000 observations, using `KNN` with default subsample still gives a fast runtime.
+
+```{r}
+set.seed(1)
+data <- HardCase(50000)
+tic <- Sys.time()
+summary(CCI.test(Y ~ X | Z1, data = data, method = "KNN"))
+toc <- Sys.time()
+toc - tic
+```
+## Adapting to outcome type
+CCI automatically adapts to the outcome type. For continuous outcomes, it uses regression methods and metrics RMSE; for categorical outcomes, it uses classification methods and metrics Kappa.
+```{r}
+ExpLogThreshold <- function(N) {
+  Z1 <- stats::rnorm(N)
+  Z2 <- stats::rnorm(N)
+  X <- exp(Z1) + Z2 + stats::rnorm(N, 0, 0.2)
+  Y <- ifelse(log(abs(Z1) + 1) + Z2 > 0.5, "Goblin",
+              ifelse(log(abs(Z1) + 1) + Z2 > 0, "Orc",
+                     ifelse(log(abs(Z1) + 1) > -0.5, "Troll", "Elf")))
+  return(data.frame(Z1, Z2, X, Y))
+}
+```
+By setting the outcome `Y` as a factor, CCI recognizes it as a classification problem and automatically switches to classification methods and metrics.
+```{r}
+set.seed(123)
+dat <- ExpLogThreshold(500)
+dat$Y <- as.factor(dat$Y)
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat))
+summary(CCI.test(Y ~ X | Z1, data = dat)) 
+```
+The user can also manually specify the metric to use via the `metric` argument.
+```{r}
+set.seed(123)
+dat <- ExpLogThreshold(500)
+dat$Y <- as.numeric(as.factor(dat$Y))
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat, metric = "Kappa"))
+```
+
+The dashed line indicates the observed test statistic, while the histogram represents the null distribution generated through permutations.
+
+# References
+

@@ -66,6 +66,8 @@ QQplot <- function(object,
   kernel = object$kernel
   distance = object$distance
   additional_args <- object$additional_args
+  robust <- object$robust
+  k_cluster <- object$k_cluster
 
   # Ensure p and N are numeric
   if (!is.numeric(p) || !is.numeric(N)) {
@@ -90,6 +92,8 @@ QQplot <- function(object,
                           poly = poly,
                           interaction = interaction,
                           k = k,
+                          robust = robust,
+                          k_cluster = k_cluster,
                           center = center,
                           scale. = scale,
                           eps = eps,

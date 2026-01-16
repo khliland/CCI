@@ -8,7 +8,7 @@
 #' @param metric Character. The type of metric: can be "RMSE" or "Kappa". Default is 'RMSE'
 #' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or "svm" for Support Vector Machine.
 #' @param nperm Integer. The number of generated Monte Carlo samples. Default is 60.
-#' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.8.
+#' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.
 #' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
 #' @param poly Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.
 #' @param interaction Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.
@@ -16,6 +16,8 @@
 #' @param nrounds Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 500.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
+#' @param robust Logical. If TRUE, uses k-means clustering to create strata for permutation. Default is TRUE.
+#' @param k_clusters Integer. The number of clusters to use for k-means clustering. Default is 20.
 #' @param metricfunc Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
 #' @param progress Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.
@@ -26,6 +28,7 @@
 #' @param positive Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
 #' @param kernel Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".
 #' @param distance Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.
+#' @param seed Integer. An optional random seed for reproducibility. Default is NULL.
 #' @param ... Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.
 #'
 #' @return A list containing the test distribution.
@@ -57,13 +60,15 @@ test.gen <- function(formula,
                      metric,
                      nperm = 60,
                      subsample = 1,
-                     p = 0.8,
+                     p = 0.5,
                      poly = TRUE,
                      interaction = TRUE,
                      degree = 3,
                      nrounds = 600,
                      nthread = 1,
                      permutation = FALSE,
+                     robust = TRUE,
+                     k_clusters = 20,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      progress = TRUE,
@@ -75,7 +80,7 @@ test.gen <- function(formula,
                      kernel = "optimal",
                      distance = 2,
                      ...) {
-
+  
   if (permutation && nperm < 10) {
     stop("nperm can't be less than 10")
   }
@@ -110,7 +115,8 @@ test.gen <- function(formula,
   }
 
   formula <- build_formula(formula, poly_terms, interaction_terms)
-
+  Z_new <- all.vars(formula[[3]])[-1] # Use this for binning
+  
   pb_message <- if (permutation) {
     "Creating null distribution"
   } else {
@@ -165,6 +171,45 @@ test.gen <- function(formula,
       N <- nrow(sub_data)
     }
 
+    # Permute X if generating null distribution
+
+    if (permutation) {
+      if (robust && !is.null(Z) ) { # Mind that Z is evaluated, not new_Z
+        Z_df <- sub_data[, Z_new, drop = FALSE]
+        Z_mat <- stats::model.matrix(~ . - 1, data = Z_df)
+        
+        # Scale Z for k-means stability (avoid zero-variance columns)
+        Z_cm <- colMeans(Z_mat, na.rm = TRUE)
+        Z_cs <- apply(Z_mat, 2, sd, na.rm = TRUE)
+        Z_cs[Z_cs == 0 | is.na(Z_cs)] <- 1
+        Z_mat <- sweep(sweep(Z_mat, 2, Z_cm, "-"), 2, Z_cs, "/")
+        
+        if (k_clusters < 2L) stop("bins must be >= 2 for k-means clustering strata.")
+        if (k_clusters > nrow(Z_mat)) k_clusters <- nrow(Z_mat)
+        
+        km <- stats::kmeans(Z_mat, centers = k_clusters, nstart = 10)
+        
+        sub_data$Z_stratum <- km$cluster
+      
+        resampled_data <- sub_data
+        
+        resampled_data[[X]] <- ave(
+          resampled_data[[X]],
+          resampled_data$Z_stratum,
+          FUN = function(v) sample(v, length(v), replace = FALSE)
+        )
+        
+        resampled_data$Z_stratum <- NULL
+        
+      } else {
+        resampled_data <- sub_data %>%
+          dplyr::mutate(!!X := sample(.data[[X]]))
+      }
+    } else {
+      resampled_data <- sub_data
+    }
+    
+    
     # Create training and testing indices
     if (metric %in% c("Kappa")) {
       inTraining <- caret::createDataPartition(y = factor(sub_data[[Y]]), p = p, list = FALSE)
@@ -174,11 +219,6 @@ test.gen <- function(formula,
       inTraining <- sample(1:nrow(sub_data), size = floor(p * N), replace = FALSE)
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
-    }
-    # Permute X if generating null distribution
-    resampled_data <- sub_data
-    if (permutation) {
-      resampled_data <- sub_data %>% mutate(!!X := sample(.data[[X]]))
     }
 
     # Apply machine learning method

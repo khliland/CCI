@@ -13,6 +13,8 @@
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree The degree of polynomial terms to include if poly is TRUE. Default is 3.
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
+#' @param robust Logical. If TRUE, uses a robust method for permutation. Default is TRUE.
+#' @param k_cluster Integer. The number of clusters to use for the robust permutation method. Default is 20.
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
@@ -54,6 +56,8 @@ perm.test <- function(formula,
                       interaction = TRUE,
                       degree = 3,
                       tail = NA,
+                      robust = TRUE,
+                      k_cluster = 20,
                       metricfunc = NULL,
                       mlfunc = NULL,
                       nthread = 1,
@@ -68,7 +72,6 @@ perm.test <- function(formula,
                       ...) {
 
 
-
   # Creating the null distribution
   dist <- test.gen(formula = formula,
                    metric = metric,
@@ -81,6 +84,8 @@ perm.test <- function(formula,
                    nrounds = nrounds,
                    p = p,
                    permutation = TRUE,
+                   robust = robust,
+                   k_cluster = k_cluster,
                    mlfunc = mlfunc,
                    metricfunc = metricfunc,
                    subsample = subsample,
@@ -105,6 +110,7 @@ perm.test <- function(formula,
                              nrounds = nrounds,
                              p = p,
                              permutation = FALSE,
+                             robust = FALSE,
                              mlfunc = mlfunc,
                              metricfunc = metricfunc,
                              subsample = subsample,
@@ -158,6 +164,8 @@ perm.test <- function(formula,
               test.statistic = test_statistic,
               tail = tail,
               p.value =  p.value,
+              robust = robust,
+              k_cluster = k_cluster,
               additional_args = additional_args
               )
 
