@@ -266,3 +266,70 @@ build_formula <- function(formula, poly_terms = NULL, interaction_terms = NULL) 
 
   return(as.formula(formula_string))
 }
+
+#' Check whether Z contains at least one categorical variable
+#'
+#' Categorical is defined as factor (and optionally character).
+#'
+#' @param sub_data data.frame containing the Z columns.
+#' @param Z character vector of column names defining the conditioning set.
+#' @param allow_character logical; treat character as categorical. Default TRUE.
+#' @return logical scalar.
+is_categorical_Z_any <- function(sub_data, Z, allow_character = TRUE) {
+  if (is.null(Z) || length(Z) == 0) return(FALSE)
+  if (!is.data.frame(sub_data)) stop("`sub_data` must be a data.frame.")
+  if (!all(Z %in% names(sub_data))) stop("Some Z variables are not in `sub_data`.")
+  
+  cols <- sub_data[Z]
+  is_cat <- vapply(
+    cols,
+    function(x) is.factor(x) || (allow_character && is.character(x)),
+    logical(1)
+  )
+  any(is_cat)
+}
+
+#' Create strata from the categorical subset of Z
+#'
+#' Uses interaction() on the categorical Z columns only.
+#'
+#' @param sub_data data.frame containing Z columns.
+#' @param Z character vector of Z column names.
+#' @param allow_character logical; treat character as categorical. Default TRUE.
+#' @return A factor defining strata.
+make_strata_from_categorical_Z <- function(sub_data, Z, allow_character = TRUE) {
+  if (!is.data.frame(sub_data)) stop("`sub_data` must be a data.frame.")
+  if (is.null(Z) || length(Z) == 0) stop("`Z` must be a non-empty character vector.")
+  if (!all(Z %in% names(sub_data))) stop("Some Z variables are not in `sub_data`.")
+  
+  cols <- sub_data[Z]
+  is_cat <- vapply(
+    cols,
+    function(x) is.factor(x) || (allow_character && is.character(x)),
+    logical(1)
+  )
+  
+  if (!any(is_cat)) stop("No categorical variables found in Z.")
+  
+  cat_cols <- cols[is_cat]
+  
+  # Ensure characters are treated as categorical consistently
+  cat_cols <- lapply(cat_cols, function(x) if (is.factor(x)) x else as.factor(x))
+  
+  interaction(cat_cols, drop = TRUE, lex.order = TRUE)
+}
+
+#' Stratified permutation of x within strata
+#'
+#' @param x vector to permute.
+#' @param strata factor-like vector defining strata.
+#' @param seed optional seed for reproducibility.
+#' @return x_star permuted within strata.
+permute_within_strata <- function(x, strata, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  if (length(x) != length(strata)) stop("`x` and `strata` must have the same length.")
+  
+  ave(x, strata, FUN = function(v) {
+    if (length(v) < 2L) v else sample(v, replace = FALSE)
+  })
+}

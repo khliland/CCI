@@ -1017,8 +1017,39 @@ simulate_independent_data <- function(n = 500, seed = NULL) {
 
 
 
-
-
+simulate_cat_Z1_Z2_null <- function(
+    n = 1000,
+    K1 = 5,
+    K2 = 5,
+    sigma_y = 1.0,
+    sigma_x = 1.0,
+    seed = NULL
+) {
+  if (!is.null(seed)) set.seed(seed)
+  
+  # Categorical Z's
+  Z1 <- factor(sample(seq_len(K1), n, replace = TRUE))
+  Z2 <- factor(sample(seq_len(K2), n, replace = TRUE))
+  
+  z1_num <- as.numeric(Z1)
+  z2_num <- as.numeric(Z2)
+  
+  g_Z <- sin(2 * pi * z1_num) + 0.3 * (z1_num * z2_num)
+  
+  Y <- g_Z + rnorm(n, sd = sigma_y)
+  
+  X <- scale(g_Z)[, 1] + rnorm(n, sd = sigma_x)
+  
+  data.frame(
+    Y = Y,
+    X = X,
+    Z1 = Z1,
+    Z2 = Z2
+  )
+}
+data <- simulate_cat_Z1_Z2_null(n = 800)
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, seed = 1, method = "rf"))
+summary(CCI.test(Y ~ X | Z1, data = data, seed = 1, method = "rf"))
 
 
 

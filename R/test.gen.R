@@ -96,7 +96,7 @@ test.gen <- function(formula,
   if (length(Z) == 0) {
     Z <- NULL
   }
-  if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
+  if (!is.null(Z) && any(sapply(data[Z], is.factor)) && verbose) {
     warning("Polynomial terms are not supported for factor variables. Polynomial terms will be skipped. To include them, convert factors to dummy variables first.")
     poly <- FALSE
   }
@@ -171,39 +171,18 @@ test.gen <- function(formula,
       N <- nrow(sub_data)
     }
 
+   
     # Permute X if generating null distribution
-
     if (permutation) {
-      if (robust && !is.null(Z) ) { # Mind that Z is evaluated, not new_Z
-        Z_df <- sub_data[, Z_new, drop = FALSE]
-        Z_mat <- stats::model.matrix(~ . - 1, data = Z_df)
-        
-        # Scale Z for k-means stability (avoid zero-variance columns)
-        Z_cm <- colMeans(Z_mat, na.rm = TRUE)
-        Z_cs <- apply(Z_mat, 2, sd, na.rm = TRUE)
-        Z_cs[Z_cs == 0 | is.na(Z_cs)] <- 1
-        Z_mat <- sweep(sweep(Z_mat, 2, Z_cm, "-"), 2, Z_cs, "/")
-        
-        if (k_clusters < 2L) stop("bins must be >= 2 for k-means clustering strata.")
-        if (k_clusters > nrow(Z_mat)) k_clusters <- nrow(Z_mat)
-        
-        km <- stats::kmeans(Z_mat, centers = k_clusters, nstart = 10)
-        
-        sub_data$Z_stratum <- km$cluster
-      
-        resampled_data <- sub_data
-        
-        resampled_data[[X]] <- ave(
-          resampled_data[[X]],
-          resampled_data$Z_stratum,
-          FUN = function(v) sample(v, length(v), replace = FALSE)
-        )
-        
-        resampled_data$Z_stratum <- NULL
-        
+      if (robust && is_categorical_Z_any(sub_data, Z)) { # Mind that Z is evaluated, not new_Z
+        # Permute within strata of Z 
+        strata <- make_strata_from_categorical_Z(sub_data, Z)
+        X_star <- permute_within_strata(sub_data$X, strata)
+        # Replace X with permuted version
+        resampled_data <- sub_data %>% dplyr::mutate(!!X := X_star)
       } else {
         resampled_data <- sub_data %>%
-          dplyr::mutate(!!X := sample(.data[[X]]))
+          dplyr::mutate(!!X := sample(.data[[X]], size = dplyr::n(), replace = FALSE))
       }
     } else {
       resampled_data <- sub_data
