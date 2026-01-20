@@ -61,7 +61,7 @@ QQplot <- function(object,
   interaction <- object$interaction
   k = object$k
   center = object$center
-  scale. = object$scale
+  scale = object$scale
   eps = object$eps
   positive = object$positive
   kernel = object$kernel
