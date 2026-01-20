@@ -40,18 +40,62 @@ check_formula <- function(formula, data) {
 
 
 clean_formula <- function(formula) {
-  formula_terms <- attr(stats::terms(formula), "term.labels")
+  
+  # If already conditional, return as is
+  if ("|" %in% all.names(formula)) {
+    return(formula)
+  }
+  
+  terms_rhs <- attr(stats::terms(formula), "term.labels")
+  
+  if (length(terms_rhs) < 2) {
+    stop("Formula must be either 'Y ~ X | Z' or 'Y ~ X + Z1 + ...'.",
+         call. = FALSE)
+  }
+  
+  response <- deparse(formula[[2]])
+  X <- terms_rhs[1]
+  Z <- paste(terms_rhs[-1], collapse = " + ")
+  
+  as.formula(paste(response, "~", X, "|", Z))
+}
 
-  tryCatch({ if ("|" %in% all.names(formula)) {
-    new_formula <- formula
-  } else if (length(formula_terms) >= 2) {
-    response <- deparse(formula[[2]])
-    x <- formula_terms[1]
-    z <- paste(formula_terms[-1], collapse = " + ")
-    new_formula <- as.formula(paste(response, "~", x, "|", z))
-  } else {
-    stop("The formula must include conditioning variables in the format 'Y ~ X | Z1 + Z2' or 'Y ~ X + Z1 + Z2'.")  }
-})
+#' Convert CI-style formula Y ~ X | Z into regression-style Y ~ X + Z
+#'
+#' @param formula A formula of the form Y ~ X | Z1 + Z2, or already Y ~ X + Z1 + Z2.
+#' @return A standard formula of the form Y ~ X + Z1 + Z2.
+#' @export
+unclean_formula <- function(formula) {
+  if (!inherits(formula, "formula")) stop("`formula` must be a formula.", call. = FALSE)
+  
+  # If no conditioning bar, assume already standard and return as-is
+  if (!("|" %in% all.names(formula))) {
+    return(formula)
+  }
+  
+  # Parse: formula[[3]] is the RHS expression
+  rhs <- formula[[3]]
+  
+  # Expect rhs to look like:  X | (Z expression)
+  if (!is.call(rhs) || rhs[[1]] != as.name("|")) {
+    stop("Expected a top-level conditional formula of the form 'Y ~ X | Z'.", call. = FALSE)
+  }
+  
+  x_expr <- rhs[[2]]
+  z_expr <- rhs[[3]]
+  
+  # Handle missing Z (e.g., Y ~ X | ) defensively
+  if (is.null(z_expr) || identical(z_expr, quote(expr = ))) {
+    return(stats::as.formula(paste(deparse(formula[[2]]), "~", deparse(x_expr))))
+  }
+  
+  # Convert to: Y ~ X + Z
+  # If Z is a single symbol/expression, this works; if Z is (Z1 + Z2), it also works.
+  stats::as.formula(paste(
+    deparse(formula[[2]]), "~",
+    deparse(x_expr), "+",
+    deparse(z_expr)
+  ))
 }
 
 
@@ -201,7 +245,8 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
 #'
 #' @param data Data frame. The data frame containing the variables for which interaction terms are to be created.
 #' @param Z Character vector. The names of the variables for which interaction terms are to be created.
-#'
+#' @param mode Character. Specifies the type of interaction terms to create. Options are: numeric_only (only numeric-numeric interactions as products) or mixed (numeric-numeric as products, factor/character involved as categorical interactions). Default is "numeric_only".
+#' 
 #' @return A list with two components:
 #' \itemize{
 #'   \item \code{data}: The modified data frame with added interaction terms.
@@ -222,18 +267,60 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
 #' interaction_terms <- add_interaction_terms(data = dat, Z = c("Z1", "Z2"))
 #' head(interaction_terms$data$Z1_int_Z2)
 #'
-add_interaction_terms <- function(data, Z) {
-  interaction_terms <- character(0)
-
-  if (length(Z) >= 2) {
-    interaction_terms <- combn(Z, 2, FUN = function(x) {
-      interaction_name <- paste0(x[1], "_int_", x[2])
-      data[[interaction_name]] <<- data[[x[1]]] * data[[x[2]]]
-      return(interaction_name)
-    })
+add_interaction_terms <- function(data, Z, mode = c("numeric_only", "mixed")) {
+  mode <- match.arg(mode)
+  
+  if (!is.data.frame(data)) stop("`data` must be a data.frame.")
+  if (is.null(Z) || length(Z) < 2) {
+    return(list(data = data, interaction_terms = character(0)))
   }
-
-  return(list(data = data, interaction_terms = interaction_terms))
+  if (!all(Z %in% names(data))) stop("Some variables in `Z` are not in `data`.")
+  
+  interaction_terms <- character(0)
+  
+  pairs <- utils::combn(Z, 2, simplify = FALSE)
+  
+  for (pair in pairs) {
+    v1 <- pair[1]
+    v2 <- pair[2]
+    
+    x1 <- data[[v1]]
+    x2 <- data[[v2]]
+    
+    name <- paste0(v1, "_int_", v2)
+    
+    is_num1 <- is.numeric(x1) || is.integer(x1)
+    is_num2 <- is.numeric(x2) || is.integer(x2)
+    
+    if (mode == "numeric_only") {
+      # Only create product interactions for numeric-numeric pairs
+      if (is_num1 && is_num2) {
+        data[[name]] <- x1 * x2
+        interaction_terms <- c(interaction_terms, name)
+      }
+      next
+    }
+    
+    # mode == "mixed":
+    # - numeric x numeric -> product
+    # - factor/character involved -> categorical interaction (factor)
+    is_cat1 <- is.factor(x1) || is.character(x1)
+    is_cat2 <- is.factor(x2) || is.character(x2)
+    
+    if (is_num1 && is_num2) {
+      data[[name]] <- x1 * x2
+      interaction_terms <- c(interaction_terms, name)
+    } else if (is_cat1 || is_cat2) {
+      data[[name]] <- interaction(x1, x2, drop = TRUE, lex.order = TRUE)
+      interaction_terms <- c(interaction_terms, name)
+    } else {
+      # Other types (logical, Date, POSIXct, etc.) — skip by default
+      # You can extend this branch if needed.
+      next
+    }
+  }
+  
+  list(data = data, interaction_terms = interaction_terms)
 }
 
 #' Build an expanded formula with poly and interaction terms
@@ -325,6 +412,14 @@ make_strata_from_categorical_Z <- function(sub_data, Z, allow_character = TRUE) 
 #' @param strata factor-like vector defining strata.
 #' @param seed optional seed for reproducibility.
 #' @return x_star permuted within strata.
+#' @importFrom stats ave
+#' 
+#' @export
+#' @examples
+#' set.seed(123)
+#' x <- 1:10
+#' strata <- rep(letters[1:2], each = 5)
+#' x_permuted <- permute_within_strata(x, strata, seed = 123)
 permute_within_strata <- function(x, strata, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   if (length(x) != length(strata)) stop("`x` and `strata` must have the same length.")

@@ -10,7 +10,7 @@
 #' @param legend.text Size of legend text
 #' @param axis.title.x Size of x-axis title
 #' @param axis.title.y Size of y-axis title
-#'
+#' @param progress Logical indicating whether to show progress during computation
 #' @param ... Additional arguments to pass to the \code{test.gen} function.
 #'
 #' @importFrom ggplot2 ggplot aes geom_qq geom_abline labs theme_minimal theme element_text
@@ -38,6 +38,7 @@ QQplot <- function(object,
                    legend.title = 13,
                    axis.title.x = 13,
                    axis.title.y = 13,
+                   progress = TRUE,
                    ...) {
   if (!inherits(object, "CCI")) {
     stop("Object must be of class 'CCI'")
@@ -48,7 +49,7 @@ QQplot <- function(object,
   nperm <- object$nperm
   nrounds <- object$nrounds
   method <- object$MLfunc
-  formula <- object$formula
+  formula <- object$ext_formula
   N <- nrow(data)
   metric <- object$metric
   subsample <- object$subsample
@@ -67,7 +68,10 @@ QQplot <- function(object,
   distance = object$distance
   additional_args <- object$additional_args
   robust <- object$robust
-  k_cluster <- object$k_cluster
+  mtry <- object$mtry
+  nthread <- object$nthread
+  metricfunc = object$metricfunc
+  mlfunc = object$mlfunc
 
   # Ensure p and N are numeric
   if (!is.numeric(p) || !is.numeric(N)) {
@@ -87,21 +91,21 @@ QQplot <- function(object,
                           nperm = nperm,
                           subsample = subsample,
                           nrounds = nrounds,
+                          metricfunc = metricfunc,
+                          mlfunc = mlfunc,
                           p = p,
-                          degree = degree,
-                          poly = poly,
-                          interaction = interaction,
                           k = k,
                           robust = robust,
-                          k_cluster = k_cluster,
                           center = center,
-                          scale. = scale,
+                          scale = scale,
                           eps = eps,
                           positive = positive,
                           kernel = kernel,
                           distance = distance,
                           additional_args,
-                          
+                          mtry = mtry,
+                          nthread = nthread,
+                          progress = progress,
                           ...)
 
   test_stats <- unlist(test_result$distribution)

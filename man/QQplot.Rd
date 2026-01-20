@@ -15,6 +15,7 @@ QQplot(
   legend.title = 13,
   axis.title.x = 13,
   axis.title.y = 13,
+  progress = TRUE,
   ...
 )
 }
@@ -38,6 +39,8 @@ QQplot(
 \item{axis.title.x}{Size of x-axis title}
 
 \item{axis.title.y}{Size of y-axis title}
+
+\item{progress}{Logical indicating whether to show progress during computation}
 
 \item{...}{Additional arguments to pass to the \code{test.gen} function.}
 }

@@ -8,7 +8,6 @@
 #' @param metric Type of metric ("RMSE", "Kappa" or "Log Loss")
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
-#' @param subsample Proportion of the data to be used. Default is 1 (no subsampling).
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
 #' @param ... Additional arguments passed to xgb.train
 #'
@@ -29,7 +28,6 @@ wrapper_xgboost <- function(formula,
                             nrounds = 500,
                             metricfunc = NULL,
                             nthread = 1,
-                            subsample = 1,
                             eps = 1e-15,
                             ...) {
   
@@ -110,8 +108,7 @@ wrapper_xgboost <- function(formula,
                            continuous   = "rmse",
                            binary       = "error",
                            categorical  = "merror"),
-      nthread   = nthread,
-      subsample = subsample
+      nthread   = nthread
     )
   } else {
     params <- list(
@@ -120,8 +117,7 @@ wrapper_xgboost <- function(formula,
                            continuous   = "rmse",
                            binary       = "error",
                            categorical  = "merror"),
-      nthread   = nthread,
-      subsample = subsample
+      nthread   = nthread
       )
   }
   
@@ -234,6 +230,7 @@ wrapper_xgboost <- function(formula,
 #' @param metric Type of metric ("RMSE", "Kappa" or "Log Loss")
 #' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
+#' @param mtry Integer. The number of variables to possibly split at in each node. Default is the square root of the number of columns in `data`.
 #' @param num.trees Integer. The number of trees to grow in the random forest. 
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
 #' @param ... Additional arguments passed to the `ranger` function.
@@ -252,6 +249,7 @@ wrapper_ranger <- function(formula,
                            metric,
                            metricfunc = NULL,
                            nthread = 1,
+                           mtry = NULL,
                            num.trees,
                            eps = 1e-15,
                            ...) {
@@ -259,11 +257,11 @@ wrapper_ranger <- function(formula,
     dependent <- all.vars(formula)[1]
     testing <- data[test_indices, ]
     test_label <- testing[[dependent]]
-    model <- ranger::ranger(formula, data = data[train_indices, ], probability = TRUE, num.threads = nthread, num.trees = num.trees, ...)
-  } else if (metric %in% "RMSE") {
-    model <- ranger::ranger(formula, data = data[train_indices, ], probability = FALSE, num.threads = nthread, num.trees = num.trees, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, probability = TRUE, num.threads = nthread, num.trees = num.trees, ...)
+  } else if (metric == "RMSE") {
+    model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, num.threads = nthread, num.trees = num.trees)
   } else {
-    model <- ranger::ranger(formula, data = data[train_indices, ], num.threads = nthread, num.trees = num.trees, ...)
+    model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, num.threads = nthread, num.trees = num.trees, ...)
   }
 
   predictions <- stats::predict(model, data = data[test_indices, ])$predictions

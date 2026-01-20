@@ -7,6 +7,7 @@
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
 #' @param nperm Integer. The number of permutations to perform. Default is 60.
+#' @param mtry Number of variables to possibly split at in each node for method 'rf'. Default is NULL (sqrt of number of variables).
 #' @param nrounds Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.
 #' @param metric Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".
 #' @param choose_direction Logical. If TRUE, the function will choose the best direction for testing. Default is FALSE.
@@ -16,13 +17,13 @@
 #' @param subsample Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"
 #' @param subsample_set Numeric. If `subsample` is set to "Yes", this parameter defines the proportion of data to use for subsampling. Default is NA.
 #' @param robust Logical. If TRUE, uses a robust method for permutation. Default is TRUE.
-#' @param k_cluster Integer. The number of clusters to use for the robust permutation method. Default is 20. 
 #' @param min_child_weight Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.
 #' @param colsample_bytree Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.
 #' @param eta Numeric. The learning rate for methods like xgboost. Default is 0.3.
 #' @param gamma Numeric. The minimum loss reduction required to make a further partition on a leaf node of the tree for methods like xgboost. Default is 0.
 #' @param max_depth Integer. The maximum depth of the trees for methods like xgboost. Default is 6.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
+#' @param mode Character. Specifies the mode of operation: "numeric_only" or "mixed". Default is "numeric_only".
 #' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
@@ -65,6 +66,7 @@ CCI.test <- function(formula = NULL,
                      p = 0.5,
                      nperm = 160,
                      nrounds = 600,
+                     mtry = NULL,
                      metric = "Auto",
                      method = 'rf',
                      choose_direction = FALSE,
@@ -72,7 +74,6 @@ CCI.test <- function(formula = NULL,
                      poly = TRUE,
                      degree = 3,
                      robust = TRUE,
-                     k_cluster= 20,
                      subsample = "Auto",
                      subsample_set,
                      min_child_weight = 1,
@@ -81,6 +82,7 @@ CCI.test <- function(formula = NULL,
                      gamma = 0,
                      max_depth = 6,
                      interaction = TRUE,
+                     mode = "numeric_only",
                      metricfunc = NULL,
                      mlfunc = NULL,
                      tail = NA,
@@ -97,7 +99,7 @@ CCI.test <- function(formula = NULL,
                      distance = 2,
                      seed = NA,
                      random_grid = TRUE,
-                     nthread = 1,
+                     nthread = 2,
                      verbose = FALSE,
                      progress = TRUE,
                      ...) {
@@ -122,7 +124,7 @@ CCI.test <- function(formula = NULL,
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
   }
-  
+
   # Set subsample as a function of sample size, starting when sample size > 1000
   if (subsample == "Auto") {
     n <- nrow(data)
@@ -141,12 +143,47 @@ CCI.test <- function(formula = NULL,
     if (verbose) {
       cat("Subsample set to: ", subsample, "\n")
     }
+  if (poly && degree < 1) {
+    stop("Degree of 0 or less is not allowed")
+  }
+  
+  # Parse formula
+  original_formula <- formula
+  Y <- all.vars(formula)[1]
+  X <- all.vars(formula[[3]])[1]
+  Z <- all.vars(formula[[3]])[-1]
+  if (length(Z) == 0) {
+    Z <- NULL
+  }
+  if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
+    poly <- FALSE
+  }
+  
+  # Add polynomial and interaction terms
+  poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
+  data <- poly_result$data
+  poly_terms <- poly_result$new_terms
+  
+  if (interaction && !is.null(Z)) {
+    interaction_result <- add_interaction_terms(data, Z, mode = mode)
+    data <- interaction_result$data
+    interaction_terms <- interaction_result$interaction_terms
+  } else {
+    interaction_terms <- NULL
+  }
+  
+  formula <- build_formula(formula, poly_terms, interaction_terms)
   
   
   formula = as.formula(formula)
-  formula <- clean_formula(formula)
   check_formula(formula, data)
-
+  
+  formula <- clean_formula(formula)
+  
+  
+  if (verbose) {
+    cat("Using formula: ", deparse(formula), "\n")
+  }
 
   if (!is.null(metricfunc)) {
     metric <- deparse(substitute(metricfunc))
@@ -182,9 +219,6 @@ CCI.test <- function(formula = NULL,
       min_child_weight = min_child_weight,
       subsample = subsample,
       folds = 4,
-      poly = poly,
-      degree = degree,
-      interaction = interaction,
       verbose = verbose
     )
   }
@@ -198,24 +232,22 @@ CCI.test <- function(formula = NULL,
                                 tune_length = tune_length,
                                 random_grid = random_grid,
                                 metric = metric,
-                                interaction = interaction,
-                                poly = poly,
-                                degree = degree,
                                 samples = samples,
-                                verbose = verbose,
-                                ...)
+                                verbose = verbose)
     params <- get_tuned_params(best_params$best_param)
     tune_warning <- best_params$warnings
   } else if (tune && !is.null(mlfunc)) {
     stop("Tuning parameters is not available when using a custom ML function.")
-  } else {
+  } else if (method == "xgboost") {
     params <- list(max_depth = max_depth,
                    eta = eta,
                    gamma = gamma,
                    colsample_bytree = colsample_bytree,
                    min_child_weight = min_child_weight)
   }
-
+  else {
+    params <- list()
+  }
   samples <- NULL
 
   method <- if (!is.null(mlfunc)) {
@@ -230,15 +262,12 @@ CCI.test <- function(formula = NULL,
     p = p,
     nperm = nperm,
     nrounds = nrounds,
+    mtry = mtry,
     metric = metric,
-    degree = degree,
-    poly = poly,
-    interaction = interaction,
     method = method,
     parametric = parametric,
     tail = tail,
     robust = robust,
-    k_cluster = k_cluster,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
     subsample = subsample,
@@ -261,7 +290,12 @@ CCI.test <- function(formula = NULL,
   if (tune) {
     result$warnings <- tune_warning
   }
-
+  result$formula <- original_formula
+  result$ext_formula <- formula
+  result$poly <- poly
+  result$degree <- degree
+  result$interaction <- interaction
+  
   pvalue <- result$p.value
 
   if (verbose) {

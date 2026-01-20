@@ -5,31 +5,27 @@
 #'
 #' @param formula Formula specifying the relationship between dependent and independent variables.
 #' @param data Data frame. The data containing the variables used.
-#' @param metric Character. The type of metric: can be "RMSE" or "Kappa". Default is 'RMSE'
 #' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or "svm" for Support Vector Machine.
-#' @param nperm Integer. The number of generated Monte Carlo samples. Default is 60.
-#' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.
+#' @param metric Character. The type of metric: can be "RMSE", "Kappa" or "LogLoss". Default is 'RMSE'
+#' @param nperm Integer. The number of generated Monte Carlo samples. Default is 160.
 #' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
-#' @param poly Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.
-#' @param interaction Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.
-#' @param degree Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.
-#' @param nrounds Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 500.
-#' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
-#' @param permutation Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.
-#' @param robust Logical. If TRUE, uses k-means clustering to create strata for permutation. Default is TRUE.
-#' @param k_clusters Integer. The number of clusters to use for k-means clustering. Default is 20.
+#' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.
+#' @param nrounds Integer. The number of rounds (trees) for methods like 'xgboost' and 'rf'. Default is 600.
+#' @param mtry Integer. The number of variables to possibly split at in each node for method 'rf'. Default is the rounded down square root of numbers of columns in data.
+#' @param nthread Integer. The number of threads to use for parallel processing. Only relevant for methods 'rf' and 'xgboost'. Default is 1.
+#' @param permutation Logical. Whether to perform permutation of the 'X' variable. Used to generate a null distribution. Default is FALSE.
+#' @param robust Logical. If TRUE, automatically performs stratified permutation if all conditional variables are factor or categorical. Default is TRUE.
 #' @param metricfunc Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
-#' @param progress Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.
-#' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
+#' @param progress Logical. A logical value indicating whether to show a progress bar during when building the null distribution. Default is TRUE.
 #' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
 #' @param scale. Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
-#' @param eps Numeric. A small value added to avoid division by zero. Default is 1e-15.
-#' @param positive Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
-#' @param kernel Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".
+#' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
+#' @param eps Numeric. A small value added to avoid division by zero. Only relevant for method 'KNN'. Default is 1e-15.
+#' @param positive Character vector. Only relevant for method 'KNN'. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
+#' @param kernel Character. Only relevant for method 'KNN'. Specifies the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".
 #' @param distance Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.
-#' @param seed Integer. An optional random seed for reproducibility. Default is NULL.
-#' @param ... Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.
+#' @param ... Additional arguments to pass to the machine learning wrapper functions \code{wrapper_xgboost}, \code{wrapper_ranger}, \code{wrapper_knn} and  \code{wrapper_svm}, or to a custom-built wrapper function.
 #'
 #' @return A list containing the test distribution.
 #' @importFrom stats predict update as.formula
@@ -57,25 +53,22 @@
 test.gen <- function(formula,
                      data,
                      method = "rf",
-                     metric,
-                     nperm = 60,
+                     metric = 'RMSE',
+                     nperm = 160,
                      subsample = 1,
                      p = 0.5,
-                     poly = TRUE,
-                     interaction = TRUE,
-                     degree = 3,
                      nrounds = 600,
+                     mtry =  NULL,
                      nthread = 1,
                      permutation = FALSE,
                      robust = TRUE,
-                     k_clusters = 20,
                      metricfunc = NULL,
                      mlfunc = NULL,
                      progress = TRUE,
-                     k = 15,
                      center = TRUE,
                      scale. = TRUE,
                      eps = 1e-15,
+                     k = 15,
                      positive = NULL,
                      kernel = "optimal",
                      distance = 2,
@@ -85,38 +78,7 @@ test.gen <- function(formula,
     stop("nperm can't be less than 10")
   }
 
-  if (poly && degree < 1) {
-    stop("Degree of 0 or less is not allowed")
-  }
-
-  # Parse formula
-  Y <- all.vars(formula)[1]
-  X <- all.vars(formula[[3]])[1]
-  Z <- all.vars(formula[[3]])[-1]
-  if (length(Z) == 0) {
-    Z <- NULL
-  }
-  if (!is.null(Z) && any(sapply(data[Z], is.factor)) && verbose) {
-    warning("Polynomial terms are not supported for factor variables. Polynomial terms will be skipped. To include them, convert factors to dummy variables first.")
-    poly <- FALSE
-  }
-
-  # Add polynomial and interaction terms
-  poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
-  data <- poly_result$data
-  poly_terms <- poly_result$new_terms
-
-  if (interaction && !is.null(Z)) {
-    interaction_result <- add_interaction_terms(data, Z)
-    data <- interaction_result$data
-    interaction_terms <- interaction_result$interaction_terms
-  } else {
-    interaction_terms <- NULL
-  }
-
-  formula <- build_formula(formula, poly_terms, interaction_terms)
-  Z_new <- all.vars(formula[[3]])[-1] # Use this for binning
-  
+  # Prompt progress bar message
   pb_message <- if (permutation) {
     "Creating null distribution"
   } else {
@@ -132,7 +94,7 @@ test.gen <- function(formula,
     )
   }
   
-  # Scaling and centering data (optional)
+  # Scaling and centering data 
   x_names <- all.vars(formula)[-1]
   num_x <- x_names[sapply(data[, x_names, drop = FALSE],
                           function(z) is.numeric(z) && !is.factor(z))]
@@ -173,6 +135,8 @@ test.gen <- function(formula,
 
    
     # Permute X if generating null distribution
+    Z <- all.vars(formula[[3]])[-1] # Use this for stratification
+    X <- all.vars(formula[[3]])[1]
     if (permutation) {
       if (robust && is_categorical_Z_any(sub_data, Z)) { # Mind that Z is evaluated, not new_Z
         # Permute within strata of Z 
@@ -190,7 +154,8 @@ test.gen <- function(formula,
     
     
     # Create training and testing indices
-    if (metric %in% c("Kappa")) {
+    Y <- all.vars(formula[[2]])
+    if (metric %in% c("Kappa", "LogLoss")) {
       inTraining <- caret::createDataPartition(y = factor(sub_data[[Y]]), p = p, list = FALSE)
       train_indices <- inTraining
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
@@ -200,6 +165,7 @@ test.gen <- function(formula,
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
     }
 
+    
     # Apply machine learning method
     null[iteration] <- tryCatch({
       if (!is.null(mlfunc)) {
@@ -216,10 +182,11 @@ test.gen <- function(formula,
           metric = metric,
           metricfunc = metricfunc,
           nrounds = nrounds,
-          subsample = subsample,
+          nthread = nthread,
           ...
         )
       } else if (method == "rf") {
+        formula <- unclean_formula(formula)
         wrapper_ranger(
           formula,
           resampled_data,
@@ -228,6 +195,8 @@ test.gen <- function(formula,
           metric = metric,
           metricfunc = metricfunc,
           num.trees = nrounds,
+          nthread = nthread,
+          mtry = mtry,
           ...
         )
       } else if (method == "svm") {

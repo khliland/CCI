@@ -2,22 +2,19 @@
 #'
 #' @param formula Model formula or DAGitty object specifying the relationship between dependent and independent variables.
 #' @param data A data frame containing the variables specified in the formula.
-#' @param p Proportion of data to use for training the model. Default is 0.825.
-#' @param nperm Number of permutations to perform. Default is 500.
+#' @param p Proportion of data to use for training the model. Default is 0.5.
+#' @param nperm Number of permutations to perform. Default is 160.
 #' @param subsample The proportion of the data to be used. Default is 1 (no subsampling).
-#' @param metric Type of metric: "RMSE" or "Kappa". Default is 'RMSE'.
-#' @param method The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".
-#' @param nrounds Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.
-#' @param parametric Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.
-#' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
-#' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
-#' @param degree The degree of polynomial terms to include if poly is TRUE. Default is 3.
+#' @param metric Type of metric: "RMSE", "Kappa" or "LogLoss". Default is 'RMSE'.
+#' @param method The machine learning method to use for the learner. Supported methods include "rf", "xgboost", "KNN" and "svm". Default is "rf".
+#' @param nrounds Number of rounds (trees) for methods 'xgboost' and 'rf'. Default is 600.
+#' @param mtry Number of variables to possibly split at in each node for method 'rf'. Default is NULL (sqrt of number of variables).
+#' @param parametric Logical. If TRUE, a parametric p-value is calculated instead of an empirical p-value. Default is FALSE.
 #' @param tail Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.
 #' @param robust Logical. If TRUE, uses a robust method for permutation. Default is TRUE.
-#' @param k_cluster Integer. The number of clusters to use for the robust permutation method. Default is 20.
 #' @param metricfunc An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.
 #' @param mlfunc An optional custom machine learning function to use instead of the predefined methods. Default is NULL.
-#' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
+#' @param nthread Integer. The number of threads to use for parallel processing for method 'rf' and 'xgboost'. Default is 1.
 #' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
 #' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
 #' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
@@ -45,19 +42,16 @@
 
 perm.test <- function(formula,
                       data,
-                      p = 0.7,
-                      nperm = 600,
+                      p = 0.5,
+                      nperm = 160,
                       subsample = 1,
                       metric = 'RMSE',
                       method = "rf",
-                      nrounds = 120,
+                      nrounds = 600,
+                      mtry = NULL,
                       parametric = FALSE,
-                      poly = TRUE,
-                      interaction = TRUE,
-                      degree = 3,
                       tail = NA,
                       robust = TRUE,
-                      k_cluster = 20,
                       metricfunc = NULL,
                       mlfunc = NULL,
                       nthread = 1,
@@ -78,14 +72,12 @@ perm.test <- function(formula,
                    data = data,
                    method = method,
                    nperm = nperm,
-                   poly = poly,
-                   degree = degree,
-                   interaction = interaction,
+                   mtry = mtry,
                    nrounds = nrounds,
+                   nthread = nthread,
                    p = p,
                    permutation = TRUE,
                    robust = robust,
-                   k_cluster = k_cluster,
                    mlfunc = mlfunc,
                    metricfunc = metricfunc,
                    subsample = subsample,
@@ -104,10 +96,9 @@ perm.test <- function(formula,
                              data = data,
                              method = method,
                              nperm = 1,
-                             poly = poly,
-                             degree = degree,
-                             interaction = interaction,
+                             mtry = mtry,
                              nrounds = nrounds,
+                             nthread = nthread,
                              p = p,
                              permutation = FALSE,
                              robust = FALSE,
@@ -151,9 +142,6 @@ perm.test <- function(formula,
               data = data,
               formula = formula,
               p = p,
-              poly = poly,
-              interaction = interaction,
-              degree = degree,
               nperm = nperm,
               nrounds = nrounds,
               subsample = subsample,
@@ -165,7 +153,6 @@ perm.test <- function(formula,
               tail = tail,
               p.value =  p.value,
               robust = robust,
-              k_cluster = k_cluster,
               additional_args = additional_args
               )
 

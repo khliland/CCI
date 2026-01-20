@@ -11,6 +11,7 @@ CCI.test(
   p = 0.5,
   nperm = 160,
   nrounds = 600,
+  mtry = NULL,
   metric = "Auto",
   method = "rf",
   choose_direction = FALSE,
@@ -18,7 +19,6 @@ CCI.test(
   poly = TRUE,
   degree = 3,
   robust = TRUE,
-  k_cluster = 20,
   subsample = "Auto",
   subsample_set,
   min_child_weight = 1,
@@ -27,6 +27,7 @@ CCI.test(
   gamma = 0,
   max_depth = 6,
   interaction = TRUE,
+  mode = "numeric_only",
   metricfunc = NULL,
   mlfunc = NULL,
   tail = NA,
@@ -43,7 +44,7 @@ CCI.test(
   distance = 2,
   seed = NA,
   random_grid = TRUE,
-  nthread = 1,
+  nthread = 2,
   verbose = FALSE,
   progress = TRUE,
   ...
@@ -60,6 +61,8 @@ CCI.test(
 
 \item{nrounds}{Integer. The number of rounds (trees) for methods 'xgboost' and 'rf' Default is 600.}
 
+\item{mtry}{Number of variables to possibly split at in each node for method 'rf'. Default is NULL (sqrt of number of variables).}
+
 \item{metric}{Character. Specifies the type of data: "Auto", "RMSE" or "Kappa". Default is "Auto".}
 
 \item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", support vector machine 'svm' and K-nearest neighbour 'KNN'. Default is "rf".}
@@ -73,8 +76,6 @@ CCI.test(
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
 \item{robust}{Logical. If TRUE, uses a robust method for permutation. Default is TRUE.}
-
-\item{k_cluster}{Integer. The number of clusters to use for the robust permutation method. Default is 20.}
 
 \item{subsample}{Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"}
 
@@ -91,6 +92,8 @@ CCI.test(
 \item{max_depth}{Integer. The maximum depth of the trees for methods like xgboost. Default is 6.}
 
 \item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
+
+\item{mode}{Character. Specifies the mode of operation: "numeric_only" or "mixed". Default is "numeric_only".}
 
 \item{metricfunc}{Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
 

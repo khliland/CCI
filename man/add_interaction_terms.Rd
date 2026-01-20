@@ -5,12 +5,14 @@
 \title{Creates interaction terms for specified variables in a data frame
 Interaction terms are named as \code{<var1>_int_<var2>} (e.g., \code{Z1_int_Z2} for the product of \code{Z1} and \code{Z2}).}
 \usage{
-add_interaction_terms(data, Z)
+add_interaction_terms(data, Z, mode = c("numeric_only", "mixed"))
 }
 \arguments{
 \item{data}{Data frame. The data frame containing the variables for which interaction terms are to be created.}
 
 \item{Z}{Character vector. The names of the variables for which interaction terms are to be created.}
+
+\item{mode}{Character. Specifies the type of interaction terms to create. Options are: numeric_only (only numeric-numeric interactions as products) or mixed (numeric-numeric as products, factor/character involved as categorical interactions). Default is "numeric_only".}
 }
 \value{
 A list with two components:

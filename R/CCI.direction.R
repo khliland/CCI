@@ -47,32 +47,6 @@ CCI.direction <- function(formula,
   if (verbose) {
    cat("Deciding best direction, Y ~ X | Z or X ~ Y | Z...\n")
   }
-  org_formula <- formula
-  # Parse formula
-  Y <- all.vars(formula)[1]
-  X <- all.vars(formula[[3]])[1]
-  Z <- all.vars(formula[[3]])[-1]
-  if (length(Z) == 0) {
-    Z <- NULL
-  }
-  if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
-    poly <- FALSE
-  }
-
-  # Add polynomial and interaction terms
-  poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
-  data <- poly_result$data
-  poly_terms <- poly_result$new_terms
-
-  if (interaction && !is.null(Z)) {
-    interaction_result <- add_interaction_terms(data, Z)
-    data <- interaction_result$data
-    interaction_terms <- interaction_result$interaction_terms
-  } else {
-    interaction_terms <- NULL
-  }
-
-  formula <- build_formula(formula, poly_terms, interaction_terms)
 
   formula <- as.formula(formula)
   outcome_var <- all.vars(formula[[2]])
@@ -85,6 +59,11 @@ CCI.direction <- function(formula,
   X_var <- rhs_vars[1]
   Z_vars <- rhs_vars[-1]
 
+  # stop if either Y or C is non numeric
+  if (!is.numeric(data[[outcome_var]]) || !is.numeric(data[[X_var]])) {
+    stop("When argument 'choose_direction = TRUE', both marginal variables must be numeric.")
+  }
+  
   # Two formulas
   formula_Y_XZ <- as.formula(
     paste(outcome_var, "~", paste(c(X_var, Z_vars), collapse = " + "))
@@ -93,14 +72,9 @@ CCI.direction <- function(formula,
     paste(X_var, "~", paste(c(outcome_var, Z_vars), collapse = " + "))
   )
 
-  # Make any data type into numeric
-  data <- data.frame(lapply(data, function(x) {
-    if (is.factor(x)) {
-      as.numeric(as.character(x))
-    } else {
-      x
-    }
-  }))
+
+  
+  
   if ((subsample <= 0 || subsample > 1) && method != "xgboost") {
     stop("Subsample must be between 0 and 1.")
   } else if (subsample < 1) {
@@ -120,22 +94,39 @@ CCI.direction <- function(formula,
 
   common_args <- list(
     trControl = ctrl,
-    preProcess = c("center", "scale"),
-    verbosity = 0
+    preProcess = c("center", "scale")
   )
 
   if (method == "xgboost") {
-    tune_grid <- expand.grid(
-      nrounds = nrounds,
-      max_depth = max_depth,
+    # build numeric design matrices safely (handles factors)
+    Xmat1 <- model.matrix(formula_Y_XZ, data)[, -1, drop = FALSE]
+    y1 <- data[[outcome_var]]
+    
+    Xmat2 <- model.matrix(formula_X_YZ, data)[, -1, drop = FALSE]
+    y2 <- data[[X_var]]
+    
+    d1 <- xgboost::xgb.DMatrix(data = Xmat1, label = y1)
+    d2 <- xgboost::xgb.DMatrix(data = Xmat2, label = y2)
+    
+    params <- list(
+      objective = "reg:squarederror",
       eta = eta,
+      max_depth = max_depth,
       gamma = gamma,
       colsample_bytree = colsample_bytree,
       min_child_weight = min_child_weight,
-      subsample = subsample
+      subsample = subsample,
+      verbosity = 0
     )
-    common_args$tuneGrid <- tune_grid
-  }
+    
+    cv1 <- xgboost::xgb.cv(params = params, data = d1, nrounds = nrounds,
+                           nfold = folds, metrics = "rmse", verbose = 0)
+    cv2 <- xgboost::xgb.cv(params = params, data = d2, nrounds = nrounds,
+                           nfold = folds, metrics = "rmse", verbose = 0)
+    
+    metric1 <- min(cv1$evaluation_log$test_rmse_mean)
+    metric2 <- min(cv2$evaluation_log$test_rmse_mean)
+  } else {
 
   model1 <- do.call(caret::train, c(list(
     form = formula_Y_XZ,
@@ -151,11 +142,13 @@ CCI.direction <- function(formula,
 
   metric1 <- min(model1$results$RMSE, na.rm = TRUE)
   metric2 <- min(model2$results$RMSE, na.rm = TRUE)
+  
+}
   best_direction <- if (metric1 <= metric2) "Y ~ X | Z" else "X ~ Y | Z"
 
   # Using the original formula to present to user
-  outcome_var <- all.vars(org_formula[[2]])
-  rhs_vars <- all.vars(org_formula[[3]])
+  outcome_var <- all.vars(formula[[2]])
+  rhs_vars <- all.vars(formula[[3]])
   X_var <- rhs_vars[1]
   Z_vars <- rhs_vars[-1]
   # Return the selected formula

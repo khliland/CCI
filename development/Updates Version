@@ -1,5 +1,5 @@
 10/11/2025 - Changes in wrappers to handle inf and -inf predictions
-14/01/2026 - New Version updloaded to CRAN
+20/01/2026 - New Version updloaded to CRAN
 Several updates
 - Added in wrapper for KNN
 - Added LogLoss to all wrappers 

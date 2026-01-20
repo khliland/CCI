@@ -7,19 +7,16 @@
 perm.test(
   formula,
   data,
-  p = 0.7,
-  nperm = 600,
+  p = 0.5,
+  nperm = 160,
   subsample = 1,
   metric = "RMSE",
   method = "rf",
-  nrounds = 120,
+  nrounds = 600,
+  mtry = NULL,
   parametric = FALSE,
-  poly = TRUE,
-  interaction = TRUE,
-  degree = 3,
   tail = NA,
   robust = TRUE,
-  k_cluster = 20,
   metricfunc = NULL,
   mlfunc = NULL,
   nthread = 1,
@@ -39,37 +36,31 @@ perm.test(
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
-\item{p}{Proportion of data to use for training the model. Default is 0.825.}
+\item{p}{Proportion of data to use for training the model. Default is 0.5.}
 
-\item{nperm}{Number of permutations to perform. Default is 500.}
+\item{nperm}{Number of permutations to perform. Default is 160.}
 
 \item{subsample}{The proportion of the data to be used. Default is 1 (no subsampling).}
 
-\item{metric}{Type of metric: "RMSE" or "Kappa". Default is 'RMSE'.}
+\item{metric}{Type of metric: "RMSE", "Kappa" or "LogLoss". Default is 'RMSE'.}
 
-\item{method}{The machine learning method to use. Supported methods include "rf", "xgboost", etc. Default is "rf".}
+\item{method}{The machine learning method to use for the learner. Supported methods include "rf", "xgboost", "KNN" and "svm". Default is "rf".}
 
-\item{nrounds}{Number of rounds (trees) for methods such as xgboost and random forest. Default is 120.}
+\item{nrounds}{Number of rounds (trees) for methods 'xgboost' and 'rf'. Default is 600.}
 
-\item{parametric}{Logical. If TRUE, a parametric p-value is calculated in addition to the empirical p-value. Default is FALSE.}
+\item{mtry}{Number of variables to possibly split at in each node for method 'rf'. Default is NULL (sqrt of number of variables).}
 
-\item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
-
-\item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
-
-\item{degree}{The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+\item{parametric}{Logical. If TRUE, a parametric p-value is calculated instead of an empirical p-value. Default is FALSE.}
 
 \item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
 
 \item{robust}{Logical. If TRUE, uses a robust method for permutation. Default is TRUE.}
 
-\item{k_cluster}{Integer. The number of clusters to use for the robust permutation method. Default is 20.}
-
 \item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
 
 \item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
-\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+\item{nthread}{Integer. The number of threads to use for parallel processing for method 'rf' and 'xgboost'. Default is 1.}
 
 \item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
 
