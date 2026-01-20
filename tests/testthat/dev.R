@@ -8,6 +8,7 @@ devtools::build()
 devtools::build_vignettes(quiet = FALSE)
 usethis::use_vignette("Testing-CI-with-CCI")
 devtools::install()
+devtools::load_all()
 
 library(CCI)
 library(dplyr)
@@ -15,30 +16,127 @@ library(CIsimdata)
 # Testing of functions
 set.seed(123)
 data <- NormalData(500)
-result <- CCI.test(Y ~ X | Z1 + Z2,
-                   data = data,
-                   seed = 1)
 
-summary(result)
+# General test for CCI.test() with continous data
+# debug(CCI.test)
+# debug(perm.test)
+# debug(test.gen)
+res <- CCI.test(Y ~ X | Z1 + Z2, data = data, verbose = TRUE, nperm = 200, seed = 1) # Basic case
+summary(res)
+plot(res)
+QQplot(res)
+
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = 'xgboost', 
+                 metric = 'RMSE',
+                 p = 0.58439672,
+                 nperm = 100, 
+                 nrounds = 100, 
+                 parametric = TRUE,
+                 poly = FALSE,
+                 choose_direction = TRUE,
+                 tune = FALSE,
+                 degree = 4,
+                 subsample = "Yes",
+                 subsample_set = 1,
+                 interaction = FALSE,
+                 center = FALSE,
+                 scale = FALSE,
+                 seed = 1,
+                 verbose = TRUE
+))
+
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = 'rf', 
+                 metric = 'RMSE',
+                 p = 0.58439672,
+                 nperm = 200, 
+                 nrounds = 332, 
+                 parametric = TRUE,
+                 poly = FALSE,
+                 choose_direction = TRUE,
+                 tune = FALSE,
+                 degree = 4,
+                 subsample = "Yes",
+                 subsample_set = 1,
+                 interaction = FALSE,
+                 center = FALSE,
+                 scale = FALSE,
+                 seed = 1,
+                 verbose = TRUE
+))
+
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = 'KNN', 
+                 metric = 'RMSE',
+                 p = 0.58439672,
+                 nperm = 200, 
+                 nrounds = 332, 
+                 parametric = TRUE,
+                 poly = FALSE,
+                 choose_direction = TRUE,
+                 tune = FALSE,
+                 degree = 4,
+                 subsample = "Yes",
+                 subsample_set = 1,
+                 interaction = FALSE,
+                 center = FALSE,
+                 scale = FALSE,
+                 seed = 1,
+                 verbose = TRUE
+))
+
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = 'svm', 
+                 metric = 'RMSE',
+                 p = 0.58439672,
+                 nperm = 200, 
+                 nrounds = 332, 
+                 parametric = TRUE,
+                 poly = FALSE,
+                 choose_direction = TRUE,
+                 tune = FALSE,
+                 degree = 4,
+                 subsample = "Yes",
+                 subsample_set = 1,
+                 interaction = FALSE,
+                 center = FALSE,
+                 scale = FALSE,
+                 seed = 1,
+                 verbose = TRUE
+))
+
+
+# Testing tuning functionality
+summary(CCI.test(Y ~ X | Z1 + Z2, 
+                 data = data, 
+                 method = 'rf',
+                 tune = TRUE))
+summary(CCI.test(Y ~ X | Z1 + Z2, 
+                 data = data, 
+                 method = 'xgboost',
+                 tune = TRUE))
+
+summary(CCI.test(Y ~ X | Z1 + Z2, 
+                 data = data,
+                 method = 'svm',
+                 tune = TRUE))
+
 result <- CCI.test(Y ~ X | Z1 ,
                    data = data,
                    seed = 1)
 summary(result)
-QQplot(result)
+QQplot(res)
 plot(result)
 
-data <- BinaryData(5000)
+data <- BinaryData(1000)
 result <- CCI.test(Y ~ X | Z1 ,
                    data = data,
                    seed = 1,
                    method = "KNN",
-                   metric = "Kappa",
-                   choose_direction = TRUE)
+                   metric = "Kappa")
 summary(result)
 
 set.seed(1985)
 data <- NormalData(80)
 CCI_obj <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, nperm = 200, parametric = T)
+debug(test.gen)
 QQplot(CCI_obj) 
 # Testing a false Null
 CCI_obj <- CCI.test(formula = Y ~ X | Z2, data = data, nperm = 200, parametric = T)
@@ -1048,8 +1146,14 @@ simulate_cat_Z1_Z2_null <- function(
   )
 }
 data <- simulate_cat_Z1_Z2_null(n = 800)
+debug(test.gen)
 summary(CCI.test(Y ~ X | Z1 + Z2, data = data, seed = 1, method = "rf"))
 summary(CCI.test(Y ~ X | Z1, data = data, seed = 1, method = "rf"))
+debug(test.gen)
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, seed = 1, method = "xgboost"))
+summary(CCI.test(Y ~ X | Z1, data = data, seed = 1, method = "xgboost"))
+summary(CCI.test(Y ~ X | Z1 + Z2, data = data, seed = 1, method = "KNN"))
+summary(CCI.test(Y ~ X | Z1, data = data, seed = 1, method = "KNN"))
 
 
 
@@ -1063,6 +1167,37 @@ summary(CCI.test(Y ~ X | Z1, data = data, seed = 1, method = "rf"))
 
 
 
-  
+library(ranger)
+
+set.seed(123)
+
+# Simulated data
+n <- 300
+dat <- data.frame(
+  Z1 = rnorm(n),
+  Z2 = rnorm(n),
+  X  = rnorm(n)
+)
+
+dat$Y <- dat$Z1 + dat$Z2 + 0.5 * dat$X + rnorm(n)
+
+# Train / test split
+idx <- sample(seq_len(n), size = floor(0.7 * n))
+train <- dat[idx, ]
+test  <- dat[-idx, ]
+
+# Fit ranger regression
+fit <- ranger(
+  Y ~ X + Z1 + Z2,
+  data = train
+)
+
+# Predict
+pred <- predict(fit, data = test)$predictions
+
+# RMSE
+rmse <- sqrt(mean((pred - test$Y)^2))
+rmse
+
   
   

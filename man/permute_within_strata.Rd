@@ -19,3 +19,9 @@ x_star permuted within strata.
 \description{
 Stratified permutation of x within strata
 }
+\examples{
+set.seed(123)
+x <- 1:10
+strata <- rep(letters[1:2], each = 5)
+x_permuted <- permute_within_strata(x, strata, seed = 123)
+}

@@ -12,6 +12,7 @@ wrapper_ranger(
   metric,
   metricfunc = NULL,
   nthread = 1,
+  mtry = NULL,
   num.trees,
   eps = 1e-15,
   ...
@@ -31,6 +32,8 @@ wrapper_ranger(
 \item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
+
+\item{mtry}{Integer. The number of variables to possibly split at in each node. Default is the square root of the number of columns in \code{data}.}
 
 \item{num.trees}{Integer. The number of trees to grow in the random forest.}
 

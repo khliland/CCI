@@ -13,7 +13,6 @@ wrapper_xgboost(
   nrounds = 500,
   metricfunc = NULL,
   nthread = 1,
-  subsample = 1,
   eps = 1e-15,
   ...
 )
@@ -34,8 +33,6 @@ wrapper_xgboost(
 \item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
 
 \item{nthread}{Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.}
-
-\item{subsample}{Proportion of the data to be used. Default is 1 (no subsampling).}
 
 \item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
 

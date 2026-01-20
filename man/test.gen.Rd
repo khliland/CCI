@@ -8,25 +8,22 @@ test.gen(
   formula,
   data,
   method = "rf",
-  metric,
-  nperm = 60,
+  metric = "RMSE",
+  nperm = 160,
   subsample = 1,
   p = 0.5,
-  poly = TRUE,
-  interaction = TRUE,
-  degree = 3,
   nrounds = 600,
+  mtry = NULL,
   nthread = 1,
   permutation = FALSE,
   robust = TRUE,
-  k_clusters = 20,
   metricfunc = NULL,
   mlfunc = NULL,
   progress = TRUE,
-  k = 15,
   center = TRUE,
   scale. = TRUE,
   eps = 1e-15,
+  k = 15,
   positive = NULL,
   kernel = "optimal",
   distance = 2,
@@ -40,53 +37,45 @@ test.gen(
 
 \item{method}{Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or "svm" for Support Vector Machine.}
 
-\item{metric}{Character. The type of metric: can be "RMSE" or "Kappa". Default is 'RMSE'}
+\item{metric}{Character. The type of metric: can be "RMSE", "Kappa" or "LogLoss". Default is 'RMSE'}
 
-\item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 60.}
+\item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 160.}
 
 \item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 
 \item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.}
 
-\item{poly}{Logical. Whether to include polynomial terms of the conditioning variables. Default is TRUE.}
+\item{nrounds}{Integer. The number of rounds (trees) for methods like 'xgboost' and 'rf'. Default is 600.}
 
-\item{interaction}{Logical. Whether to include interaction terms of the conditioning variables. Default is TRUE.}
+\item{mtry}{Integer. The number of variables to possibly split at in each node for method 'rf'. Default is the rounded down square root of numbers of columns in data.}
 
-\item{degree}{Integer. The degree of polynomial terms to be included if \code{poly} is TRUE. Default is 3.}
+\item{nthread}{Integer. The number of threads to use for parallel processing. Only relevant for methods 'rf' and 'xgboost'. Default is 1.}
 
-\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 500.}
+\item{permutation}{Logical. Whether to perform permutation of the 'X' variable. Used to generate a null distribution. Default is FALSE.}
 
-\item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
-
-\item{permutation}{Logical. Whether to perform permutation to generate a null distribution. Default is FALSE.}
-
-\item{robust}{Logical. If TRUE, uses k-means clustering to create strata for permutation. Default is TRUE.}
-
-\item{k_clusters}{Integer. The number of clusters to use for k-means clustering. Default is 20.}
+\item{robust}{Logical. If TRUE, automatically performs stratified permutation if all conditional variables are factor or categorical. Default is TRUE.}
 
 \item{metricfunc}{Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.}
 
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
-\item{progress}{Logical. A logical value indicating whether to show a progress bar during the permutation process. Default is TRUE.}
-
-\item{k}{Integer. The number of nearest neighbors for the "KNN" method. Default is 15.}
+\item{progress}{Logical. A logical value indicating whether to show a progress bar during when building the null distribution. Default is TRUE.}
 
 \item{center}{Logical. If TRUE, the data is centered before model fitting. Default is TRUE.}
 
 \item{scale.}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
 
-\item{eps}{Numeric. A small value added to avoid division by zero. Default is 1e-15.}
+\item{eps}{Numeric. A small value added to avoid division by zero. Only relevant for method 'KNN'. Default is 1e-15.}
 
-\item{positive}{Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.}
+\item{k}{Integer. The number of nearest neighbors for the "KNN" method. Default is 15.}
 
-\item{kernel}{Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".}
+\item{positive}{Character vector. Only relevant for method 'KNN'. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.}
+
+\item{kernel}{Character. Only relevant for method 'KNN'. Specifies the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".}
 
 \item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
 
-\item{...}{Additional arguments to pass to the machine learning wrapper functions \code{xgboost_wrapper}, \code{ranger_wrapper}, \code{lightgbm_wrapper}, or to a custom-built wrapper function.}
-
-\item{seed}{Integer. An optional random seed for reproducibility. Default is NULL.}
+\item{...}{Additional arguments to pass to the machine learning wrapper functions \code{wrapper_xgboost}, \code{wrapper_ranger}, \code{wrapper_knn} and  \code{wrapper_svm}, or to a custom-built wrapper function.}
 }
 \value{
 A list containing the test distribution.
