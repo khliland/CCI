@@ -9,6 +9,10 @@ devtools::build_vignettes(quiet = FALSE)
 usethis::use_vignette("Testing-CI-with-CCI")
 devtools::install()
 devtools::load_all()
+sum(cranlogs::cran_downloads(
+  packages = "CCI",
+  from = "2025-08-01",
+  to   = Sys.Date())$count)
 
 library(CCI)
 library(dplyr)
