@@ -21,7 +21,7 @@ test.gen(
   mlfunc = NULL,
   progress = TRUE,
   center = TRUE,
-  scale. = TRUE,
+  scale = TRUE,
   eps = 1e-15,
   k = 15,
   positive = NULL,
@@ -63,7 +63,7 @@ test.gen(
 
 \item{center}{Logical. If TRUE, the data is centered before model fitting. Default is TRUE.}
 
-\item{scale.}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
+\item{scale}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
 
 \item{eps}{Numeric. A small value added to avoid division by zero. Only relevant for method 'KNN'. Default is 1e-15.}
 

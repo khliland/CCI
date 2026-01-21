@@ -23,7 +23,7 @@ perm.test(
   progress = TRUE,
   k = 15,
   center = TRUE,
-  scale. = TRUE,
+  scale = TRUE,
   eps = 1e-15,
   positive = NULL,
   kernel = "optimal",
@@ -68,7 +68,7 @@ perm.test(
 
 \item{center}{Logical. If TRUE, the data is centered before model fitting. Default is TRUE.}
 
-\item{scale.}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
+\item{scale}{Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.}
 
 \item{eps}{Numeric. A small value added to avoid division by zero. Default is 1e-15.}
 

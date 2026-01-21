@@ -14,6 +14,7 @@ wrapper_xgboost(
   metricfunc = NULL,
   nthread = 1,
   eps = 1e-15,
+  subsample = 1,
   ...
 )
 }
@@ -35,6 +36,8 @@ wrapper_xgboost(
 \item{nthread}{Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.}
 
 \item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
+
+\item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
 
 \item{...}{Additional arguments passed to xgb.train}
 }

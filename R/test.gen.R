@@ -19,7 +19,7 @@
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
 #' @param progress Logical. A logical value indicating whether to show a progress bar during when building the null distribution. Default is TRUE.
 #' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
-#' @param scale. Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
+#' @param scale Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
 #' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
 #' @param eps Numeric. A small value added to avoid division by zero. Only relevant for method 'KNN'. Default is 1e-15.
 #' @param positive Character vector. Only relevant for method 'KNN'. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
@@ -66,7 +66,7 @@ test.gen <- function(formula,
                      mlfunc = NULL,
                      progress = TRUE,
                      center = TRUE,
-                     scale. = TRUE,
+                     scale = TRUE,
                      eps = 1e-15,
                      k = 15,
                      positive = NULL,
@@ -98,7 +98,7 @@ test.gen <- function(formula,
   x_names <- all.vars(formula)[-1]
   num_x <- x_names[sapply(data[, x_names, drop = FALSE],
                           function(z) is.numeric(z) && !is.factor(z))]
-  if (isTRUE(center) || isTRUE(scale.)) {
+  if (isTRUE(center) || isTRUE(scale)) {
     
     if (length(num_x) > 0L) {
       
@@ -109,7 +109,7 @@ test.gen <- function(formula,
         X_mat <- sweep(X_mat, 2, cm, "-")
       }
       
-      if (isTRUE(scale.)) {
+      if (isTRUE(scale)) {
         cs <- apply(X_mat, 2, sd, na.rm = TRUE)
         cs[cs == 0 | is.na(cs)] <- 1
         X_mat <- sweep(X_mat, 2, cs, "/")

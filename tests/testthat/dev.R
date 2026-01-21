@@ -15,13 +15,13 @@ library(dplyr)
 library(CIsimdata)
 # Testing of functions
 set.seed(123)
-data <- NormalData(10000)
+data <- NormalData(1000)
 
 # General test for CCI.test() with continous data
 # debug(CCI.test)
 # debug(perm.test)
 # debug(test.gen)
-res <- CCI.test(Y ~ X | Z1 + Z2, data = data, verbose = TRUE, nperm = 60, seed = 1) # Basic case
+res <- CCI.test(Y ~ X | Z1 + Z2, data = data, verbose = TRUE, seed = 1) # Basic case
 summary(res)
 plot(res)
 QQplot(res)

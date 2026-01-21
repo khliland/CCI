@@ -9,6 +9,7 @@
 #' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
+#' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
 #' @param ... Additional arguments passed to xgb.train
 #'
 #' @importFrom xgboost xgb.DMatrix xgb.train

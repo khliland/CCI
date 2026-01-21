@@ -37,7 +37,7 @@ CCI.test(
   tune_length = 10,
   k = 15,
   center = TRUE,
-  scale. = TRUE,
+  scale = TRUE,
   eps = 1e-15,
   positive = NULL,
   kernel = "optimal",
@@ -113,7 +113,7 @@ CCI.test(
 
 \item{center}{Logical. If TRUE, the data will be centered before fitting the model}
 
-\item{scale.}{Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.}
+\item{scale}{Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.}
 
 \item{eps}{Numeric. A small value to avoid division by zero in some calculations.}
 

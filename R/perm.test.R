@@ -18,7 +18,7 @@
 #' @param progress Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.
 #' @param k Integer. The number of nearest neighbors for the "KNN" method. Default is 15.
 #' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
-#' @param scale. Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
+#' @param scale Logical. If TRUE, the data is scaled before model fitting. Default is TRUE.
 #' @param eps Numeric. A small value added to avoid division by zero. Default is 1e-15.
 #' @param positive Character vector. Specifies which levels of a factor variable should be treated as positive class in classification tasks. Default is NULL.
 #' @param kernel Character string specifying the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".
@@ -58,7 +58,7 @@ perm.test <- function(formula,
                       progress = TRUE,
                       k = 15,
                       center = TRUE,
-                      scale. = TRUE,
+                      scale = TRUE,
                       eps = 1e-15,
                       positive = NULL,
                       kernel = "optimal",
@@ -84,7 +84,7 @@ perm.test <- function(formula,
                    progress = progress,
                    k = k,
                    center = center,
-                   scale. = scale,
+                   scale = scale,
                    eps = eps,
                    positive = positive,
                    kernel = kernel,
@@ -108,7 +108,7 @@ perm.test <- function(formula,
                              progress = progress,
                              k = k,
                              center = center,
-                             scale. = scale,
+                             scale = scale,
                              eps = eps,
                              positive = positive,
                              kernel = kernel,

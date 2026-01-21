@@ -33,7 +33,7 @@
 #' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
 #' @param k Integer. The number of nearest neighbors to use for KNN method. Default is 15.
 #' @param center Logical. If TRUE, the data will be centered before fitting the model
-#' @param scale. Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.
+#' @param scale Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.
 #' @param eps Numeric. A small value to avoid division by zero in some calculations.
 #' @param positive Character. The name of the positive class (KNN) in the data, used for classification tasks. Default is NULL.
 #' @param kernel Character. The kernel type to use for KNN method. Default is "optimal".
@@ -92,7 +92,7 @@ CCI.test <- function(formula = NULL,
                      tune_length = 10,
                      k = 15,
                      center = TRUE,
-                     scale. = TRUE,
+                     scale = TRUE,
                      eps = 1e-15,
                      positive = NULL,
                      kernel = "optimal",
@@ -275,7 +275,7 @@ CCI.test <- function(formula = NULL,
     nthread = nthread,
     k = k,
     center = center,
-    scale. = scale,
+    scale = scale,
     eps = eps,
     positive = positive,
     kernel = kernel,
