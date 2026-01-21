@@ -156,7 +156,6 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #' @export
 #'
 
-
 get_tuned_params <- function(tuned_model) {
   supported_methods <- c("rf", "xgboost", "svm")
   if (!tuned_model$method %in% supported_methods) {
@@ -362,6 +361,8 @@ build_formula <- function(formula, poly_terms = NULL, interaction_terms = NULL) 
 #' @param Z character vector of column names defining the conditioning set.
 #' @param allow_character logical; treat character as categorical. Default TRUE.
 #' @return logical scalar.
+#' @export
+#'
 is_categorical_Z_any <- function(sub_data, Z, allow_character = TRUE) {
   if (is.null(Z) || length(Z) == 0) return(FALSE)
   if (!is.data.frame(sub_data)) stop("`sub_data` must be a data.frame.")
@@ -384,6 +385,8 @@ is_categorical_Z_any <- function(sub_data, Z, allow_character = TRUE) {
 #' @param Z character vector of Z column names.
 #' @param allow_character logical; treat character as categorical. Default TRUE.
 #' @return A factor defining strata.
+#' @export
+#'
 make_strata_from_categorical_Z <- function(sub_data, Z, allow_character = TRUE) {
   if (!is.data.frame(sub_data)) stop("`sub_data` must be a data.frame.")
   if (is.null(Z) || length(Z) == 0) stop("`Z` must be a non-empty character vector.")
