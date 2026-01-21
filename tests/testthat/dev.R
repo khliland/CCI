@@ -15,16 +15,18 @@ library(dplyr)
 library(CIsimdata)
 # Testing of functions
 set.seed(123)
-data <- NormalData(500)
+data <- NormalData(10000)
 
 # General test for CCI.test() with continous data
 # debug(CCI.test)
 # debug(perm.test)
 # debug(test.gen)
-res <- CCI.test(Y ~ X | Z1 + Z2, data = data, verbose = TRUE, nperm = 200, seed = 1) # Basic case
+res <- CCI.test(Y ~ X | Z1 + Z2, data = data, verbose = TRUE, nperm = 60, seed = 1) # Basic case
 summary(res)
 plot(res)
 QQplot(res)
+
+res <- CCI.test(Y ~ X | Z1, data = data, method = "xgboost", seed = 1) # Basic case
 
 summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = 'xgboost', 
                  metric = 'RMSE',

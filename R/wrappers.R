@@ -29,6 +29,7 @@ wrapper_xgboost <- function(formula,
                             metricfunc = NULL,
                             nthread = 1,
                             eps = 1e-15,
+                            subsample = 1,
                             ...) {
   
   independent <- all.vars(formula)[-1]
@@ -117,7 +118,8 @@ wrapper_xgboost <- function(formula,
                            continuous   = "rmse",
                            binary       = "error",
                            categorical  = "merror"),
-      nthread   = nthread
+      nthread   = nthread,
+      subsample = subsample
       )
   }
   

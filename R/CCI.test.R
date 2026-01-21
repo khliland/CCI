@@ -128,8 +128,8 @@ CCI.test <- function(formula = NULL,
   # Set subsample as a function of sample size, starting when sample size > 1000
   if (subsample == "Auto") {
     n <- nrow(data)
-    if (n > 1000) {
-      subsample <- 1 / ((n / 1000) ^ 0.75)
+    if (n > 900) {
+      subsample <- 1 / ((n / 900) ^ 0.75)
     } else {
       subsample <- 1
     }

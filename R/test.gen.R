@@ -138,7 +138,7 @@ test.gen <- function(formula,
     Z <- all.vars(formula[[3]])[-1] # Use this for stratification
     X <- all.vars(formula[[3]])[1]
     if (permutation) {
-      if (robust && is_categorical_Z_any(sub_data, Z)) { # Mind that Z is evaluated, not new_Z
+      if (robust && is_categorical_Z_any(sub_data, Z)) { 
         # Permute within strata of Z 
         strata <- make_strata_from_categorical_Z(sub_data, Z)
         X_star <- permute_within_strata(sub_data$X, strata)
@@ -183,6 +183,7 @@ test.gen <- function(formula,
           metricfunc = metricfunc,
           nrounds = nrounds,
           nthread = nthread,
+          subsample = subsample,
           ...
         )
       } else if (method == "rf") {
