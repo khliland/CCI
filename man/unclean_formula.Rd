@@ -4,10 +4,10 @@
 \alias{unclean_formula}
 \title{Convert CI-style formula Y ~ X | Z into regression-style Y ~ X + Z}
 \usage{
-unclean_formula(formula)
+unclean_formula(f)
 }
 \arguments{
-\item{formula}{A formula of the form Y ~ X | Z1 + Z2, or already Y ~ X + Z1 + Z2.}
+\item{f}{A formula of the form Y ~ X | Z1 + Z2, or already Y ~ X + Z1 + Z2.}
 }
 \value{
 A standard formula of the form Y ~ X + Z1 + Z2.

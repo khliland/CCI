@@ -4,7 +4,7 @@
 \alias{is_categorical_Z_any}
 \title{Check whether Z contains at least one categorical variable}
 \usage{
-is_categorical_Z_any(sub_data, Z, allow_character = TRUE)
+is_categorical_Z_any(sub_data, Z, allow_character = TRUE, allow_logical = TRUE)
 }
 \arguments{
 \item{sub_data}{data.frame containing the Z columns.}
@@ -12,10 +12,13 @@ is_categorical_Z_any(sub_data, Z, allow_character = TRUE)
 \item{Z}{character vector of column names defining the conditioning set.}
 
 \item{allow_character}{logical; treat character as categorical. Default TRUE.}
+
+\item{allow_logical}{logical; treat logical as categorical. Default TRUE.}
 }
 \value{
 logical scalar.
 }
 \description{
-Categorical is defined as factor (and optionally character).
+Categorical is defined as factor (and optionally character and logical).
+This helper is intentionally strict about inputs and does not modify data.
 }

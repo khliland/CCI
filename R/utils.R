@@ -62,40 +62,39 @@ clean_formula <- function(formula) {
 
 #' Convert CI-style formula Y ~ X | Z into regression-style Y ~ X + Z
 #'
-#' @param formula A formula of the form Y ~ X | Z1 + Z2, or already Y ~ X + Z1 + Z2.
+#' @param f A formula of the form Y ~ X | Z1 + Z2, or already Y ~ X + Z1 + Z2.
 #' @return A standard formula of the form Y ~ X + Z1 + Z2.
 #' @export
-unclean_formula <- function(formula) {
-  if (!inherits(formula, "formula")) stop("`formula` must be a formula.", call. = FALSE)
+unclean_formula <- function(f) {
+  # f is a formula like y ~ x | z1 + z2 + ...
+  # returns y ~ x + z1 + z2 + ...
   
-  # If no conditioning bar, assume already standard and return as-is
-  if (!("|" %in% all.names(formula))) {
-    return(formula)
+  # Deparse to single string (safe)
+  s <- paste(deparse(f), collapse = " ")
+  
+  # Split on | (must escape)
+  parts <- strsplit(s, "\\|")[[1]]
+  if (length(parts) == 1) {
+    # already standard
+    return(stats::as.formula(s))
+  }
+  if (length(parts) != 2) {
+    stop("Unexpected formula structure with multiple '|': ", s, call. = FALSE)
   }
   
-  # Parse: formula[[3]] is the RHS expression
-  rhs <- formula[[3]]
+  left <- trimws(parts[1])  # "y ~ x"
+  right <- trimws(parts[2]) # "z1 + z2 + ..."
   
-  # Expect rhs to look like:  X | (Z expression)
-  if (!is.call(rhs) || rhs[[1]] != as.name("|")) {
-    stop("Expected a top-level conditional formula of the form 'Y ~ X | Z'.", call. = FALSE)
-  }
+  # Extract y and x from left
+  # left is "y ~ x" (possibly with spaces)
+  yx <- strsplit(left, "~")[[1]]
+  if (length(yx) != 2) stop("Could not parse left side: ", left, call. = FALSE)
+  y <- trimws(yx[1])
+  x <- trimws(yx[2])
   
-  x_expr <- rhs[[2]]
-  z_expr <- rhs[[3]]
-  
-  # Handle missing Z (e.g., Y ~ X | ) defensively
-  if (is.null(z_expr) || identical(z_expr, quote(expr = ))) {
-    return(stats::as.formula(paste(deparse(formula[[2]]), "~", deparse(x_expr))))
-  }
-  
-  # Convert to: Y ~ X + Z
-  # If Z is a single symbol/expression, this works; if Z is (Z1 + Z2), it also works.
-  stats::as.formula(paste(
-    deparse(formula[[2]]), "~",
-    deparse(x_expr), "+",
-    deparse(z_expr)
-  ))
+  # Build standard formula string
+  out <- paste0(y, " ~ ", x, " + ", right)
+  stats::as.formula(out)
 }
 
 
@@ -355,79 +354,131 @@ build_formula <- function(formula, poly_terms = NULL, interaction_terms = NULL) 
 
 #' Check whether Z contains at least one categorical variable
 #'
-#' Categorical is defined as factor (and optionally character).
+#' Categorical is defined as factor (and optionally character and logical).
+#' This helper is intentionally strict about inputs and does not modify data.
 #'
 #' @param sub_data data.frame containing the Z columns.
 #' @param Z character vector of column names defining the conditioning set.
 #' @param allow_character logical; treat character as categorical. Default TRUE.
+#' @param allow_logical logical; treat logical as categorical. Default TRUE.
 #' @return logical scalar.
 #' @export
-#'
-is_categorical_Z_any <- function(sub_data, Z, allow_character = TRUE) {
-  if (is.null(Z) || length(Z) == 0) return(FALSE)
-  if (!is.data.frame(sub_data)) stop("`sub_data` must be a data.frame.")
-  if (!all(Z %in% names(sub_data))) stop("Some Z variables are not in `sub_data`.")
+is_categorical_Z_any <- function(sub_data, Z,
+                                 allow_character = TRUE,
+                                 allow_logical = TRUE) {
+  if (is.null(Z) || length(Z) == 0L) return(FALSE)
+  if (!is.data.frame(sub_data)) stop("'sub_data' must be a data.frame.")
+  if (!is.character(Z)) stop("'Z' must be a character vector of column names.")
   
-  cols <- sub_data[Z]
+  missing_cols <- setdiff(Z, names(sub_data))
+  if (length(missing_cols) > 0L) {
+    stop("Some Z variables are not in 'sub_data': ", paste(missing_cols, collapse = ", "))
+  }
+  
+  cols <- sub_data[, Z, drop = FALSE]
+  
   is_cat <- vapply(
     cols,
-    function(x) is.factor(x) || (allow_character && is.character(x)),
+    function(x) {
+      is.factor(x) ||
+        (allow_character && is.character(x)) ||
+        (allow_logical && is.logical(x))
+    },
     logical(1)
   )
+  
   any(is_cat)
 }
 
 #' Create strata from the categorical subset of Z
 #'
 #' Uses interaction() on the categorical Z columns only.
+#' Characters (and logicals, if enabled) are coerced to factor for stable behavior.
+#'
+#' Rows with NA in any stratification column will receive NA strata.
 #'
 #' @param sub_data data.frame containing Z columns.
 #' @param Z character vector of Z column names.
 #' @param allow_character logical; treat character as categorical. Default TRUE.
-#' @return A factor defining strata.
+#' @param allow_logical logical; treat logical as categorical. Default TRUE.
+#' @return A factor defining strata (same length as nrow(sub_data)).
 #' @export
-#'
-make_strata_from_categorical_Z <- function(sub_data, Z, allow_character = TRUE) {
-  if (!is.data.frame(sub_data)) stop("`sub_data` must be a data.frame.")
-  if (is.null(Z) || length(Z) == 0) stop("`Z` must be a non-empty character vector.")
-  if (!all(Z %in% names(sub_data))) stop("Some Z variables are not in `sub_data`.")
+make_strata_from_categorical_Z <- function(sub_data, Z,
+                                           allow_character = TRUE,
+                                           allow_logical = TRUE) {
+  if (!is.data.frame(sub_data)) stop("'sub_data' must be a data.frame.")
+  if (is.null(Z) || length(Z) == 0L) stop("'Z' must be a non-empty character vector.")
+  if (!is.character(Z)) stop("'Z' must be a character vector of column names.")
   
-  cols <- sub_data[Z]
+  missing_cols <- setdiff(Z, names(sub_data))
+  if (length(missing_cols) > 0L) {
+    stop("Some Z variables are not in 'data': ", paste(missing_cols, collapse = ", "))
+  }
+  
+  cols <- sub_data[, Z, drop = FALSE]
+  
   is_cat <- vapply(
     cols,
-    function(x) is.factor(x) || (allow_character && is.character(x)),
+    function(x) {
+      is.factor(x) ||
+        (allow_character && is.character(x)) ||
+        (allow_logical && is.logical(x))
+    },
     logical(1)
   )
   
   if (!any(is_cat)) stop("No categorical variables found in Z.")
   
-  cat_cols <- cols[is_cat]
+  cat_cols <- cols[, is_cat, drop = FALSE]
   
-  # Ensure characters are treated as categorical consistently
-  cat_cols <- lapply(cat_cols, function(x) if (is.factor(x)) x else as.factor(x))
+  # Coerce character/logical to factor for stable interaction() behavior
+  for (nm in names(cat_cols)) {
+    if (!is.factor(cat_cols[[nm]])) cat_cols[[nm]] <- factor(cat_cols[[nm]])
+  }
   
-  interaction(cat_cols, drop = TRUE, lex.order = TRUE)
+  do.call(interaction, c(cat_cols, list(drop = TRUE, lex.order = TRUE)))
 }
 
 #' Stratified permutation of x within strata
 #'
+#' Permutes values of 'x' within each stratum. By default, rows with NA in 'x'
+#' or 'strata' are left unchanged to preserve alignment.
+#'
 #' @param x vector to permute.
 #' @param strata factor-like vector defining strata.
 #' @param seed optional seed for reproducibility.
+#' @param na_action how to handle NA rows: "keep" (default) keeps them fixed,
+#'   "drop" removes them (returns shorter vector).
 #' @return x_star permuted within strata.
-#' @importFrom stats ave
-#' 
 #' @export
 #' @examples
 #' set.seed(123)
 #' x <- 1:10
 #' strata <- rep(letters[1:2], each = 5)
 #' x_permuted <- permute_within_strata(x, strata, seed = 123)
-permute_within_strata <- function(x, strata, seed = NULL) {
-  if (!is.null(seed)) set.seed(seed)
-  if (length(x) != length(strata)) stop("`x` and `strata` must have the same length.")
+permute_within_strata <- function(x, strata, seed = NULL,
+                                  na_action = c("keep", "drop")) {
+  na_action <- match.arg(na_action)
   
-  ave(x, strata, FUN = function(v) {
-    if (length(v) < 2L) v else sample(v, replace = FALSE)
-  })
+  if (!is.null(seed)) set.seed(seed)
+  if (length(x) != length(strata)) stop("'x' and 'strata' must have the same length.")
+  
+  if (na_action == "drop") {
+    ok <- !(is.na(x) | is.na(strata))
+    x2 <- x[ok]
+    s2 <- strata[ok]
+    # group-wise permutation, returns shorter vector
+    return(stats::ave(x2, s2, FUN = function(v) if (length(v) < 2L) v else sample(v, replace = FALSE)))
+  }
+  
+  # na_action == "keep": preserve length and row alignment
+  out <- x
+  ok <- !(is.na(x) | is.na(strata))
+  
+  idx_by_grp <- split(which(ok), as.factor(strata[ok]))
+  for (idx in idx_by_grp) {
+    if (length(idx) >= 2L) out[idx] <- sample(out[idx], replace = FALSE)
+  }
+  
+  out
 }

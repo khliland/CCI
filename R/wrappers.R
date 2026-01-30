@@ -256,6 +256,8 @@ wrapper_ranger <- function(formula,
                            num.trees,
                            eps = 1e-15,
                            ...) {
+
+  
   if (metric %in% c("Kappa", "LogLoss")) {
     dependent <- all.vars(formula)[1]
     testing <- data[test_indices, ]

@@ -142,7 +142,11 @@ test.gen <- function(formula,
       if (robust && is_categorical_Z_any(sub_data, Z)) { 
         # Permute within strata of Z 
         strata <- make_strata_from_categorical_Z(sub_data, Z)
-        X_star <- permute_within_strata(sub_data$X, strata)
+        
+        # select only column X from sub_data
+        sub_data_X <- sub_data[[X]]
+        
+        X_star <- permute_within_strata(sub_data_X, strata)
         # Replace X with permuted version
         resampled_data <- sub_data %>% dplyr::mutate(!!X := X_star)
       } else {
@@ -166,7 +170,10 @@ test.gen <- function(formula,
       test_indices <- setdiff(1:nrow(sub_data), inTraining)
     }
 
-    
+    # Last check if resampled_data contains all variable in formula
+    formula <- unclean_formula(formula)
+    check_formula(formula, resampled_data)
+   
     # Apply machine learning method
     null[iteration] <- tryCatch({
       if (!is.null(mlfunc)) {
@@ -176,39 +183,39 @@ test.gen <- function(formula,
                test_indices, ...)
       } else if (method == "xgboost") {
         wrapper_xgboost(
-          formula,
-          resampled_data,
-          train_indices,
-          test_indices,
-          metric = metric,
-          metricfunc = metricfunc,
-          nrounds = nrounds,
-          nthread = nthread,
-          subsample = subsample,
+          formula       = formula,
+          data          = resampled_data,
+          train_indices = train_indices,
+          test_indices  = test_indices,
+          metric        = metric,
+          metricfunc    = metricfunc,
+          nrounds       = nrounds,
+          nthread       = nthread,
+          subsample     = subsample,
           ...
         )
       } else if (method == "rf") {
         formula <- unclean_formula(formula)
         wrapper_ranger(
-          formula,
-          resampled_data,
-          train_indices,
-          test_indices,
-          metric = metric,
-          metricfunc = metricfunc,
-          num.trees = nrounds,
-          nthread = nthread,
-          mtry = mtry,
+          formula       = formula,
+          data          = resampled_data,
+          train_indices = train_indices,
+          test_indices  = test_indices,
+          metric        = metric,
+          metricfunc    = metricfunc,
+          num.trees     = nrounds,
+          nthread       = nthread,
+          mtry          = mtry,
           ...
         )
       } else if (method == "svm") {
         wrapper_svm(
-          formula,
-          resampled_data,
-          train_indices,
-          test_indices,
-          metric = metric,
-          metricfunc = metricfunc,
+          formula = formula,
+          data = resampled_data,
+          train_indices = train_indices,
+          test_indices  = test_indices,
+          metric        = metric,
+          metricfunc    = metricfunc,
           ...
         )
       } else if (method == "KNN") {

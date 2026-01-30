@@ -4,7 +4,7 @@
 \alias{permute_within_strata}
 \title{Stratified permutation of x within strata}
 \usage{
-permute_within_strata(x, strata, seed = NULL)
+permute_within_strata(x, strata, seed = NULL, na_action = c("keep", "drop"))
 }
 \arguments{
 \item{x}{vector to permute.}
@@ -12,12 +12,16 @@ permute_within_strata(x, strata, seed = NULL)
 \item{strata}{factor-like vector defining strata.}
 
 \item{seed}{optional seed for reproducibility.}
+
+\item{na_action}{how to handle NA rows: "keep" (default) keeps them fixed,
+"drop" removes them (returns shorter vector).}
 }
 \value{
 x_star permuted within strata.
 }
 \description{
-Stratified permutation of x within strata
+Permutes values of 'x' within each stratum. By default, rows with NA in 'x'
+or 'strata' are left unchanged to preserve alignment.
 }
 \examples{
 set.seed(123)

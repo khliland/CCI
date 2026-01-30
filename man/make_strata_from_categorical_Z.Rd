@@ -4,7 +4,12 @@
 \alias{make_strata_from_categorical_Z}
 \title{Create strata from the categorical subset of Z}
 \usage{
-make_strata_from_categorical_Z(sub_data, Z, allow_character = TRUE)
+make_strata_from_categorical_Z(
+  sub_data,
+  Z,
+  allow_character = TRUE,
+  allow_logical = TRUE
+)
 }
 \arguments{
 \item{sub_data}{data.frame containing Z columns.}
@@ -12,10 +17,16 @@ make_strata_from_categorical_Z(sub_data, Z, allow_character = TRUE)
 \item{Z}{character vector of Z column names.}
 
 \item{allow_character}{logical; treat character as categorical. Default TRUE.}
+
+\item{allow_logical}{logical; treat logical as categorical. Default TRUE.}
 }
 \value{
-A factor defining strata.
+A factor defining strata (same length as nrow(sub_data)).
 }
 \description{
 Uses interaction() on the categorical Z columns only.
+Characters (and logicals, if enabled) are coerced to factor for stable behavior.
+}
+\details{
+Rows with NA in any stratification column will receive NA strata.
 }
