@@ -25,15 +25,24 @@ data <- NormalData(300)
 # debug(CCI.test)
 # debug(perm.test)
 # debug(test.gen)
-res <- CCI.test(Y ~ X | Z1 + Z2, data = data, verbose = TRUE, seed = 1) # Basic case
+res <- CCI.test(Y ~ X | Z1 + Z2, nperm = 500, data = data, verbose = TRUE, seed = 1) # Basic case
 summary(res)
 plot(res)
 QQplot(res)
 
+res <- CCI.test(Y ~ X | Z1, nperm = 500, data = data, verbose = TRUE, seed = 1) # Basic case
+QQplot(res)
+
+
 res <- CCI.test(Y ~ X | Z1, data = data, method = "xgboost", seed = 1) # Basic case
+summary(res)
+plot(res)
+
+set.seed(1)
+data <- BinaryData(1000)
 
 summary(CCI.test(Y ~ X | Z1 + Z2, data = data, method = 'xgboost', 
-                 metric = 'RMSE',
+                 metric = 'Kappa',
                  p = 0.58439672,
                  nperm = 100, 
                  nrounds = 100, 
@@ -131,13 +140,24 @@ summary(result)
 QQplot(res)
 plot(result)
 
+set.seed(12)
 data <- BinaryData(1000)
-result <- CCI.test(Y ~ X | Z1 ,
+result <- CCI.test(Y ~ X | Z1 + Z2 ,
                    data = data,
-                   seed = 1,
-                   method = "KNN",
-                   metric = "Kappa")
+                   seed = 10,
+                   nperm = 250,
+                   parametric = T)
 summary(result)
+QQplot(result)
+
+result <- CCI.test(Y ~ X | Z1,
+                   data = data,
+                   seed = 10,
+                   nperm = 250,
+                   parametric = T)
+summary(result)
+QQplot(result)
+
 
 set.seed(1985)
 data <- NormalData(80)
@@ -149,11 +169,11 @@ CCI_obj <- CCI.test(formula = Y ~ X | Z2, data = data, nperm = 200, parametric =
 QQplot(CCI_obj) 
 
 data <- PoissonNoise(500)
-result <- CCI.test(Y ~ X | Z1,
+result <- CCI.test(Y ~ X | Z1 + Z2,
                    data = data,
                    seed = 1,
-                   method = "KNN")
-summary(result)
+                   nperm = 500)
+QQplot(result)
 
 result <- CCI.test(Y ~ X | Z1 + Z2,
                    data = data,
@@ -1212,5 +1232,44 @@ pred <- predict(fit, data = test)$predictions
 rmse <- sqrt(mean((pred - test$Y)^2))
 rmse
 
+
+data_generator <- function(N, d = 0){
+  X1 <- stats::rnorm(N,25,5)
+  X1_prob <- plogis((X1 - 25)/5)
+  X2 <- stats::rbinom(N,1,X1_prob)
+  X3 <- stats::rnorm(N,5*X2,2)
+  X4 <- numeric(N)
   
+  for (i in 1:N) {
+    score_y <- cos(X1[i] * pi) + X3[i]
+    if (score_y > 1) {
+      X4[i] <- 3
+    } else if (score_y > 0.5) {
+      X4[i] <- 2
+    } else if (score_y > 0) {
+      X4[i] <- 1
+    } else {
+      X4[i] <- 0
+    }
+  }
+  
+  X5 <- stats::rnorm(N,X2,1) 
+  X6 <- stats::rnorm(N,X1 + X3 + X4 + X5,3)
+  X7 <- X1 + X6 + (stats::rpois(N, lambda = 1)-1)
+  
+  return(data.frame(X1,X2,X3,X4,X5,X6,X7))
+}
+
+dat <- data_generator(N = 1000)
+# head(dat)
+# n <- nrow(dat)
+# V <- colnames(dat)
+# suffStat <- list(C = cor(dat), n = n)
+# 
+# pc.fit <- pc(suffStat = suffStat, alpha = 0.05, indepTest = gaussCItest, labels = V)
+# amat <- as(pc.fit@graph, "matrix")
+# print(amat)
+
+tst <- CCI.test(formula = X5 ~ X6 + X2 + X3 + X4, data = dat, seed = 1)
+summary(tst)
   

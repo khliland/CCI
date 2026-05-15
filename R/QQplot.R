@@ -116,21 +116,27 @@ QQplot <- function(object,
   pvalues <- NULL # Dummy to avoid 'globals' warning in package test.
 
   ggobj <- ggplot2::ggplot(p_values, ggplot2::aes(sample = pvalues)) +
-    ggplot2::geom_qq(distribution = stats::qunif, size = 0.1)  +
+    ggplot2::geom_qq(distribution = stats::qunif, size = 0.1) +
     ggplot2::geom_abline(slope = 1, intercept = 0, color = "blue") +
-    ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles",
-         title = paste0("QQPlot of p-values with ", nperm, " samples"))  +
+    ggplot2::coord_equal(xlim = c(0,1), ylim = c(0,1)) +
+    ggplot2::labs(
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles",
+      title = paste0("QQPlot of p-values with ", nperm, " samples")
+    ) +
     ggplot2::theme_minimal() +
-    ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
-                    axis.text.y = element_text(size = axis.text.y),
-                    strip.text.x = element_text(size = strip.text.x),
-                    strip.text.y = element_text(size = strip.text.y),
-                    legend.text = element_text(size = legend.text),
-                    legend.title = element_text(size = legend.title),
-                    axis.title.x = element_text(size = axis.title.x),
-                    axis.title.y = element_text(size = axis.title.y),
-                    plot.title = element_text(size = title.size, face = "bold"), 
-                    legend.position = 'none')
+    ggplot2::theme(
+      axis.text.x = element_text(size = axis.text.x),
+      axis.text.y = element_text(size = axis.text.y),
+      strip.text.x = element_text(size = strip.text.x),
+      strip.text.y = element_text(size = strip.text.y),
+      legend.text = element_text(size = legend.text),
+      legend.title = element_text(size = legend.title),
+      axis.title.x = element_text(size = axis.title.x),
+      axis.title.y = element_text(size = axis.title.y),
+      plot.title = element_text(size = title.size, face = "bold"),
+      legend.position = "none"
+    )
 
   return(ggobj)
 }
