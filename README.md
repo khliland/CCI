@@ -4,7 +4,7 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/CCI)](https://CRAN.R-project.org/package=CCI)
 <!-- badges: end -->
 
-**CCI** is an R package for testing conditional independence, $Y \perp\!\!\!\perp X \mid Z$: does
+**CCI** is an R package for testing conditional independence, $Y _||_ X \mid Z$: does
 $X$ carry information about $Y$ once $Z$ is known? It uses machine learning to answer this as a
 prediction question. If a model for $Y$ predicts new data better with the real $X$ than with a
 randomly permuted $X$, then $X$ carries information about $Y$ beyond $Z$. The null distribution is
@@ -39,7 +39,7 @@ remotes::install_github("khliland/CCI", build_vignettes = TRUE)
 ## A first test
 
 We simulate data where $Y$ and $X$ both depend on $Z_1$ and $Z_2$, but not on each other. Then
-$Y \perp\!\!\!\perp X \mid Z_1, Z_2$ is true, while $Y \perp\!\!\!\perp X \mid Z_1$ is false.
+$Y _||_ X \mid Z_1, Z_2$ is true, while $Y _||_ X \mid Z_1$ is false.
 
 ```r
 library(CCI)
@@ -96,8 +96,8 @@ samples, 1/161. `plot()` shows the null distribution together with the test stat
 
 ## Main features
 
-**The formula.** `Y ~ X | Z1 + Z2` tests $Y \perp\!\!\!\perp X \mid Z_1, Z_2$. `Y ~ X + Z1 + Z2` is
-the same. For an unconditional test of $Y \perp\!\!\!\perp X$, write `Y ~ X | 1` or `Y ~ X + 1`.
+**The formula.** `Y ~ X | Z1 + Z2` tests $Y _||_ X \mid Z_1, Z_2$. `Y ~ X + Z1 + Z2` is
+the same. For an unconditional test of $Y _||_ X$, write `Y ~ X | 1` or `Y ~ X + 1`.
 
 **Data types.** The metric is chosen from the type of $Y$: RMSE for a numeric $Y$, Cohen's Kappa
 for a factor, character or logical $Y$. `metric = "LogLoss"` uses predicted class probabilities
