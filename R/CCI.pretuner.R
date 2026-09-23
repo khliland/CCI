@@ -44,7 +44,6 @@
 #'
 #' @importFrom dplyr %>%
 #' @importFrom stats model.matrix var cor sd
-#' @import caret
 #' @import progress
 #'
 #' @return A list containing:

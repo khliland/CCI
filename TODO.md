@@ -5,22 +5,30 @@
   - Supports RMSE, Kappa and LogLoss; fixed double poly/interaction expansion from `CCI.test`
   - Tuned parameters now actually reach the model in `CCI.test`
   - NEWS.md added and version bumped to 0.3.7
-- [ ] 2. Make CCI project-specific decisions available to agents
-- [ ] 3. Finish improving vignettes and README
-- [ ] 4. Code improvements
+- [x] 2. Make CCI project-specific decisions available to agents
+  - AGENTS.md (guide for coding agents), CLAUDE.md (imports AGENTS.md), development/DECISIONS.md (decision log with reasons)
+  - [ ] Maintainer review of the "Implementation" decisions in DECISIONS.md
+  - [x] Remove the unused `@importFrom caret train trainControl` in R/CCI.test.R (also the unused `@import caret` in R/CCI.pretuner.R)
+- [x] 3. Finish improving vignettes and README
+  - [x] Vignettes: getting started (rewritten), diagnostics-and-tuning, custom-models-and-metrics, applied-examples
+  - [x] README: rewritten as a short landing page pointing to the vignettes
+- [x] 4. Code improvements (manual check script: tests/testthat/check_package.R). Known limitation left: xgboost row `subsample` can not be set
   - [x] `perm.test` used `tail = "right"` for LogLoss; now `"left"` (see BUGFIXES.md #6)
-  - `wrapper_ranger` drops `...` for RMSE, so extra ranger arguments are ignored for continuous outcomes
+  - [x] `wrapper_ranger` drops `...` for RMSE, so extra ranger arguments are ignored for continuous outcomes (BUGFIXES.md #14)
   - [x] `wrapper_xgboost` dead `args` branch removed (BUGFIXES.md #8d); xgboost row `subsample` still not available
   - Package audit 2026-09-23 (all confirmed by running code):
     - [x] One failed iteration makes the p-value NA (`get_pvalues` has no NA handling), see BUGFIXES.md #7
     - [x] `wrapper_xgboost` gives `metricfunc` the actual values as a factor even for continuous Y, so the p-value is NA (BUGFIXES.md #8b)
     - [x] `wrapper_xgboost` fails for numeric class labels not coded 0..K-1 (e.g. 1/2), so the p-value is NA (BUGFIXES.md #8c)
     - [x] `wrapper_xgboost` scrambled multiclass predictions with xgboost 3.x (BUGFIXES.md #8a)
-    - [ ] Other wrappers: use `call_metricfunc()`; `wrapper_knn` stops for any custom metric
-    - [ ] `QQplot`: `additional_args` passed unnamed (xgboost params lost); the CCI object lacks k, center, scale, mtry, nthread, metricfunc, mlfunc, eps, kernel, distance, so KNN and custom metrics give all-NA p-values
-    - [ ] `CCI.direction` compares raw RMSE of Y and X (scale dependent: Y*100 flips the choice); uses caret rf/svmRadial (randomForest/kernlab not deps); summary shows the original formula, not the chosen direction
-    - [ ] No `print.CCI` method: printing a result shows an almost empty htest print
-    - [ ] `robust` docs say "all Z categorical", code uses "any"
-    - [ ] `poly` is turned off for all Z if any Z is a factor
-    - [ ] `plot.CCI` y-axis says "Freq." but shows density
-    - [ ] `development/TODO.txt` has an unresolved merge-conflict marker
+    - [x] Other wrappers: use `call_metricfunc()`; `wrapper_knn` stops for any custom metric (BUGFIXES.md #10)
+    - [x] Custom `metricfunc` gets class probabilities from xgboost but predicted classes from rf, svm and KNN (documented, BUGFIXES.md #14)
+    - [x] `QQplot`: `additional_args` passed unnamed (xgboost params lost); the CCI object lacks k, center, scale, mtry, nthread, metricfunc, mlfunc, eps, kernel, distance, so KNN and custom metrics give all-NA p-values (BUGFIXES.md #9)
+    - [x] `CCI.direction` compares raw RMSE of Y and X (scale dependent: Y*100 flips the choice) (BUGFIXES.md #11)
+    - [x] `CCI.direction` uses caret rf/svmRadial (randomForest/kernlab are not dependencies, and not the models used in the test); summary shows the original formula, not the chosen direction (BUGFIXES.md #13)
+    - [x] rf fails for a character Y (ranger: "Unsupported type of dependent variable"), e.g. CIsimdata QuadThresh; found by check_package.R (BUGFIXES.md #12, also logical Y and character Z)
+    - [x] No `print.CCI` method: printing a result shows an almost empty htest print (BUGFIXES.md #13)
+    - [x] `robust` docs say "all Z categorical", code uses "any" (BUGFIXES.md #14)
+    - [x] `poly` is turned off for all Z if any Z is a factor (BUGFIXES.md #14)
+    - [x] `plot.CCI` y-axis says "Freq." but shows density (BUGFIXES.md #14, also extra layers in ...)
+    - [x] `development/TODO.txt` has an unresolved merge-conflict marker (BUGFIXES.md #14)

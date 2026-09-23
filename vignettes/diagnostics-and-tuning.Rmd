@@ -1,0 +1,199 @@
+---
+title: "Diagnostics, tuning and test direction"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Diagnostics, tuning and test direction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(CCI)
+```
+
+The CCI test is computational: its result depends on random train/test splits, on the number of
+Monte Carlo samples and on how well the machine learning model fits the data. This vignette shows
+how to check that a result is reliable, and how to get more power out of the test by tuning the
+learner and choosing the direction of the test. For the basics, see
+`vignette("Testing-CI-with-CCI", package = "CCI")`.
+
+We use data where $Y$ depends on $X$ given $Z_1$ and $Z_2$, but the effect of $X$ is small compared
+to the effect of $Z$. $H_0$ is false, but the dependence is not easy to detect with 400
+observations. We also make data where $H_0$ is true.
+
+```{r}
+make_data <- function(n, effect) {
+  Z1 <- rnorm(n)
+  Z2 <- rnorm(n)
+  X <- sin(Z1) + Z2 + rnorm(n, sd = 0.5)
+  Y <- Z1 * Z2 + effect * X + rnorm(n, sd = 0.5)
+  data.frame(Z1, Z2, X, Y)
+}
+set.seed(12)
+weak <- make_data(400, effect = 0.5)   # H0 false, weak effect
+set.seed(13)
+null <- make_data(400, effect = 0)     # H0 true
+```
+
+# Look at the null distribution
+
+Start by plotting the null distribution together with the test statistic (dashed line):
+
+```{r}
+res_weak <- CCI.test(Y ~ X | Z1 + Z2, data = weak, seed = 1, progress = FALSE)
+summary(res_weak)
+plot(res_weak)
+```
+
+The null distribution should be unimodal and reasonably smooth. An irregular shape, e.g. U-shaped or
+with large gaps, suggests that the learner does not fit the data well and that the result is not
+reliable. Then try another `method`, tune the learner (see below), or use more data.
+
+Here the p-value is `r round(res_weak$p.value, 3)`. The rest of this vignette looks at how to judge
+such a result, and how to get a more powerful test.
+
+# Number of Monte Carlo samples and parametric p-values
+
+The empirical p-value is the share of the null distribution that is at least as extreme as the test
+statistic. Its smallest possible value is $1/(\text{nperm} + 1)$, and it has Monte Carlo error. The
+default `nperm = 160` is enough to see clear rejections and clear non-rejections. When the p-value is
+close to the significance level (say between 0.02 and 0.1), increase `nperm` to 250 or more.
+
+Alternatively, `parametric = TRUE` approximates the null distribution by a normal distribution with
+the same mean and standard deviation, and computes the p-value from it. This is smoother and can go
+below $1/(\text{nperm} + 1)$, but relies on the null distribution being roughly normal, which the
+plot above can confirm:
+
+```{r}
+res_param <- CCI.test(Y ~ X | Z1 + Z2, data = weak, parametric = TRUE, seed = 1, progress = FALSE)
+c(empirical = res_weak$p.value, parametric = res_param$p.value)
+```
+
+# QQ-plot of p-values
+
+The test statistic is computed from a single random train/test split, so the p-value depends on that
+split. `QQplot()` shows how much. It computes the test statistic again on `nperm` new random splits
+(with the real $X$), computes a p-value for each against the stored null distribution, and plots them
+against the uniform distribution. It uses the same settings as the original test (learner, metric,
+model parameters and so on).
+
+- If $H_0$ is true, the p-values are spread out over $[0, 1]$, close to the diagonal.
+- If $H_0$ is false, the p-values pile up near 0, below the diagonal.
+
+```{r}
+res_null <- CCI.test(Y ~ X | Z1 + Z2, data = null, nperm = 100, seed = 1, progress = FALSE)
+QQplot(res_null, nperm = 50, progress = FALSE)
+QQplot(res_weak, nperm = 50, progress = FALSE)
+```
+
+`QQplot()` is useful for p-values that are low but not very low (e.g. between 0.05 and 0.2). If
+most of the recomputed p-values are small, as for the weak effect, the evidence against $H_0$ is
+stronger than a single p-value suggests. Arguments given to `QQplot()`, like `nperm = 50` above,
+override the stored settings.
+
+# Very high p-values
+
+A p-value close to 1 (e.g. above 0.99) means that the model with the real $X$ predicts *worse* than
+almost all models with a permuted $X$. This is not expected under $H_0$ either, and usually means
+that the model overfits. Try a more regularised learner, tune it, or try another `method`.
+
+# Failed model fits
+
+If a model fails to fit in some of the Monte Carlo samples, those samples are left out of the null
+distribution with a warning that says how many were removed, and the p-value is computed from the
+rest. Many failed fits usually point to a problem with the data or the model settings.
+
+# Tuning the learner
+
+With `tune = TRUE`, `CCI.test()` first tunes the hyperparameters of the learner (`rf`, `xgboost` or
+`svm`) with `CCI.pretuner()`, and then runs the test with the best parameters. The model is tuned
+for predicting $Y$ from $Z$ only, i.e. under $H_0$, so tuning does not favour a rejection. All
+parameter combinations are evaluated on the same cross-validation folds. `samples` is the number of
+random parameter combinations tried, and `folds` the number of folds.
+
+```{r}
+res_tuned <- CCI.test(Y ~ X | Z1 + Z2, data = weak, tune = TRUE, samples = 5, folds = 3,
+                      seed = 1, progress = FALSE)
+res_tuned$p.value
+```
+
+`CCI.pretuner()` can also be called directly, which gives full control over the candidate values
+and shows the results. Here we tune xgboost over a small grid:
+
+```{r}
+set.seed(1)
+tuned <- CCI.pretuner(Y ~ X | Z1 + Z2, data = weak, method = "xgboost",
+                      nrounds = c(100, 200), eta = c(0.05, 0.1, 0.3), max_depth = 2:4,
+                      samples = 8, folds = 3, progress = FALSE)
+head(tuned$tuning_result, 3)
+best <- get_tuned_params(tuned$best_param)
+str(best)
+```
+
+The results are sorted with the best combination first, with the mean and standard deviation of the
+RMSE across the folds. The candidate values are set with arguments like `nrounds`, `eta` and
+`max_depth` (xgboost), `mtry` (rf) or `sigma` and `C` (svm), or with a custom grid in `tuneGrid`.
+The parameters from `get_tuned_params()` can be given to `CCI.test()`:
+
+```{r}
+res_xgb <- do.call(CCI.test, c(list(formula = Y ~ X | Z1 + Z2, data = weak, method = "xgboost",
+                                    seed = 1, progress = FALSE), best))
+res_xgb$p.value
+```
+
+In this example the tuned xgboost model gives a p-value of `r round(res_xgb$p.value, 3)`, compared
+with `r round(res_weak$p.value, 3)` for the random forest with default settings. The learner matters
+most when the dependence is weak compared to the noise.
+
+# Choosing the direction of the test
+
+Conditional independence is symmetric, $Y \perp\!\!\!\perp X \mid Z$ is the same as
+$X \perp\!\!\!\perp Y \mid Z$, but the test is not: the variable on the left of `~` is the one that
+is predicted. The test tends to have more power when the variable that is *easiest* to predict is on
+the left. `CCI.direction()` chooses the direction with cross-validation:
+
+```{r}
+deparse(CCI.direction(Y ~ X | Z1 + Z2, data = weak, method = "xgboost", nrounds = 100))
+```
+
+Here $X$ is easier to predict from $Z$ than $Y$ is, so `X ~ Y | Z1 + Z2` is chosen. Both variables
+are standardised before the comparison, so the choice does not depend on their units. With
+`choose_direction = TRUE`, `CCI.test()` does this before testing (this requires $Y$ and $X$ to be
+numeric):
+
+```{r}
+res_dir <- do.call(CCI.test, c(list(formula = Y ~ X | Z1 + Z2, data = weak, method = "xgboost",
+                                    choose_direction = TRUE, seed = 1, progress = FALSE), best))
+res_dir$p.value
+```
+
+The tested direction is stored in the result (`res_dir$ext_formula`, which also lists the added
+polynomial and interaction terms).
+
+# A checklist
+
+Based on the recommendations in @Thorjussen2026:
+
+- Aim for at least 500--1000 observations, more for complex relationships.
+- Start with the default `method = "rf"`, then try `"xgboost"`, `"svm"` or a custom model if there is
+  reason to.
+- Plot the null distribution and check that it is unimodal.
+- Increase `nperm` (to 250 or more) when the p-value is close to the significance level, or use
+  `parametric = TRUE`.
+- Use `QQplot()` for p-values that are low but not very low.
+- Be careful with p-values above 0.99, which usually indicate overfitting.
+- Consider `choose_direction = TRUE` when $Y$ and $X$ are both numeric.
+- For more than about 10 000 observations, use `MC_sample` or `method = "KNN"` to reduce the runtime.
+
+# References

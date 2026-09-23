@@ -6,6 +6,7 @@
 \usage{
 \method{plot}{CCI}(
   x,
+  ...,
   fill_color = "lightblue",
   title.size = 14,
   axis.text.x = 13,
@@ -16,12 +17,13 @@
   legend.title = 13,
   axis.title.x = 13,
   axis.title.y = 13,
-  base_size = 13,
-  ...
+  base_size = 13
 )
 }
 \arguments{
 \item{x}{Object of class 'CCI'}
+
+\item{...}{ggplot2 layers or themes to add to the plot, e.g. \code{plot(result, ggplot2::labs(title = "My test"))}. Other arguments are ignored with a warning. Since the plot is a ggplot2 object, layers can also be added with \code{+}.}
 
 \item{fill_color}{Color for the histogram fill}
 
@@ -44,8 +46,6 @@
 \item{axis.title.y}{Size of y-axis title}
 
 \item{base_size}{Base font size}
-
-\item{...}{Additional arguments to ggplot2}
 }
 \value{
 A plot of the null distribution and the test statistic in ggplot2 format.

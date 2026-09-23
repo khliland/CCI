@@ -23,7 +23,7 @@
 #' @param metricfunc Optional user-defined function \code{function(actual, predictions, ...)} returning a numeric performance value. See Details.
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
-#' @param subsample Not used by the model. Subsampling of the data is done in \code{\link{test.gen}} before the wrapper is called.
+#' @param MC_sample Not used by the model. The share of data per Monte Carlo sample is applied in \code{\link{test.gen}} before the wrapper is called. (xgboost's own row subsampling can be set with \code{subsample} in \code{...}.)
 #' @param ... Additional arguments passed to \code{xgb.train} as parameters (e.g. \code{eta}, \code{max_depth}, \code{objective}).
 #'
 #' @importFrom xgboost xgb.DMatrix xgb.train
@@ -44,7 +44,7 @@ wrapper_xgboost <- function(formula,
                             metricfunc = NULL,
                             nthread = 1,
                             eps = 1e-15,
-                            subsample = 1,
+                            MC_sample = 1,
                             ...) {
 
   independent <- all.vars(formula)[-1]
@@ -159,7 +159,7 @@ wrapper_xgboost <- function(formula,
 #' @param train_indices A vector of indices specifying the rows in `data` to be used as the training set.
 #' @param test_indices A vector of indices specifying the rows in `data` to be used as the test set.
 #' @param metric Type of metric ("RMSE", "Kappa" or "Log Loss")
-#' @param metricfunc Optional user-defined function to calculate a custom performance metric. This function should take the arguments `data`, `model`, and `test_indices`, and return a numeric value representing the performance metric.
+#' @param metricfunc Optional user-defined function \code{function(actual, predictions, ...)} returning a numeric performance value. For a factor response, \code{predictions} are the predicted classes. The \code{...} arguments are only passed on if the function accepts them.
 #' @param nthread Integer. The number of threads to use for parallel processing. Default is 1.
 #' @param mtry Integer. The number of variables to possibly split at in each node. Default is the square root of the number of columns in `data`.
 #' @param num.trees Integer. The number of trees to grow in the random forest. 
@@ -185,14 +185,16 @@ wrapper_ranger <- function(formula,
                            eps = 1e-15,
                            ...) {
 
-  
+  # ranger does not accept a character response or character predictors
+  data <- characters_to_factors(data, all.vars(formula))
+
   if (metric %in% c("Kappa", "LogLoss")) {
     dependent <- all.vars(formula)[1]
     testing <- data[test_indices, ]
     test_label <- testing[[dependent]]
     model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, probability = TRUE, num.threads = nthread, num.trees = num.trees, ...)
   } else if (metric == "RMSE") {
-    model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, num.threads = nthread, num.trees = num.trees)
+    model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, num.threads = nthread, num.trees = num.trees, ...)
   } else {
     model <- ranger::ranger(formula, data = data[train_indices, ], mtry = mtry, num.threads = nthread, num.trees = num.trees, ...)
   }
@@ -207,7 +209,7 @@ wrapper_ranger <- function(formula,
   }
   
   if (!is.null(metricfunc)) {
-    metric_value <- metricfunc(actual, predictions, ...)
+    metric_value <- call_metricfunc(metricfunc, actual, predictions, ...)
   } else if (metric %in% c("Kappa")) {
     # Probability columns are named by class, but not necessarily in the order of levels(factor(actual))
     classes <- colnames(predictions)
@@ -314,7 +316,8 @@ wrapper_svm <- function(formula,
                         eps = 1e-15,
                         ...) {
   y_name <- all.vars(formula)[1]
-  
+  data <- characters_to_factors(data, all.vars(formula))
+
   # Ensure factor outcome for classification metrics
   if (metric %in% c("Kappa", "LogLoss")) {
     data[[y_name]] <- as.factor(data[[y_name]])
@@ -343,7 +346,7 @@ wrapper_svm <- function(formula,
   }
   
   if (!is.null(metricfunc)) {
-    metric_value <- metricfunc(actual, predictions, ...)
+    metric_value <- call_metricfunc(metricfunc, actual, predictions, ...)
   } else if (metric == "RMSE") {
     metric_value <- sqrt(mean((predictions - actual)^2))
   } else if (metric == "Kappa") {
@@ -398,8 +401,8 @@ wrapper_svm <- function(formula,
 #' @param data Data frame
 #' @param train_indices Indices for training rows
 #' @param test_indices Indices for test rows
-#' @param metric Performance metric: "RMSE" (regression), "Kappa" (classification), or "LogLoss" (classification)
-#' @param metricfunc Optional custom metric function: function(actual, predictions, ...)
+#' @param metric Performance metric: "RMSE" (regression), "Kappa" (classification), or "LogLoss" (classification), or the name of a custom metric when \code{metricfunc} is given
+#' @param metricfunc Optional custom metric function \code{function(actual, predictions, ...)}. A numeric response gives regression (numeric predictions); a factor, character or logical response gives classification (predicted classes as a factor). The \code{...} arguments are only passed on if the function accepts them.
 #' @param k Integer, number of neighbors (default 15)
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
 #' @param positive Character. The positive class label for binary classification (used in LogLoss). Default is NULL.
@@ -432,14 +435,23 @@ wrapper_knn <- function(formula,
   y_name <- all.vars(formula)[1]
   x_names <- all.vars(formula)[-1]
   
-  # Outcome: coerce type to match metric
+  # Type of task: from the metric, or from the response when a custom metric is used
   y <- data[[y_name]]
   if (metric %in% c("Kappa", "LogLoss")) {
-    y <- as.factor(y)
-  } else if (metric %in% "RMSE") {
-    y <- as.numeric(y)
+    classification <- TRUE
+  } else if (metric == "RMSE") {
+    classification <- FALSE
+  } else if (!is.null(metricfunc)) {
+    classification <- is.factor(y) || is.character(y) || is.logical(y)
   } else {
-    stop("metric must be 'RMSE' (regression), 'Kappa' (classification), or 'LogLoss' (classification).")
+    stop("metric must be 'RMSE' (regression), 'Kappa' (classification), or 'LogLoss' (classification), ",
+         "or a custom metricfunc must be given.")
+  }
+  if (classification) {
+    y <- as.factor(y)
+  } else {
+    if (!is.numeric(y)) stop("Metric '", metric, "' requires a numeric response.")
+    y <- as.numeric(y)
   }
   
   # Design matrices using one-hot for factors; build ONCE to keep same columns
@@ -456,8 +468,8 @@ wrapper_knn <- function(formula,
   y_test  <- y[test_indices]
   
   # Remove rows with Inf in features or outcomes (defensive)
-  bad_train <- rowSums(!is.finite(X_train)) > 0 | !is.finite(if (metric == "RMSE") y_train else as.numeric(y_train))
-  bad_test  <- rowSums(!is.finite(X_test))  > 0 | !is.finite(if (metric == "RMSE") y_test  else as.numeric(y_test))
+  bad_train <- rowSums(!is.finite(X_train)) > 0 | !is.finite(if (classification) as.numeric(y_train) else y_train)
+  bad_test  <- rowSums(!is.finite(X_test))  > 0 | !is.finite(if (classification) as.numeric(y_test) else y_test)
   if (any(bad_train)) {
     X_train <- X_train[!bad_train, , drop = FALSE]
     y_train <- y_train[!bad_train]
@@ -491,16 +503,16 @@ wrapper_knn <- function(formula,
   )
   
   # Predictions
-  if (metric == "RMSE") {
+  if (!classification) {
     preds <- as.numeric(fitted(fit))
   } else {
     preds <- as.character(fitted(fit))  # class labels
     preds <- factor(preds, levels = levels(factor(y_train)))
   }
-  
+
   # Custom metric function override
   if (!is.null(metricfunc)) {
-    return(metricfunc(y_test, preds, ...))
+    return(call_metricfunc(metricfunc, y_test, preds, ...))
   }
   
   # Built-in metrics

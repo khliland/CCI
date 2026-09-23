@@ -15,51 +15,86 @@ CCI.direction(
   gamma = 0,
   colsample_bytree = 1,
   min_child_weight = 1,
-  subsample = 1,
+  MC_sample = 1,
+  mtry = NULL,
+  nthread = 1,
+  k = 15,
+  kernel = "optimal",
+  distance = 2,
   poly = TRUE,
   degree = 3,
   interaction = TRUE,
   verbose = FALSE,
+  subsample = NULL,
   ...
 )
 }
 \arguments{
-\item{formula}{A formula object specifying the model to be fitted.}
+\item{formula}{A formula of the form \code{Y ~ X | Z1 + Z2} (or \code{Y ~ X + Z1 + Z2}, or \code{Y ~ X | 1} without conditioning variables).}
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
-\item{method}{A character string specifying the method to be used for model fitting. Options include "rf" (random forest), "xgboost" (XGBoost), "nnet" (neural network), "gpr" (Gaussian process regression), and "svm" (support vector machine).}
+\item{method}{Character. The learner: \code{"rf"} (random forest, ranger), \code{"xgboost"}, \code{"svm"} (e1071) or \code{"KNN"} (kknn). Default is \code{"rf"}.}
 
-\item{folds}{An integer specifying the number of folds for cross-validation. Default is 4.}
+\item{folds}{Integer. The number of folds for cross-validation. Default is 4.}
 
-\item{nrounds}{Integer. The number of rounds (trees) for methods like xgboost, ranger, and lightgbm. Default is 600.}
+\item{nrounds}{Integer. The number of trees for \code{"rf"} and boosting rounds for \code{"xgboost"}. Default is 600.}
 
-\item{max_depth}{Integer. The maximum depth of the trees for methods like xgboost. Default is 6.}
+\item{max_depth}{Integer. The maximum depth of the trees for xgboost. Default is 6.}
 
-\item{eta}{Numeric. The learning rate for methods like xgboost. Default is 0.3.}
+\item{eta}{Numeric. The learning rate for xgboost. Default is 0.3.}
 
-\item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node of the tree for methods like xgboost. Default is 0.}
+\item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node for xgboost. Default is 0.}
 
-\item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.}
+\item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for xgboost. Default is 1.}
 
-\item{min_child_weight}{Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.}
+\item{min_child_weight}{Numeric. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1.}
 
-\item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
+\item{MC_sample}{Numeric between 0 and 1. The share of the data to use (a random sample). Default is 1 (all data).}
 
-\item{poly}{Logical. If TRUE, polynomial terms of the conditioning variables are included in the model. Default is TRUE.}
+\item{mtry}{Integer. The number of variables tried at each split for \code{"rf"}. Default is \code{NULL} (ranger's default).}
 
-\item{degree}{Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.}
+\item{nthread}{Integer. The number of threads for \code{"rf"} and \code{"xgboost"}. Default is 1.}
 
-\item{interaction}{Logical. If TRUE, interaction terms of the conditioning variables are included in the model. Default is TRUE.}
+\item{k}{Integer. The number of neighbours for \code{"KNN"}. Default is 15.}
 
-\item{verbose}{Logical. If TRUE, prints additional information during the execution. Default is FALSE.}
+\item{kernel}{Character. The kernel for \code{"KNN"}. Default is \code{"optimal"}.}
 
-\item{...}{Additional arguments to be passed to the model fitting function.}
+\item{distance}{Numeric. The Minkowski distance parameter for \code{"KNN"}. Default is 2.}
+
+\item{poly}{Not used. Kept for backward compatibility; \code{CCI.test} adds polynomial terms before choosing the direction.}
+
+\item{degree}{Not used. Kept for backward compatibility.}
+
+\item{interaction}{Not used. Kept for backward compatibility.}
+
+\item{verbose}{Logical. If TRUE, prints the cross-validated RMSE of both directions and the selected formula. Default is FALSE.}
+
+\item{subsample}{Deprecated, use \code{MC_sample}.}
+
+\item{...}{Additional arguments passed to the learner's wrapper function.}
 }
 \value{
-A formula object specifying the selected model direction.
+The selected formula, either \code{Y ~ X | Z} or \code{X ~ Y | Z}. With
+\code{verbose = TRUE}, the cross-validated standardized RMSE of both directions is printed.
 }
 \description{
 This function selects the best direction for the CCI test based on cross validation. For the condition Y \emph{||} X | Z, the function return the recommended
 formula either Y ~ X | Z or X ~ Y | Z .
+}
+\details{
+Both directions are evaluated with k-fold cross-validation, using the same learners as
+\code{\link{CCI.test}} (\code{\link{wrapper_ranger}}, \code{\link{wrapper_xgboost}},
+\code{\link{wrapper_svm}} or \code{\link{wrapper_knn}}) and the same folds for both directions.
+The numeric variables are standardized (mean 0, standard deviation 1) before the models are
+fitted, so the cross-validated RMSEs of the two directions are comparable and the choice does not
+depend on the units of the variables. The direction with the lowest standardized RMSE, i.e. the
+variable that is easiest to predict, is chosen.
+}
+\examples{
+set.seed(1)
+dat <- data.frame(Z1 = rnorm(200), Z2 = rnorm(200))
+dat$X <- dat$Z1 + dat$Z2 + rnorm(200, sd = 0.1)   # X is easy to predict from Z
+dat$Y <- dat$Z1 + rnorm(200)                      # Y is harder to predict
+CCI.direction(Y ~ X | Z1 + Z2, data = dat, method = "xgboost", nrounds = 50)
 }

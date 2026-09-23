@@ -10,7 +10,7 @@ test.gen(
   method = "rf",
   metric = "RMSE",
   nperm = 160,
-  subsample = 1,
+  MC_sample = 1,
   p = 0.5,
   nrounds = 600,
   mtry = NULL,
@@ -27,6 +27,7 @@ test.gen(
   positive = NULL,
   kernel = "optimal",
   distance = 2,
+  subsample = NULL,
   ...
 )
 }
@@ -41,7 +42,7 @@ test.gen(
 
 \item{nperm}{Integer. The number of generated Monte Carlo samples. Default is 160.}
 
-\item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
+\item{MC_sample}{Numeric between 0 and 1. The share of the data used in each Monte Carlo sample (a new random sample each time). Default is 1 (all data).}
 
 \item{p}{Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.}
 
@@ -53,9 +54,9 @@ test.gen(
 
 \item{permutation}{Logical. Whether to perform permutation of the 'X' variable. Used to generate a null distribution. Default is FALSE.}
 
-\item{robust}{Logical. If TRUE, automatically performs stratified permutation if all conditional variables are factor or categorical. Default is TRUE.}
+\item{robust}{Logical. If TRUE and the conditioning set Z contains any categorical variables (factor, character or logical), X is permuted within the groups defined by the categorical variables in Z (stratified permutation). If FALSE, X is always permuted over all observations. Default is TRUE.}
 
-\item{metricfunc}{Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.}
+\item{metricfunc}{Optional custom performance metric: a function \code{function(actual, predictions, ...)} returning a single number. Set \code{tail} to "right" if higher values mean better predictions and "left" if lower values do. \code{actual} is numeric for a numeric Y and a factor for a categorical Y. For a numeric Y, \code{predictions} is numeric. For a categorical Y, \code{predictions} are the predicted classes (a factor) for methods "rf", "svm" and "KNN", and class probabilities for "xgboost": the probability of the second class level for two classes, or an n x K matrix with the class levels as column names for more classes. The \code{...} arguments are only passed on if the function accepts them. Default is NULL.}
 
 \item{mlfunc}{Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.}
 
@@ -74,6 +75,8 @@ test.gen(
 \item{kernel}{Character. Only relevant for method 'KNN'. Specifies the kernel type for method option "KNN" . Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian" and "optimal". Default is "optimal".}
 
 \item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
+
+\item{subsample}{Deprecated, use \code{MC_sample}.}
 
 \item{...}{Additional arguments to pass to the machine learning wrapper functions \code{wrapper_xgboost}, \code{wrapper_ranger}, \code{wrapper_knn} and  \code{wrapper_svm}, or to a custom-built wrapper function.}
 }

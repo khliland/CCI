@@ -10,7 +10,7 @@ add_poly_terms(data, Z, degree = 3, poly = TRUE)
 \arguments{
 \item{data}{Data frame. The data frame containing the variables for which polynomial terms are to be created.}
 
-\item{Z}{Character vector. The names of the variables for which polynomial terms are to be created.}
+\item{Z}{Character vector. The names of the variables for which polynomial terms are to be created. Only the numeric variables among them get polynomial terms; categorical variables (factors) are skipped.}
 
 \item{degree}{Integer. The maximum degree of polynomial terms to be created. Default is 3.}
 

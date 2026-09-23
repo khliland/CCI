@@ -14,9 +14,11 @@
 #' @param method Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost", support vector machine 'svm' and K-nearest neighbour 'KNN'. Default is "rf".
 #' @param poly Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.
 #' @param degree Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.
-#' @param subsample Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"
-#' @param subsample_set Numeric. If `subsample` is set to "Yes", this parameter defines the proportion of data to use for subsampling. Default is NA.
-#' @param robust Logical. If TRUE, uses a robust method for permutation. Default is TRUE.
+#' @param MC_sample Character. The share of the data used in each Monte Carlo sample: "Auto" uses \eqn{(900/n)^{0.75}} of the data when n > 900 and all data otherwise, "Yes" uses the share given in `MC_sample_set`, and "No" always uses all data. A different random sample is drawn in each Monte Carlo sample. Default is "Auto".
+#' @param MC_sample_set Numeric between 0 and 1. The share of the data used in each Monte Carlo sample when `MC_sample = "Yes"`.
+#' @param subsample Deprecated, use `MC_sample`.
+#' @param subsample_set Deprecated, use `MC_sample_set`.
+#' @param robust Logical. If TRUE and the conditioning set Z contains any categorical variables (factor, character or logical), X is permuted within the groups defined by the categorical variables in Z (stratified permutation). This keeps the relationship between X and the categorical part of Z under the null hypothesis. If FALSE, X is always permuted over all observations. Default is TRUE.
 #' @param min_child_weight Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.
 #' @param colsample_bytree Numeric. The subsample ratio of columns when constructing each tree for methods like xgboost. Default is 1.
 #' @param eta Numeric. The learning rate for methods like xgboost. Default is 0.3.
@@ -24,7 +26,7 @@
 #' @param max_depth Integer. The maximum depth of the trees for methods like xgboost. Default is 6.
 #' @param interaction Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.
 #' @param mode Character. Specifies the mode of operation: "numeric_only" or "mixed". Default is "numeric_only".
-#' @param metricfunc Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.
+#' @param metricfunc Optional custom performance metric: a function \code{function(actual, predictions, ...)} returning a single number. Set \code{tail} to "right" if higher values mean better predictions and "left" if lower values do. \code{actual} is numeric for a numeric Y and a factor for a categorical Y. For a numeric Y, \code{predictions} is numeric. For a categorical Y, \code{predictions} are the predicted classes (a factor) for methods "rf", "svm" and "KNN", and class probabilities for "xgboost": the probability of the second class level for two classes, or an n x K matrix with the class levels as column names for more classes. The \code{...} arguments are only passed on if the function accepts them. Default is NULL.
 #' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using `metricfunc` or `mlfunc`. Default is NA.
@@ -47,7 +49,6 @@
 #' @param ... Additional arguments to pass to the \code{perm.test} function.
 #'
 #' @importFrom dplyr %>%
-#' @importFrom caret train trainControl createDataPartition
 #'
 #' @return Invisibly returns the result of \code{perm.test}, which is an object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
 #' @aliases CCI
@@ -74,8 +75,8 @@ CCI.test <- function(formula = NULL,
                      poly = TRUE,
                      degree = 3,
                      robust = TRUE,
-                     subsample = "Auto",
-                     subsample_set,
+                     MC_sample = "Auto",
+                     MC_sample_set = NULL,
                      min_child_weight = 1,
                      colsample_bytree = 1,
                      eta = 0.3,
@@ -102,8 +103,12 @@ CCI.test <- function(formula = NULL,
                      nthread = 2,
                      verbose = FALSE,
                      progress = TRUE,
+                     subsample = NULL,
+                     subsample_set = NULL,
                      ...) {
 
+  MC_sample <- deprecated_arg(MC_sample, subsample, "subsample", "MC_sample")
+  MC_sample_set <- deprecated_arg(MC_sample_set, subsample_set, "subsample_set", "MC_sample_set")
 
   if (!is.na(seed)) {
     set.seed(seed)
@@ -128,24 +133,27 @@ CCI.test <- function(formula = NULL,
     stop("You can only use one of mlfunc or metricfunc.")
   }
 
-  # Set subsample as a function of sample size, starting when sample size > 1000
-  if (subsample == "Auto") {
+  # Share of the data used in each Monte Carlo sample; "Auto" starts reducing it when n > 900
+  if (identical(MC_sample, "Auto")) {
     n <- nrow(data)
     if (n > 900) {
-      subsample <- 1 / ((n / 900) ^ 0.75)
+      MC_sample <- 1 / ((n / 900) ^ 0.75)
     } else {
-      subsample <- 1
+      MC_sample <- 1
     }
-  } else if (subsample == "Yes") {
-      subsample <- subsample_set
-    } else if (subsample == "No") {
-      subsample <- 1
-    } else {
-      stop("Invalid subsample option. Use 'Auto', 'Yes' or 'No'.")
+  } else if (identical(MC_sample, "Yes")) {
+    if (is.null(MC_sample_set) || !is.numeric(MC_sample_set) || MC_sample_set <= 0 || MC_sample_set > 1) {
+      stop("With MC_sample = 'Yes', set MC_sample_set to the share of data to use (between 0 and 1).")
     }
-    if (verbose) {
-      cat("Subsample set to: ", subsample, "\n")
-    }
+    MC_sample <- MC_sample_set
+  } else if (identical(MC_sample, "No")) {
+    MC_sample <- 1
+  } else {
+    stop("Invalid MC_sample option. Use 'Auto', 'Yes' or 'No'.")
+  }
+  if (verbose) {
+    cat("MC sample share set to: ", MC_sample, "\n")
+  }
   if (poly && degree < 1) {
     stop("Degree of 0 or less is not allowed")
   }
@@ -158,10 +166,9 @@ CCI.test <- function(formula = NULL,
   if (length(Z) == 0) {
     Z <- NULL
   }
-  if (!is.null(Z) && any(sapply(data[Z], is.factor))) {
-    poly <- FALSE
-  }
-  
+  # Character and logical variables are categorical: treat them as factors in every step
+  data <- characters_to_factors(data, c(Y, X, Z))
+
   # Add polynomial and interaction terms
   poly_result <- add_poly_terms(data, Z, degree = degree, poly = poly)
   data <- poly_result$data
@@ -204,6 +211,8 @@ CCI.test <- function(formula = NULL,
   }
 
 
+  # The hypothesis as tested, without polynomial and interaction terms (shown by print and summary)
+  tested_formula <- original_formula
   if (choose_direction) {
     formula <- CCI.direction(
       formula = formula,
@@ -215,10 +224,19 @@ CCI.test <- function(formula = NULL,
       gamma = gamma,
       colsample_bytree = colsample_bytree,
       min_child_weight = min_child_weight,
-      subsample = subsample,
+      MC_sample = MC_sample,
+      mtry = mtry,
+      nthread = nthread,
+      k = k,
+      kernel = kernel,
+      distance = distance,
       folds = 4,
       verbose = verbose
     )
+    if (all.vars(formula)[1] != Y) {
+      Z_part <- if (is.null(Z)) "1" else paste(Z, collapse = " + ")
+      tested_formula <- stats::as.formula(paste(X, "~", Y, "|", Z_part))
+    }
   }
   if (tune && is.null(mlfunc)) {
     if (!method %in% c("rf", "xgboost", "svm")) {
@@ -282,7 +300,7 @@ CCI.test <- function(formula = NULL,
     robust = robust,
     metricfunc = metricfunc,
     mlfunc = mlfunc,
-    subsample = subsample,
+    MC_sample = MC_sample,
     progress = progress,
     nthread = nthread,
     k = k,
@@ -304,6 +322,7 @@ CCI.test <- function(formula = NULL,
     result$warnings <- tune_warning
   }
   result$formula <- original_formula
+  result$tested_formula <- tested_formula
   result$ext_formula <- formula
   result$poly <- poly
   result$degree <- degree

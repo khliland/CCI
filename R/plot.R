@@ -12,7 +12,7 @@
 #' @param axis.title.x Size of x-axis title
 #' @param axis.title.y Size of y-axis title
 #' @param base_size Base font size
-#' @param ... Additional arguments to ggplot2
+#' @param ... ggplot2 layers or themes to add to the plot, e.g. \code{plot(result, ggplot2::labs(title = "My test"))}. Other arguments are ignored with a warning. Since the plot is a ggplot2 object, layers can also be added with \code{+}.
 #'
 #' @import ggplot2
 #' @importFrom stats density
@@ -28,7 +28,8 @@
 #' plot(cci)
 
 
-plot.CCI <- function(x, 
+plot.CCI <- function(x,
+                     ...,
                      fill_color = "lightblue",
                      title.size = 14,
                      axis.text.x = 13, 
@@ -39,8 +40,7 @@ plot.CCI <- function(x,
                      legend.title = 13,
                      axis.title.x = 13,
                      axis.title.y = 13,
-                     base_size = 13,
-                     ...) {
+                     base_size = 13) {
   if (!inherits(x, "CCI")) {
     stop("Object must be of class 'CCI'")
   }
@@ -62,7 +62,7 @@ plot.CCI <- function(x,
     ggplot2::geom_vline(ggplot2::aes(xintercept = test_stat), color = "black", linetype = "dashed", linewidth = 1) +
     ggplot2::labs(title = "Null distribution with test statistic",
          x = xTitle,
-         y = "Freq.") +
+         y = "Density") +
     ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(axis.text.x = element_text(size = axis.text.x),
                    axis.text.y = element_text(size = axis.text.y),
@@ -75,11 +75,16 @@ plot.CCI <- function(x,
                    plot.title = element_text(size = title.size, face = "bold"), 
                    legend.position = 'none')
 
+  # Extra ggplot2 layers, e.g. plot(x, ggplot2::labs(title = "My test"))
   additional_layers <- list(...)
-  if (all(vapply(additional_layers, inherits, logical(1), what = "gg"))) {
-    for (layer in additional_layers) {
-      plot <- plot + layer
-    }
+  is_gg <- vapply(additional_layers, function(layer) {
+    inherits(layer, c("gg", "ggproto", "theme", "labels", "Scale", "Coord", "Facet"))
+  }, logical(1))
+  if (any(!is_gg)) {
+    warning("Arguments in ... that are not ggplot2 layers or themes were ignored.", call. = FALSE)
+  }
+  for (layer in additional_layers[is_gg]) {
+    plot <- plot + layer
   }
   return(plot)
 }

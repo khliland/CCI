@@ -1,54 +1,63 @@
-# Welcome to the CCI Package
+# CCI: Computational Conditional Independence testing
 
-Thanks for checking out the development version of CCI (Computational Conditional Independence) package in R. 
-The CCI-package is made for conducting computational testing for conditionally independent.
-Conditional independence is written as Y _||_ X | Z, meaning that the random variable Y is independent of X given Z.
-Computational testing of conditional independence is a machine learning based test where permutation and Monte Carlo Cross-Validation (MCCV) us used to build an empirical null distribution and estimating a test statistic. 
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/CCI)](https://CRAN.R-project.org/package=CCI)
+<!-- badges: end -->
 
+**CCI** is an R package for testing conditional independence, $Y \perp\!\!\!\perp X \mid Z$: does
+$X$ carry information about $Y$ once $Z$ is known? It uses machine learning to answer this as a
+prediction question. If a model for $Y$ predicts new data better with the real $X$ than with a
+randomly permuted $X$, then $X$ carries information about $Y$ beyond $Z$. The null distribution is
+built with permutation and Monte Carlo cross-validation, so the test needs no parametric assumptions
+about the relationships between the variables.
 
-### Key Features:
-In this readme we will go through all the available features of the CCI package, and provide heuristics for how to use it. 
-The CCI package is designed to be flexible and hopefully user-friendly, allowing you to test conditional independence in various data types and scenarios. 
-Report any bugs or issues you encounter, and feel free to contribute to the package on GitHub.
+- Works for continuous, binary and categorical variables, and mixed data.
+- Detects non-linear and complex relationships.
+- Built-in learners: random forest, XGBoost, support vector machines and k-nearest neighbours, or
+  your own model and performance metric.
+- Tools to judge the result: plots of the null distribution, QQ-plots of p-values, hyperparameter
+  tuning and automatic choice of test direction.
+
+The method is described in Thorjussen et al. (2024, [Algorithms](https://doi.org/10.3390/a17080323))
+and the package in Thorjussen et al. (2026, [SoftwareX](https://doi.org/10.1016/j.softx.2026.102726)).
+
 ## Installation
-You can install the development version of `CCI` from GitHub:
+
+From CRAN:
+
 ```r
 install.packages("CCI")
+```
+
+The development version from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("khliland/CCI", build_vignettes = TRUE)
+```
+
+## A first test
+
+We simulate data where $Y$ and $X$ both depend on $Z_1$ and $Z_2$, but not on each other. Then
+$Y \perp\!\!\!\perp X \mid Z_1, Z_2$ is true, while $Y \perp\!\!\!\perp X \mid Z_1$ is false.
+
+```r
 library(CCI)
-```
 
-## 1. Basic Usage
-
-### Data
-
-In order to show the functionality of the CCI package we will generate various different synthetic data sets 
-that can be used to test conditional independence. We will define functions for this purpose as we go. 
-
-The function below generates a data set where `Y` is conditionally independent of `X` given `Z1` and `Z2`. The functions are linear 
-so it should be easy to test conditional independence using traditional statistical tests as well.
-```r
-NormalData <- function(N){
-  Z1 <- stats::rnorm(N,0,1)
-  Z2 <- stats::rnorm(N,0,1)
-  X <- stats::rnorm(N, Z1 + Z2, 1)
-  Y <- stats::rnorm(N, Z1 + Z2, 1)
-
-  df <- data.frame(Z1, Z2, X, Y)
-  return(df)
+normal_data <- function(n) {
+  Z1 <- rnorm(n)
+  Z2 <- rnorm(n)
+  X <- Z1 + Z2 + rnorm(n)
+  Y <- Z1 + Z2 + rnorm(n)
+  data.frame(Z1, Z2, X, Y)
 }
+set.seed(123)
+dat <- normal_data(500)
+
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat, seed = 1))
 ```
-### Testing Conditional Independence
-Below is an example of the simplest line of code needed to test the hypothesis `Y _||_ X | Z1, Z2` using the CCI package.
-The code generates a dataset with 400 observations, where `Y` is conditionally independent of `X` given `Z1` and `Z2`.
-The main user interface function for CCI is CCI.test(), which must at least have a formula and a data frame as input to perform a test.
-```r
-set.seed(1985)
-data <- NormalData(400)
-t <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data)
-summary(t)
+
 ```
-The output for this test should look something like this:
-```r
 Computational Conditional Independence Test
 --------------------------------------------
 Method:    CCI test using rf 
@@ -56,27 +65,19 @@ Formula:   Y ~ X | Z1 + Z2
 Permutations:  160 
 Metric:    RMSE 
 Tail:      left 
-Statistic: 1.127 
-P-value:   0.9068 
+Statistic: 1.143 
+P-value:   0.7019 
 
-Subsample:   1 
+MC sample:   1 
 ```
 
-The output tells us that you have performed a computational test of conditional independence using Random Forest  (`rf`) as the base machine learning algorithm, testing the condition `Y ~ X | Z1 + Z2`.
-The performance metric used to build the null distribution and the test statistic is Root Mean Square Error (RMSE), indicating that `Y` is a continuous variable.
-The test statistic is 1.144, and the p-value is 0.9344, therefor we fail to reject the null hypothesis at a significance level of 0.05. Which is correct.
-tail is set to "left", meaning that the further left the test statistic is in the null distribution, the lower the p-value, this is not important now, but will be important when we use custom performance metrics later.
+The p-value is large, so conditional independence is not rejected. Leaving out $Z_2$:
 
-We can plot the null distribution by running `plot()` in a CCI object.
 ```r
-plot(t)
+summary(CCI.test(Y ~ X | Z1, data = dat, seed = 1))
 ```
-In the previous example we tested a true null hypothesis, for completeness, we will now test a false null hypothesis, where `Y` is not conditionally independent of `X` given `Z1`.
-```r
-summary(CCI.test(formula = Y ~ X | Z1, data = data, parametric = TRUE))
+
 ```
-The output of the last test should look something like this: 
-```r
 Computational Conditional Independence Test
 --------------------------------------------
 Method:    CCI test using rf 
@@ -84,499 +85,86 @@ Formula:   Y ~ X | Z1
 Permutations:  160 
 Metric:    RMSE 
 Tail:      left 
-Statistic: 1.253 
-P-value:   5.89e-05 
+Statistic: 1.492 
+P-value:   0.006211 
 
-Subsample:   1 
+MC sample:   1 
 ```
-At significant level 0.05 the test rejects the null hypothesis of `Y ~ X | Z1`, since the p-value is less than 0.05.
-We also added in the argument parametric = TRUE, which means that the p-value is calculated assuming that the null distribution is Gaussian.
-The default way of calculating a p-value is empirically, which means that the p-value is calculated by comparing the test statistic to the null distribution.
-Using a parametric p-value is usually a good idea, since the empircal derived p-value is limited in how small it can be. 
 
-## 2. Handling Different Data Types
-One of the main motivation for having a computational test of conditional independence is to be able to test conditional independence using different data types, such as continuous, binary, and categorical data.
-Depending on the data type of `Y` in the formula `Y ~ X | Z1 + Z2`, CCI adjusts the `metric` argument to `"RMSE"` (default) or `"Kappa"`, however, you can also do it manually. 
-If the dependent variable `Y` in the formula `Y ~ X | Z1 + Z2` is continuous, then the performance metric used is RMSE (Root Mean Square Error). 
-If it is a factor variable or binary variable, then the performance metric used is Kappa score.
+Here the null hypothesis is rejected. The p-value is the smallest possible with 160 Monte Carlo
+samples, 1/161. `plot()` shows the null distribution together with the test statistic.
 
-In the example below, both `Y` and `X` are binary variables, meaning they only take on values 0 and 1. 
+## Main features
+
+**The formula.** `Y ~ X | Z1 + Z2` tests $Y \perp\!\!\!\perp X \mid Z_1, Z_2$. `Y ~ X + Z1 + Z2` is
+the same. For an unconditional test of $Y \perp\!\!\!\perp X$, write `Y ~ X | 1` or `Y ~ X + 1`.
+
+**Data types.** The metric is chosen from the type of $Y$: RMSE for a numeric $Y$, Cohen's Kappa
+for a factor, character or logical $Y$. `metric = "LogLoss"` uses predicted class probabilities
+instead. When $Z$ contains categorical variables, $X$ is permuted within their groups
+(`robust = TRUE`).
+
+**Learners.** `method = "rf"` (default), `"xgboost"`, `"svm"` or `"KNN"`. Model parameters are
+passed directly, e.g. `CCI.test(Y ~ X | Z, data, method = "xgboost", eta = 0.1, max_depth = 3)`.
+
+**Large data.** `MC_sample = "Auto"` (default) uses a share $(900/n)^{0.75}$ of the data in each Monte
+Carlo sample when $n > 900$, and `method = "KNN"` is by far the fastest learner.
+
+**Judging the result.**
+
 ```r
-BinaryData <- function(N, threshold = 0) {
-  Z1 <- stats::rnorm(N)
-  Z2 <- stats::rnorm(N)
-  X <- ifelse(stats::rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
-  Y <- ifelse(stats::rnorm(N, Z1 + Z2 + Z1*Z2, 1) < threshold, 1, 0)
-  df <- data.frame(Z1,Z2,X,Y)
-  return(df)
+res <- CCI.test(Y ~ X | Z1, data = dat, parametric = TRUE)  # p-value from a normal approximation
+plot(res)     # the null distribution should be unimodal
+QQplot(res)   # p-values over new train/test splits
+```
+
+**Tuning and test direction.** `tune = TRUE` tunes the learner with `CCI.pretuner()` before testing,
+and `choose_direction = TRUE` tests in the direction where the prediction is easiest.
+
+**Your own model or metric.**
+
+```r
+r_squared <- function(actual, predictions) {
+  1 - sum((actual - predictions)^2) / sum((actual - mean(actual))^2)
 }
-```
+CCI.test(Y ~ X | Z1, data = dat, metricfunc = r_squared, tail = "right")  # higher R^2 is better
 
-
-```r
-set.seed(1985)
-data <- BinaryData(500)
-cci_test <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa")
-summary(cci_test)
-plot(cci_test)
-```
-If you notice in the example above, the null distribution looks kinda weird. It consist of two peaks, one at around -0.5 and one at 0.5. 
-This is in general not a good sign, and indicate that the learner is struggeling to make good predictions, in such cases one should try to change the method.
-The CCI package comes with four build in machine learning methods for testing, Random Forest 'rf', Extreme Gradient Boosting 'xgboost', K-nearest neighbour 'KNN' and Support Vector Machines 'svm'.
-
-When the default learner Random Forest fails, one should give priority to XGBoost, like this: 
-```r
-test_w_xgb <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, metric = "Kappa", method = "xgboost")
-summary(test_w_xgb)
-plot(test_w_xgb)
-```
-Viola, now the null distribution looks much better, which is what we want. The p-value is 0.75 which is ok since `Y` and `X` are by construction conditionally independent given `Z1` and `Z2`.
-
-The learner support vector machine (`svm`) might work better in small data sets, 
-compared to the tree based learners `rf` and `xgboost`.
-
-Using 'svm' in small data sets, we set the nperm argument to 400 to get a more precise null distribution. that the null distribution is generated using 150 Monte Carlo samples. 
-
-```r
-set.seed(1985)
-data <- BinaryData(200)
-test_w_svm <- CCI.test(formula = Y ~ X | Z1, data = data, metric = "Kappa", method = "svm", nperm = 400)
-summary(test_w_svm)
-plot(test_w_svm)
-```
-
-In large samples 'rf', 'xgboost' and 'svm' are all very slow and computationally demanding. Using the learner 'KNN' us by far the fastest
-method for large data sets. Here is an example of using 'KNN' for testing conditional independence in a large binary data set. However, as with 'svm', 'KNN' is not as robust is 'rf' and 'xgboost', so be careful when using it.
-```r
-set.seed(1985)
-data <- BinaryData(20000)
-test_w_knn <- CCI.test(formula = Y ~ X | Z1, data = data, metric = "Kappa", method = "KNN")
-summary(test_w_knn)
-plot(test_w_knn)
-```
-In the example above, the Subsample line in the output is set to 0.11. In large samples, the CCI.test automatically subsets the data to achieve faster testing. 
-This can be turn of by setting the argument `subsample = "No"` in the CCI.test() function.
-
-When you are dealing with character variables representing categories, you can convert these variables into factor variable. 
-'CCI.test' use metric = "Kappa", automatically.
-
-Let us create a somewhat complicated data generating function for categorical data, 
-```r
-ComplicatedData <- function(N) {
-  Z1 <- stats::runif(N, -1, 1)
-  Z2 <- stats::runif(N, -1, 1)
-
-  X <- sin(Z1 * pi) + Z2 + stats::rnorm(N, 0, 0.1)
-
-  Y <- ifelse(cos(Z1 * pi) + Z2 > 1, "Laptop",
-              ifelse(cos(Z1 * pi) + Z2 > 0.5, "Desktop",
-                     ifelse(cos(Z1 * pi) + Z2 > 0, "GamePad", "Phone")))
-
-
-  return(data.frame(Z1, Z2, X, Y))
+lm_rmse <- function(formula, data, train_indices, test_indices, ...) {
+  fit <- lm(formula, data = data[train_indices, ])
+  actual <- data[test_indices, all.vars(formula)[1]]
+  sqrt(mean((predict(fit, data[test_indices, ]) - actual)^2))
 }
-```
-Let's test a false hypothesis where `Y` is not conditionally independent of `X` given `Z1`.
-```r
-set.seed(1945)
-data <- ComplicatedData(1000)
-data$Y <-as.factor(data$Y) # Make sure Y is a factor variable
-factor_test <- CCI.test(formula = Y ~ X | Z1, data = data)
-summary(factor_test)
+CCI.test(Y ~ X | Z1, data = dat, mlfunc = lm_rmse, tail = "left")         # lower RMSE is better
 ```
 
-The default `nperm` value is 160, which will usually be enough. In some cases increasing the number of samples to get a more precise null distribution at the cost of longer computation time.
-We also set the seed parameter to 1, which ensures that the random number generation is reproducible. Setting the seed is a good idea. 
+## Learn more
 
-So now we have handled the `metric` and `nperm` arguments. An important argument in `CCI.test()` is the `p` argument, which controls the proportion of data used for training the model in each Monte Carlo Sample.
-Default value is 0.5, but it is often a good idea to increase this value to 0.7 or 0.8.
-In large data sets, you can set `p` to a lower value, like 0.1, to speed up the process and increase precision.
-```r
-SineGaussian <- function(N, a = 1, d = 0){
-  Z = stats::rnorm(N,0,1)
-  X = exp(-(Z)^2 / 2) * sin(a * (Z)) + 0.3*stats::rnorm(N,0,0.1)
-  Y = exp(-(Z)^2 / 2) * sin(a * (Z)) +  d*X + 0.3*stats::rnorm(N,0,0.1)
-  df <- data.frame(Z,X,Y)
-  return(df)
-}
-```
-```r
-set.seed(1986)
-data <- SineGaussian(800, d = 0.5) # d = 0.5 breaks conditional independence Y _||_ X | Z
-summary(CCI.test(formula = Y ~ X | Z, p = 0.8, nrounds = 1000, data = data, parametric = T, seed = 3))
-```
+The vignettes cover the package in detail:
 
-In the example below, even with 2 million observations and using the random forest learner, runtime for one test is acceptable,
-because the CCI.test function is automatically sub-samples and only use about 0.3 % of the data for training the model in each iteration.
-```r
-set.seed(1984)
-data <- SineGaussian(2000000, d = 0.5) 
-summary(CCI.test(formula = Y ~ X | Z, data = data, parametric = T, nperm = 100, p = 0.25))
-```
+| Vignette | Contents |
+|---|---|
+| [Getting started with CCI](vignettes/Testing-CI-with-CCI.Rmd) | The idea behind the test, reading the output, formulas, learners, data types and large data |
+| [Diagnostics, tuning and test direction](vignettes/diagnostics-and-tuning.Rmd) | Null distribution plots, `nperm` and parametric p-values, `QQplot()`, tuning and `choose_direction`, with a checklist |
+| [Custom models and performance metrics](vignettes/custom-models-and-metrics.Rmd) | Writing `metricfunc` and `mlfunc` functions, for regression and classification |
+| [Applied examples](vignettes/applied-examples.Rmd) | Testing the conditional independencies implied by a causal DAG, and time series |
 
-You can pass on arguments to the machine learning algorithm used in `CCI.test()`. Here is an example of using the `xgboost` method with custom parameters.
-```r
-UniformNoise <- function(N) {
-  Z1 = stats::rnorm(N, 0, 1)
-  Z2 = stats::rnorm(N, 0, 1)
-  X = Z2 - Z1 - Z2 * Z1 + stats::runif(N, min=-2, max=2)
-  Y = Z2 + Z1 + Z2 * Z1 + stats::runif(N, min=-2, max=2)
-  df <- data.frame(Z1, Z2, X, Y)
-  return(df)
-}
-```
+In R: `browseVignettes("CCI")`, or e.g. `vignette("Testing-CI-with-CCI", package = "CCI")`.
 
-```r
-set.seed(1066)
-dat <- UniformNoise(N = 2000)
-complex_test <- CCI.test(formula = Y ~ X | Z2, # Non independence
-data = dat, 
-method = "xgboost", 
-parametric = TRUE, 
-p = 0.25,
-nthread = 5, 
-alpha = 0.3, 
-eta = 0.1, 
-max_depth = 6, 
-min_child_weight = 3, 
-colsample_bytree = 0.8, 
-gamma = 0.1, 
-nrounds = 100, 
-objective = "reg:pseudohubererror")
-summary(complex_test)
-```
-### The formula
-As you might have guessed, the formula argument in `CCI.test()` gives the conditional independent statement to test. 
-The condition Y _||_ X | Z1, Z2 is written as `Y ~ X | Z1 + Z2` (alternatively as `Y ~ X + Z1 + Z2`, both is accepted). 
-When `Y` is the dependent variable it means that `Y` is predicted while `X` is permuted to see if it improves predicition performance beyond `Z1` and `Z2`.
-Naturally, the condition Y _||_ X | Z1, Z2 can also be tested by the formula `X ~ Y | Z1 + Z2`. So which way to choose?
-Generally it is best to predict the variable with the best predictive performance. 
-`CCI.test()` will automatically choose the variable with the best predictive performance if you set the argument `choose_direction = TRUE`. 
-```r
-NonLinNormal <- function(N){
-  Z1 <- stats::rnorm(N,0,1)
-  Z2 <- stats::rnorm(N,0,1)
-  X <-  stats::rnorm(N,Z1*Z2,1)
-  Y <-  stats::rnorm(N,exp(Z1*Z2),1)
-  df <- data.frame(Z1,Z2,X,Y)
-  return(df)
-}
-```
+What has changed between versions is listed in [NEWS.md](NEWS.md).
 
-```r
-set.seed(1815)
-data <- NonLinNormal(N = 600)
-summary(CCI.test(formula = Y ~ X | Z1, method = 'rf', data = data, nrounds = 800, choose_direction = TRUE, parametric = T, seed = 1985))
-```
-The output from the test:
-```r
-Computational Conditional Independence Test
---------------------------------------------
-Method:    CCI test using rf 
-Formula:   X ~ Y | Z1 
-Permutations:  160 
-Metric:    RMSE 
-Tail:      left 
-Statistic: 1.247 
-P-value:   1.499e-08 
+## Citation
 
-Subsample:   1
-```
-Even though we input the formula as `Y ~ X | Z1`, the function automatically changed it to `X ~ Y | Z1` since `X` had better predictive performance than `Y` given `Z1`.
-```r
-summary(CCI.test(formula = Y ~ X | Z1, method = 'rf', data = data, nrounds = 800, parametric = T, seed = 1985))
-```
-Not including choose direction gives:
-```r
-Computational Conditional Independence Test
---------------------------------------------
-Method:    CCI test using rf 
-Formula:   Y ~ X | Z1 
-Permutations:  160 
-Metric:    RMSE 
-Tail:      left 
-Statistic: 22.2 
-P-value:   0.05876 
+If you use CCI, please cite:
 
-Subsample:   1 
-```
-Not setting 'choose_direction = TRUE' gives a different result, failing to reject the null hypothesis. Should you then always set 'choose_direction = TRUE'?
-choose_direction = TRUE is a good idea in many cases, however, the decision on predicting `Y` or `X` is determined by comparing RMSE, which, for instance with different data types, might not be the best way to decide which variable to predict.
-Unfortunatley, this is a weakness of the indirect way CCI is testing independence, by comparing out of sample predictions. In some cases, it might be better to test both directions manually and see if they agree.
+- Thorjussen, C. B. H., Liland, K. H., Solberg, L. E., & Måge, I. (2026). CCI: An R package for
+  computational conditional independence testing. *SoftwareX*, 34, 102726.
+  <https://doi.org/10.1016/j.softx.2026.102726>
+- Thorjussen, C. B. H., Liland, K. H., Måge, I., & Solberg, L. E. (2024). Computational test for
+  conditional independence. *Algorithms*, 17(8), 323. <https://doi.org/10.3390/a17080323>
 
-## 2.1. QQ-plots of p-values
-In any statistical test, it might be the case that we have insufficient power and therefor one can not rely on one single p-value. 
-An extra level of analysis in CCI, or any other statistical test, is to create quantile-quantile (qq) plots over p-values, to see if they approximately follows a uniform distribution, here is how to do it.
+`citation("CCI")` gives the references in BibTeX format.
 
-```r
-set.seed(1985)
-data <- NormalData(80)
-CCI_obj <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, nperm = 200, parametric = T)
-QQplot(CCI_obj) # P-values roughly follow the diagonal line
-# Testing a false Null
-CCI_obj <- CCI.test(formula = Y ~ X | Z2, data = data, nperm = 200, parametric = T)
-QQplot(CCI_obj) # P-values do not follow diagonal line
-```
-Note that assessing a qq plot is not a statistical test, and each test must be judge subjectively. 
+## Bugs and contributions
 
-These examples show the basics of computational testing of conditional independence with the CCI-package. 
-
-Next we will show further functionality in CCI.test() 
-
-## 3. Testing CI in dagitty DAGs
-
-Conditional independence testing is central in validating a causal model with the data. 
-In the example below we load data from the study, we use the dagitty package to draw out a causal model extract 
-conditional independence statements. reclassifying them to formulas, and loop through the formulas list using parallel processing. 
-
-First we create some data
-```r
-dag_data <- function(N) {
-  X1 = stats::rnorm(N, 0, 1)
-  X2 = stats::rnorm(N, X1, 1)
-  X3 = X1 + stats::runif(N, min=-2, max=2)
-  X4 = stats::rnorm(N, X2*X3, 1)
-  X5 = cos(X2) + sin(X3) + stats::runif(N, min=-2, max=2)
-  X6 = X1 + X5 + stats::rnorm(N, 0, 1)
-  df <- data.frame(X1, X2, X3, X4, X5, X6)
-  return(df)
-}
-```
-
-```r
-data <- dag_data(1000)
-library(dagitty)
-# Define the DAG, but with missing path from X1 to X6
-DAG <- dagitty('dag{X1 -> X2
-     X1 -> X3
-     X2 -> X4
-     X2 -> X5
-     X3 -> X4
-     X3 -> X5
-     X5 -> X6
-}')
-# Plot the DAG
-plot(DAG)
-# Run CCI test
-conditions <- impliedConditionalIndependencies(DAG)
-# Create formula list from conditions 
-
-formulas <- list()
-for (i in 1:length(conditions)) {
-  cond <- conditions[[i]]
-  lhs <- cond$X
-  rhs <- cond$Y
-  set <- cond$Z
-  if (length(set) == 0) {
-    # No conditioning set
-  } else {
-    formula <- as.formula(paste(lhs, "~", rhs, "|", paste(set, collapse = " + ")))
-  }
-  
-  formulas[[i]] <- formula
-}
-
-results <- sapply(X = 1:length(formulas), function(i) {
-p <- CCI.test(formula   = formulas[[i]],
-    data      = data, 
-    parametric = TRUE,
-    seed      = i,
-    method = 'KNN'
-  )$p.value
-  
-  data.frame(
-    formula = deparse(formulas[[i]]),
-    p_value = p)
-})
-results_df <- do.call(rbind, results)
-print(results_df)
-```
-```r
-The results looks something like this:
-      [,1]                  
- [1,] "X1 ~ X4 | X2 + X3"   
- [2,] "0.206164617120084"   
- [3,] "X1 ~ X5 | X2 + X3"   
- [4,] "0.484597383038517"   
- [5,] "X1 ~ X6 | X5"        
- [6,] "2.78088375816534e-17"
- [7,] "X1 ~ X6 | X2 + X3"   
- [8,] "0.152848951218739"   
- [9,] "X2 ~ X3 | X1"        
-[10,] "0.0741838421103421"  
-[11,] "X2 ~ X6 | X5"        
-[12,] "0.000222402185375476"
-[13,] "X3 ~ X6 | X5"        
-[14,] "8.22978537578748e-06"
-[15,] "X4 ~ X5 | X2 + X3"   
-[16,] "0.0438917941548344"  
-[17,] "X4 ~ X6 | X5"        
-[18,] "0.21551154136803"    
-[19,] "X4 ~ X6 | X2 + X3"   
-[20,] "0.847667824630129"  
-```
-Testing reveals that the rejected null hypothesis at significance level 0.05 is `X1 ~ X6 | X5`, `X1 ~ X6 | X2 + X3`, `X2 ~ X6 | X5` and `X3 ~ X6 | X5`. 
-The conditions `X2 ~ X6 | X5` and `X3 ~ X6 | X5` are rejected since `X1` is a common cause of `X2`, `X3` and `X6`.
-
-
-## 6. Using the `mlfunc` and `metricfunc` arguments 
-Advance users can pass on custom machine learning wrapper functions and performance metrics to the `CCI.test()` function using the `mlfunc` and `metricfunc` arguments, respectively.
-This is intended so that you can use a machine learning algorithm or performance metric of your choice, allowing for greater flexibility and customization in your conditional independence testing.
-The function passed through the `mlfunc` argument should take the following inputs: `formula`, `data`, `train_indices`, `test_indices` and `...`
-- **`formula`**: The formula for the model.
-- **`data`**: The dataset used for training and testing.
-- **`train_indices`**: Indices for the training data.
-- **`test_indices`**: Indices for the test data.
-- **`...`**: is a place holder for any arguments passed to the ML algorithm.
-
-The function should return a numeric value representing the model's performance. 
-
-Here's the general structure of the wrapper functions in pseudo code :
-
-```
-my_CCI_wrapper <- function(formula, data, train_indices, test_indices,...) {
-  train_data <- data[train_indices, ]
-  test_data <- data[test_indices, ]
-  model <- train_model(formula = formula, data = train_data, ...)
-  predictions <- predict_model(model, newdata = test_data)
-  actual <- get_true_values(formula, data = test_data)
-  performance <- compute_metric(actual, predictions)
-  return(performance)
-}
-```
-Let's take a look at two examples, the first example uses the `nnet` package to create a neural network wrapper function.
-
-
-```r
-neuralnet_wrapper <- function(formula,
-                      data,
-                      train_indices,
-                      test_indices,
-                      ...) {
-    model <- nnet::nnet(formula, data = data[train_indices, ], linout = TRUE, trace = FALSE, ...)
-    predictions <- predict(model, newdata = data[test_indices, ])
-    actual <- data[test_indices, ][[all.vars(formula)[1]]]
-    metric <- sqrt(mean((predictions - actual)^2))
-    return(metric)
-}
-
-dat <- NonLinNormal(2000)
-summary(CCI.test(formula = Y ~ X | Z1 + Z2, data = dat, tail = 'left', mlfunc = neuralnet_wrapper, nperm = 100, size = 10, decay = 0.1, maxit = 200, seed = 1))
-```
-In general we wouldn't recommend using neural networks for CCI testing, since they are hard to train, but this is just an example of how to create a custom wrapper function.
-
-As a more useful example, we create a wrapper for using the caret package. The caret package contains functionality for over 200 machine learning algorithms. 
-```r
-library(caret)
-caret_wrapper <- function(formula,
-                          data,
-                          train_indices,
-                          test_indices,
-                          caret_method,
-                          caret_data_type,
-                          ...) { 
-  training_data <- data[train_indices, ]
-  test_data <- data[test_indices, ]
-  ctrl <- caret::trainControl(method = "none")
-  model <- caret::train(formula,
-                        data = training_data,
-                        method = caret_method,
-                        trControl = ctrl,
-                        verbose = F,
-                        trace = F,
-                        ...)
-  predictions <- predict(model, newdata = test_data)
-  actual <- data[test_indices, ][[all.vars(formula)[1]]]
-  if (caret_data_type =="continuous") {
-    metric <- sqrt(mean((predictions - actual)^2))
-  } else if (caret_data_type %in% c("categorical", "binary")) {
-    actual <- test_data[[all.vars(formula)[1]]]
-    metric <- sum(predictions == actual) / length(actual)
-  } else {
-    stop("Unsupported data type for wrapper")
-  }
-  return(metric)
-}
-```
-
-```r
-# Testing using k-nearest neighbors from caret
-dat <- NonLinNormal(2000)
-summary(CCI.test(formula = Y ~ X | Z1, data = dat, tail = 'left', mlfunc = caret_wrapper, caret_method = "knn", caret_data_type = "continuous", seed = 2))
-```
-
-## 7. ️ Custom Performance Metric with `metricfunc`
-
-The CCI package provides default performance metrics, such as RMSE for continuous outcomes and Kappa scores for binary and categorical outcomes. However, if you have a specific performance metric in mind, you can easily define your own using the `metricfunc` argument.
-
-Your custom function should take the following inputs:
-
-- **`actual`**: The true values 
-- **`predictions`**: Predicted values
-- **`...`**: Additional arguments if needed
-
-The output should be a numeric value representing the performance metric. Here’s an example that calculates the \(R^2\) metric using `rf`:
-```r
-Rsquare_metric  <- function(actual, predictions) {
-  sst <- sum((actual - mean(actual))^2)
-  ssr <- sum((actual - predictions)^2)
-  metric <- 1 - (ssr / sst)
-  return(metric)
-}
-results <- CCI.test(formula = Y ~ X | Z2, data = dat, method = "rf", metricfunc = Rsquare_metric, tail = "right", seed = 2, verbose = TRUE)
-```
-Setting `verbose = TRUE` will print out the P-value after testing.
-
-**Important:** When using a custom performance metric, you should also specify the `tail` argument:
-- **`tail = "right"`**: Use if higher metric values indicate better model performance.
-- **`tail = "left"`**: Use if lower metric values indicate better model performance.
-
-
-### Time series data
-CCI can also be used to test whether two time series variables are conditionally independent. However, analyzing time series data with CCI requires a relatively large data set due to the complexity and dependencies inherent in time series analysis. 
-In this example we test if two (\(X\) and \(Y\) trends which diverge in a times series are conditional independent given previous lags of X. We then to the same for lags of Y to show that this test is rejected (using significance level = 0.05). 
-
-```r
-time_series <- function(n, phi1, phi2) {
-  phi <- c(phi1, phi2)
-  # We generate X
-  X <- arima.sim(n = n, list(ar = phi))
-  Y <- numeric(n)
-  
-  for (t in 3:n) {
-    Y[t] <- 0.01 * t +  1.2 * X[t-1] +  0.7 * X[t-2] +  0.5 * X[t-2]*X[t-1] + rnorm(1, sd = 1)
-  }
-  data <- data.frame(Time = 1:n, X = X, Y = Y)
-}
-set.seed(1993) 
-data <- time_series(n = 1500, phi1 = 0.9, phi2 = -0.5)
-
-data$X_lag1 <- c(NA, data$X[-length(data$X)])  
-data$X_lag2 <- c(NA, NA, data$X[-(length(data$X)-1):-(length(data$X))])
-
-cor(data$Y, data$X) # Showing the correlation between Y and X, indicating that they are not independent
-
-# Inputing Time as a conditioning variables for general trends.
-data <- na.omit(data)
-summary(CCI.test(formula = X ~ Y | X_lag1 + Time, data = data, method = "xgboost", parametric = TRUE))
-summary(CCI.test(formula = Y ~ X | X_lag1 + X_lag2 + Time, data = data, method = "xgboost", parametric = TRUE))
-
-data$Y_lag1 <- c(NA, data$Y[-length(data$Y)])  
-data$Y_lag2 <- c(NA, NA, data$Y[-(length(data$Y)-1):-(length(data$Y))])
-summary(CCI.test(formula = Y ~ X | Y_lag1 + Y_lag2 + Time, data = data, method = "xgboost", parametric = TRUE))
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Please report bugs and suggestions at <https://github.com/khliland/CCI/issues>. Contributions are
+welcome.

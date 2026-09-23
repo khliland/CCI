@@ -199,7 +199,7 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #' @param tuned_model A model object returned from the CCI.pretuner function. This object contains the tuned parameters and other relevant information.
 #'
 #' @return A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost), named as the arguments of \code{\link{CCI.test}}. Returns \code{NULL} for unsupported methods.
-#' The xgboost row \code{subsample} is not returned, since \code{subsample} in \code{CCI.test} controls subsampling of the data.
+#' The xgboost row \code{subsample} is not returned, since \code{CCI.test} has a deprecated argument \code{subsample} (the old name of \code{MC_sample}).
 #' @export
 #'
 
@@ -232,7 +232,7 @@ get_tuned_params <- function(tuned_model) {
 #' Polynomial terms are named as \code{<variable>_d_<degree>} (e.g., \code{Z1_d_2} for the square of \code{Z1}).
 #'
 #' @param data Data frame. The data frame containing the variables for which polynomial terms are to be created.
-#' @param Z Character vector. The names of the variables for which polynomial terms are to be created.
+#' @param Z Character vector. The names of the variables for which polynomial terms are to be created. Only the numeric variables among them get polynomial terms; categorical variables (factors) are skipped.
 #' @param degree Integer. The maximum degree of polynomial terms to be created. Default is 3.
 #' @param poly Logical. If TRUE, polynomial terms will be created. If FALSE, no polynomial terms will be created. Default is TRUE.
 #'
@@ -263,7 +263,9 @@ add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
     return(list(data = data, new_terms = character(0), poly = FALSE))
   }
 
-  if (any(sapply(data[Z], is.factor))) {
+  # Polynomial terms only make sense for numeric variables; categorical Z variables are left as they are
+  Z <- Z[vapply(data[Z], is.numeric, logical(1))]
+  if (length(Z) == 0) {
     return(list(data = data, new_terms = character(0), poly = FALSE))
   }
 
@@ -545,4 +547,37 @@ call_metricfunc <- function(metricfunc, actual, predictions, ...) {
   } else {
     metricfunc(actual, predictions)
   }
+}
+
+#' Convert character and logical variables to factors
+#'
+#' Character and logical variables are treated as categorical variables in CCI. Converting them to
+#' factors up front means every step (choice of metric, polynomial terms, stratified permutation and
+#' the model wrappers) treats them the same way.
+#'
+#' @param data Data frame.
+#' @param vars Character vector of column names to convert (others are left unchanged).
+#' @return The data frame with character and logical columns in \code{vars} converted to factors.
+#' @noRd
+characters_to_factors <- function(data, vars) {
+  for (v in intersect(vars, names(data))) {
+    if (is.character(data[[v]]) || is.logical(data[[v]])) data[[v]] <- factor(data[[v]])
+  }
+  data
+}
+
+#' Use a deprecated argument name
+#'
+#' Returns the value of the deprecated argument (with a warning) if it was given, otherwise the value
+#' of the new argument.
+#'
+#' @param new_value Value of the new argument.
+#' @param old_value Value of the deprecated argument (NULL if not given).
+#' @param old_name,new_name Names of the deprecated and the new argument.
+#' @return The value to use.
+#' @noRd
+deprecated_arg <- function(new_value, old_value, old_name, new_name) {
+  if (is.null(old_value)) return(new_value)
+  warning("The argument '", old_name, "' is deprecated; use '", new_name, "' instead.", call. = FALSE)
+  old_value
 }

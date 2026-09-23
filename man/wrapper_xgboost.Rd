@@ -14,7 +14,7 @@ wrapper_xgboost(
   metricfunc = NULL,
   nthread = 1,
   eps = 1e-15,
-  subsample = 1,
+  MC_sample = 1,
   ...
 )
 }
@@ -37,7 +37,7 @@ wrapper_xgboost(
 
 \item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
 
-\item{subsample}{Not used by the model. Subsampling of the data is done in \code{\link{test.gen}} before the wrapper is called.}
+\item{MC_sample}{Not used by the model. The share of data per Monte Carlo sample is applied in \code{\link{test.gen}} before the wrapper is called. (xgboost's own row subsampling can be set with \code{subsample} in \code{...}.)}
 
 \item{...}{Additional arguments passed to \code{xgb.train} as parameters (e.g. \code{eta}, \code{max_depth}, \code{objective}).}
 }

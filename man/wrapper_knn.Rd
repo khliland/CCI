@@ -28,9 +28,9 @@ wrapper_knn(
 
 \item{test_indices}{Indices for test rows}
 
-\item{metric}{Performance metric: "RMSE" (regression), "Kappa" (classification), or "LogLoss" (classification)}
+\item{metric}{Performance metric: "RMSE" (regression), "Kappa" (classification), or "LogLoss" (classification), or the name of a custom metric when \code{metricfunc} is given}
 
-\item{metricfunc}{Optional custom metric function: function(actual, predictions, ...)}
+\item{metricfunc}{Optional custom metric function \code{function(actual, predictions, ...)}. A numeric response gives regression (numeric predictions); a factor, character or logical response gives classification (predicted classes as a factor). The \code{...} arguments are only passed on if the function accepts them.}
 
 \item{k}{Integer, number of neighbors (default 15)}
 

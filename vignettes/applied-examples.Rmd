@@ -1,0 +1,187 @@
+---
+title: "Applied examples: causal models and time series"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Applied examples: causal models and time series}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+has_dagitty <- requireNamespace("dagitty", quietly = TRUE)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(CCI)
+```
+
+This vignette shows two common uses of conditional independence tests: checking a causal model
+against data, and testing whether the past of one time series predicts another. For the basics, see
+`vignette("Testing-CI-with-CCI", package = "CCI")`.
+
+# Testing a causal model (DAG)
+
+A causal model drawn as a directed acyclic graph (DAG) implies a set of conditional independencies:
+every pair of variables that is not connected by an arrow is independent given some set of other
+variables. If the data contradict one of them, the DAG is wrong, for instance because an arrow is
+missing. Testing all implied conditional independencies is therefore a way to check a DAG against
+data [@Textor2016]. The dagitty package finds the implied conditional independencies, and CCI can
+test them, also when the relationships are non-linear.
+
+`r if (!has_dagitty) "*The dagitty package is not installed, so the code in this section is not run.*"`
+
+We use a DAG with five variables:
+
+```{r, eval = has_dagitty}
+library(dagitty)
+true_dag <- dagitty("dag {
+  A -> B
+  A -> C
+  B -> D
+  C -> D
+  D -> E
+}")
+plot(graphLayout(true_dag))
+```
+
+and simulate data from it, with non-linear relationships:
+
+```{r}
+simulate_dag_data <- function(n) {
+  A <- rnorm(n)
+  B <- sin(2 * A) + rnorm(n, sd = 0.5)
+  C <- A^2 + rnorm(n, sd = 0.5)
+  D <- B * C + rnorm(n, sd = 0.5)
+  E <- tanh(D) + rnorm(n, sd = 0.3)
+  data.frame(A, B, C, D, E)
+}
+set.seed(1)
+dag_data <- simulate_dag_data(600)
+```
+
+`impliedConditionalIndependencies()` lists the independencies implied by the DAG. Each one is turned
+into a CCI formula. An empty conditioning set gives an unconditional test, written with `| 1`:
+
+```{r, eval = has_dagitty}
+ci_to_formula <- function(ci) {
+  z <- if (length(ci$Z) == 0) "1" else paste(ci$Z, collapse = " + ")
+  as.formula(paste(ci$X, "~", ci$Y, "|", z))
+}
+implied <- impliedConditionalIndependencies(true_dag)
+implied
+formulas <- lapply(implied, ci_to_formula)
+```
+
+Then each is tested. Since several hypotheses are tested, the p-values are adjusted for multiple
+testing with Holm's method. With many tests, the adjusted p-values need to be small, so we use
+parametric p-values (`parametric = TRUE`), which are not limited by the number of Monte Carlo
+samples:
+
+```{r, eval = has_dagitty}
+test_dag <- function(formulas, data) {
+  p <- vapply(formulas, function(f) {
+    CCI.test(f, data = data, nperm = 60, parametric = TRUE, seed = 1, progress = FALSE)$p.value
+  }, numeric(1))
+  data.frame(hypothesis = vapply(formulas, function(f) paste(deparse(f), collapse = ""), ""),
+             p_value = signif(p, 3),
+             p_adjusted = signif(p.adjust(p, method = "holm"), 3))
+}
+true_results <- test_dag(formulas, dag_data)
+true_results
+```
+
+```{r, include = FALSE}
+rejected <- function(results) {
+  if (!has_dagitty) return("")
+  hyp <- results$hypothesis[results$p_adjusted <= 0.05]
+  if (length(hyp) == 0) "none" else paste0("`", hyp, "`", collapse = ", ")
+}
+```
+
+Rejected at the 5% level after adjustment: `r if (has_dagitty) rejected(true_results)`. The data
+are consistent with the DAG. Now suppose we had drawn the DAG without the arrow from $C$ to $D$:
+
+```{r, eval = has_dagitty}
+wrong_dag <- dagitty("dag {
+  A -> B
+  A -> C
+  B -> D
+  D -> E
+}")
+wrong_results <- test_dag(lapply(impliedConditionalIndependencies(wrong_dag), ci_to_formula),
+                          dag_data)
+wrong_results
+```
+
+Rejected at the 5% level after adjustment: `r if (has_dagitty) rejected(wrong_results)`. An
+independence between $C$ and $D$ only holds if every path between them goes through the
+conditioning variables, so a rejection shows that the DAG is missing a connection between $C$ and
+$D$. Not every independence
+that involves the missing arrow needs to be rejected: some dependencies are weak and hard to detect.
+A rejected independence points to where the DAG should be revised, but it does not say which arrow
+to add; several changes to the DAG could explain the same rejection.
+
+Note that non-rejection does not prove that the DAG is right: other DAGs can imply the same
+independencies, and a test may lack the power to detect a weak dependence.
+
+# Time series
+
+CCI can also be used with time series, by putting lagged variables in the formula. A common question
+is whether the past of one series, $X$, helps to predict another series, $Y$, beyond the past of $Y$
+itself (Granger causality). We simulate a series $X$ that follows an autoregressive process, and a
+series $Y$ that depends non-linearly on the past of $X$ and has a trend:
+
+```{r}
+simulate_series <- function(n) {
+  X <- as.numeric(arima.sim(n = n, list(ar = c(0.9, -0.5))))
+  Y <- numeric(n)
+  for (t in 3:n) {
+    Y[t] <- 0.01 * t + 1.2 * X[t - 1] + 0.7 * X[t - 2] + 0.5 * X[t - 1] * X[t - 2] + rnorm(1)
+  }
+  data.frame(Time = seq_len(n), X = X, Y = Y)
+}
+lag <- function(x, k) c(rep(NA, k), x[seq_len(length(x) - k)])
+
+set.seed(1993)
+ts_data <- simulate_series(1000)
+ts_data$X_lag1 <- lag(ts_data$X, 1)
+ts_data$X_lag2 <- lag(ts_data$X, 2)
+ts_data$Y_lag1 <- lag(ts_data$Y, 1)
+ts_data$Y_lag2 <- lag(ts_data$Y, 2)
+ts_data <- na.omit(ts_data)
+```
+
+Does the past of $X$ predict $Y$ beyond the past of $Y$ and the trend? It should, since $Y$ depends
+on $X_{t-1}$:
+
+```{r}
+summary(CCI.test(Y ~ X_lag1 | Y_lag1 + Y_lag2 + Time, data = ts_data, nperm = 100,
+                 seed = 1, progress = FALSE))
+```
+
+Does the past of $Y$ predict $X$ beyond the past of $X$? It should not, since $X$ follows its own
+autoregressive process and does not depend on $Y$:
+
+```{r}
+summary(CCI.test(X ~ Y_lag1 | X_lag1 + X_lag2, data = ts_data, nperm = 100,
+                 seed = 1, progress = FALSE))
+```
+
+Include the lags that are needed to describe each series (here two lags of $X$), and variables like
+`Time` for trends. Otherwise, the past of one series can predict the other only because it carries
+information about the missing lags or the trend.
+
+**A caution.** CCI splits the data randomly into training and test parts, which assumes that the
+observations are exchangeable. Time series observations are dependent over time, so the test is
+approximate. It works best with long series, when the lags in the conditioning set capture most of
+the dependence over time.
+
+# References

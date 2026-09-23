@@ -11,7 +11,7 @@ get_tuned_params(tuned_model)
 }
 \value{
 A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost), named as the arguments of \code{\link{CCI.test}}. Returns \code{NULL} for unsupported methods.
-The xgboost row \code{subsample} is not returned, since \code{subsample} in \code{CCI.test} controls subsampling of the data.
+The xgboost row \code{subsample} is not returned, since \code{CCI.test} has a deprecated argument \code{subsample} (the old name of \code{MC_sample}).
 }
 \description{
 Get the best parameters after tuning with CCI.tuner

@@ -141,8 +141,101 @@ Tuned values now override the defaults, for example `nrounds`.
 
 **Tests:** `tests/testthat/test-wrapper-xgboost.R`.
 
+## 9. `QQplot` did not repeat the test it was plotting
+
+**Files:** `R/QQplot.R`, `R/perm.test.R`
+
+**Symptom:** The article recommends `QQplot()` for borderline p-values (0.05–0.2), but:
+- with xgboost, parameters such as `eta` and `max_depth` were dropped (traced: no `xgb.train` call got `eta`), so a different model was plotted than the one tested;
+- with `method = "KNN"`, a custom `metricfunc` or a custom `mlfunc`, all p-values were `NA`, but a normal-looking plot was still returned;
+- centering and scaling were turned off, unlike in the test (matters for svm and KNN);
+- it failed for objects from `perm.test()`, which have no `ext_formula`.
+
+**Cause:**
+- `object$additional_args` was passed to `test.gen` unnamed (same bug class as #1), so it was dropped.
+- The `CCI` object did not store `k`, `center`, `scale`, `eps`, `positive`, `kernel`, `distance`, `mtry`, `nthread`, `metricfunc` or `mlfunc`. `QQplot` read them as `NULL`: `k = NULL` broke KNN, and `center = NULL` turned scaling off. Without `metricfunc` and `mlfunc`, a custom metric name or method name was sent to the wrappers, which stopped with "Unsupported metric" or "Method chosen is not supported".
+
+**Fix:** `perm.test` collects all settings passed to `test.gen` in one list. It uses the list for both the null distribution and the test statistic, and stores it in the result as `settings`. `QQplot` repeats the test with `do.call(test.gen, settings)`, and arguments given to `QQplot()` override the stored settings (e.g. `nperm = 50`). The formula falls back to `object$formula` when `ext_formula` is missing. Objects created before this version (no `settings`) use the stored fields with defaults for the rest. If such an object used a custom metric, `QQplot` stops with an explanation, since the function was never stored.
+
+**Unchanged results:** `perm.test` gives identical null distributions and p-values to before for the same seed (checked for rf, KNN and svm).
+
+**Tests:** `tests/testthat/test-qqplot.R`.
+
+## 10. KNN failed with any custom metric; `metricfunc` without `...` failed
+
+**File:** `R/wrappers.R`
+
+**Symptom:** `CCI.test(..., method = "KNN", metricfunc = f)` gave `P-value: NA` (and `QQplot` failed), because every model fit stopped with "metric must be 'RMSE' (regression), 'Kappa' (classification), or 'LogLoss' (classification)." In the ranger, svm and KNN wrappers, a metric function without a `...` argument failed with "unused argument" whenever extra arguments were given (e.g. `min.node.size`, `cost`).
+
+**Cause:** `wrapper_knn` decided the type of task only from `metric`, and with a custom metric `metric` is the function name, so it stopped. All wrappers except xgboost called `metricfunc(actual, predictions, ...)` unconditionally.
+
+**Fix:** With a custom metric, `wrapper_knn` decides the task from the response, as `wrapper_xgboost` does: numeric gives regression (numeric predictions), and factor, character or logical gives classification (predicted classes as a factor). All wrappers call the metric through `call_metricfunc()`, which passes `...` only when the function accepts it. The `metricfunc` docs in `wrapper_ranger` described wrong arguments (`data`, `model`, `test_indices`) and were corrected.
+
+**Tests:** `tests/testthat/test-metricfunc.R`.
+
+## 11. `CCI.direction` depended on the units of Y and X
+
+**File:** `R/CCI.direction.R`
+
+**Symptom:** Multiplying Y by 100 changed the chosen direction from `Y ~ X | Z1 + Z2` to `X ~ Y | Z1 + Z2`, with the same data otherwise.
+
+**Cause:** The function compared the cross-validated RMSE of predicting Y (from X, Z) with the RMSE of predicting X (from Y, Z). RMSE is in the units of the outcome, so the variable with the smaller variance tended to win, regardless of how well it could be predicted. The article describes the intention as choosing "the easiest prediction". caret's `preProcess = c("center", "scale")` only scales the predictors, not the outcome.
+
+**Fix:** Y and X are standardized (mean 0, sd 1) before the two models are fitted, so the comparison is RMSE / sd(outcome), a unit-free measure of how hard each variable is to predict. A variable with zero variance gives an informative error.
+
+**Result:** Rescaling Y by 0.01 or 100, or X by 100, now gives the same direction. A variable that is almost fully explained by Z is chosen as outcome even when the other variable has a much smaller scale.
+
+**Impact:** `CCI.test(choose_direction = TRUE)` can choose a different direction than before when Y and X have different variances. The test itself is valid in both directions; the choice only affects power.
+
+**Tests:** `tests/testthat/test-direction.R`.
+
+## 12. Character and logical variables were not handled consistently
+
+**Files:** `R/CCI.test.R`, `R/wrappers.R`, `R/utils.R`
+
+**Found by:** `tests/testthat/check_package.R` (Part 1), on `CIsimdata::QuadThresh`, which returns Y as a character vector (as do several other CIsimdata scenarios).
+
+**Symptom:**
+- `method = "rf"` with a character Y or character X: every model fit failed with ranger's "Unsupported type of dependent variable", so the p-value was `NA`. This also broke rf with a custom metric and `tune = TRUE` ("No models were successfully trained in pretuning").
+- A logical Y stopped with "Could not determine an appropriate metric automatically".
+- A character Z stopped for every method with "non-numeric argument to binary operator": it was not recognised as categorical, so `add_poly_terms` computed `Z^2` on text.
+- svm, xgboost and KNN already handled a character Y.
+
+**Cause:** Only factors were treated as categorical. `CCI.test` chose Kappa for a character Y, but passed the character column on unchanged. ranger does not accept character variables, and the "is Z categorical?" check (which turns off polynomial terms) only looked for factors.
+
+**Fix:** A new internal helper, `characters_to_factors()`, converts character and logical formula variables to factors. `CCI.test` uses it right after parsing the formula, so the metric, polynomial terms, stratified permutation and all wrappers treat them as categorical. `wrapper_ranger` and `wrapper_svm` also use it, so direct calls and `CCI.pretuner` work. Numeric and factor data are unchanged.
+
+**Result:** The four failing checks on QuadThresh (rf with Kappa, LogLoss, a custom accuracy metric, and tuning) now reject the false statement with p = 1/41 (40 permutations); the true statement gives p = 0.22.
+
+**Tests:** `tests/testthat/test-character.R`.
+
+## 13. `CCI.direction` used other models than the test; printing gave nothing useful
+
+**Files:** `R/CCI.direction.R`, `R/CCI.test.R`, `R/reports.R`
+
+**Symptom:**
+- `CCI.direction` (used by `choose_direction = TRUE`) trained its models through caret: `method = "rf"` used the randomForest package and `method = "svm"` the kernlab package. Neither is a dependency of CCI, so the direction choice could fail on a system without them, and the models differed from the ones used in the test (ranger and e1071). For xgboost, `xgb.cv()` was used, with the data subsample share (e.g. 0.3 for n = 5000) passed as xgboost's own row `subsample`.
+- The article lists a `print.CCI()` method, but it did not exist: printing a result used `print.htest` and showed an almost empty printout.
+- After `choose_direction = TRUE` switched the direction, `summary()` showed the formula as given, not the one that was tested.
+
+**Fix:**
+- `CCI.direction` cross-validates both directions with the package's own wrappers (`wrapper_ranger`, `wrapper_xgboost`, `wrapper_svm`, `wrapper_knn`) on the same folds (drawn in base R), with the settings from `CCI.test` (`nrounds`, xgboost parameters, `mtry`, `nthread`, `k`, `kernel`, `distance`). All numeric variables are standardized first. `subsample` only subsamples the data. It also handles character variables and unconditional formulas (`Y ~ X | 1`), and `verbose = TRUE` prints the RMSE of both directions.
+- New `print.CCI()`: formula, learner, metric, number of permutations, statistic and p-value (marked "parametric" when `parametric = TRUE`).
+- `CCI.test` stores the tested formula (without polynomial and interaction terms) in `tested_formula`. `print()` and `summary()` show it, and add the formula as given when the direction was changed.
+
+**Tests:** `tests/testthat/test-direction.R` (all four learners, with `caret::train` mocked to fail) and `tests/testthat/test-reports.R`.
+
+## 14. Remaining smaller issues
+
+**Files:** `R/utils.R`, `R/CCI.test.R`, `R/wrappers.R`, `R/plot.R`, `R/perm.test.R`, `R/test.gen.R`, `development/TODO.txt`
+
+- **Polynomial terms were turned off for all of Z if any Z was categorical.** `CCI.test` set `poly <- FALSE` when any Z was a factor, and `add_poly_terms` returned without terms. Now `add_poly_terms` only skips the non-numeric variables, so numeric Z variables get their polynomial terms also in mixed data. (Test: `test-misc.R`, and `test-character.R` checks that a character Z gets no terms while a numeric Z does.)
+- **`wrapper_ranger` ignored `...` for continuous outcomes.** The RMSE branch called `ranger()` without `...`, so arguments such as `min.node.size` or `max.depth` had no effect for a numeric Y. They are now passed on, as in the classification branches. (Test: `max.depth = 1` now changes the RMSE.)
+- **`plot.CCI` labelled the density axis "Freq.",** and extra ggplot2 layers in `...` never worked: unnamed arguments were matched by position to `fill_color`, `title.size`, etc., and if any argument was not a ggplot object, all were silently ignored. `...` now comes right after `x`, layers and themes are added, other arguments give a warning, and the y-axis is labelled "Density".
+- **The `robust` documentation** in `test.gen` said stratified permutation was used when *all* conditioning variables are categorical; the code (and the SoftwareX article) use it when *any* is. The documentation in `CCI.test`, `perm.test` and `test.gen` now describes the behaviour.
+- **The `metricfunc` documentation** did not say what the metric function receives. It now describes `actual` and `predictions` for each learner in `CCI.test`, `perm.test` and `test.gen`. The difference between xgboost (class probabilities) and rf, svm and KNN (predicted classes) is kept, since changing either would break existing metric functions; it is documented instead.
+- **`development/TODO.txt`** started with the leftover merge-conflict markers `<<<<<<< HEAD` and `=======` (without a closing marker); they were removed.
+
 ## Known, not yet fixed
 
-- `wrapper_ranger` does not pass `...` to `ranger()` for RMSE, so extra ranger arguments are ignored for continuous outcomes.
 - `wrapper_xgboost` does not use xgboost's own row `subsample`; the name is taken by the data subsampling in `CCI.test`.
-- Only `wrapper_xgboost` uses `call_metricfunc()`; the other wrappers still pass `...` to `metricfunc` unconditionally, and `wrapper_knn` stops for any custom metric.

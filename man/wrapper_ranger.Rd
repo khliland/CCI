@@ -29,7 +29,7 @@ wrapper_ranger(
 
 \item{metric}{Type of metric ("RMSE", "Kappa" or "Log Loss")}
 
-\item{metricfunc}{Optional user-defined function to calculate a custom performance metric. This function should take the arguments \code{data}, \code{model}, and \code{test_indices}, and return a numeric value representing the performance metric.}
+\item{metricfunc}{Optional user-defined function \code{function(actual, predictions, ...)} returning a numeric performance value. For a factor response, \code{predictions} are the predicted classes. The \code{...} arguments are only passed on if the function accepts them.}
 
 \item{nthread}{Integer. The number of threads to use for parallel processing. Default is 1.}
 

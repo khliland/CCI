@@ -11,7 +11,14 @@
 #' @param axis.title.x Size of x-axis title
 #' @param axis.title.y Size of y-axis title
 #' @param progress Logical indicating whether to show progress during computation
-#' @param ... Additional arguments to pass to the \code{test.gen} function.
+#' @param ... Arguments passed to \code{\link{test.gen}}. By default the test statistic is recomputed
+#'   \code{nperm} times with exactly the settings used to create \code{object} (method, metric, custom
+#'   \code{metricfunc}/\code{mlfunc}, model parameters, scaling, etc.). Arguments given here override
+#'   them, e.g. \code{nperm = 50}.
+#'
+#' @details The test statistic (without permutation) is recomputed on \code{nperm} new random
+#'   train/test splits, and the p-value of each is computed against the stored null distribution.
+#'   Under the null hypothesis the p-values should be roughly uniform.
 #'
 #' @importFrom ggplot2 ggplot aes geom_qq geom_abline labs theme_minimal theme element_text
 #' @importFrom stats qunif
@@ -46,67 +53,37 @@ QQplot <- function(object,
 
   data <- object$data
   null_dist <- object$null.distribution
-  nperm <- object$nperm
-  nrounds <- object$nrounds
-  method <- object$MLfunc
-  formula <- object$ext_formula
-  N <- nrow(data)
-  metric <- object$metric
-  subsample <- object$subsample
   tail <- object$tail
   parametric <- object$parametric
-  p <- object$p
-  degree <- object$degree
-  poly <- object$poly
-  interaction <- object$interaction
-  k = object$k
-  center = object$center
-  scale = object$scale
-  eps = object$eps
-  positive = object$positive
-  kernel = object$kernel
-  distance = object$distance
-  additional_args <- object$additional_args
-  robust <- object$robust
-  mtry <- object$mtry
-  nthread <- object$nthread
-  metricfunc = object$metricfunc
-  mlfunc = object$mlfunc
 
-  # Ensure p and N are numeric
-  if (!is.numeric(p) || !is.numeric(N)) {
-    stop("p and N must be numeric values.")
-  }
-
-  formula = as.formula(formula)
-  formula <- clean_formula(formula)
+  # The formula used in the test (with polynomial and interaction terms when called through CCI.test)
+  formula <- object$ext_formula %||% object$formula
+  formula <- clean_formula(stats::as.formula(formula))
   check_formula(formula, data)
 
+  # Repeat the test with exactly the settings used to create the object
+  settings <- object$settings
+  if (is.null(settings)) {
+    # Objects from CCI < 0.3.7 only store some of the settings; the rest get their defaults
+    if (!object$metric %in% c("RMSE", "Kappa", "LogLoss")) {
+      stop("This CCI object was created with an older version of CCI and does not store the custom ",
+           "metric or ML function. Run the test again with the current version to use QQplot().",
+           call. = FALSE)
+    }
+    settings <- c(list(metric = object$metric, method = object$MLfunc, nrounds = object$nrounds,
+                       p = object$p, MC_sample = object$MC_sample %||% object$subsample,
+                       robust = object$robust),
+                  object$additional_args[names(object$additional_args) != ""])
+    settings <- settings[!vapply(settings, is.null, logical(1))]
+  }
+  # Arguments given to QQplot() override the stored settings
+  settings <- utils::modifyList(settings, list(...), keep.null = TRUE)
+  nperm <- settings$nperm %||% object$nperm
+  settings$nperm <- NULL
 
-  test_result <- test.gen(formula = formula,
-                          data = data,
-                          permutation = FALSE,
-                          metric = metric,
-                          method = method,
-                          nperm = nperm,
-                          subsample = subsample,
-                          nrounds = nrounds,
-                          metricfunc = metricfunc,
-                          mlfunc = mlfunc,
-                          p = p,
-                          k = k,
-                          robust = robust,
-                          center = center,
-                          scale = scale,
-                          eps = eps,
-                          positive = positive,
-                          kernel = kernel,
-                          distance = distance,
-                          additional_args,
-                          mtry = mtry,
-                          nthread = nthread,
-                          progress = progress,
-                          ...)
+  test_result <- do.call(test.gen, c(list(formula = formula, data = data, nperm = nperm,
+                                          permutation = FALSE, progress = progress),
+                                     settings))
 
   # Remove failed model fits once here, so get_pvalues() does not warn for every test statistic
   null_dist <- unlist(null_dist)

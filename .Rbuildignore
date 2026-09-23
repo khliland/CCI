@@ -10,3 +10,6 @@ development
 ^TODO\.md$
 ^tests/testthat/dev\.R$
 ^BUGFIXES\.md$
+^tests/testthat/check_package\.R$
+^AGENTS\.md$
+^CLAUDE\.md$

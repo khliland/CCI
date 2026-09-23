@@ -9,7 +9,7 @@ perm.test(
   data,
   p = 0.5,
   nperm = 160,
-  subsample = 1,
+  MC_sample = 1,
   metric = "RMSE",
   method = "rf",
   nrounds = 600,
@@ -28,6 +28,7 @@ perm.test(
   positive = NULL,
   kernel = "optimal",
   distance = 2,
+  subsample = NULL,
   ...
 )
 }
@@ -40,7 +41,7 @@ perm.test(
 
 \item{nperm}{Number of permutations to perform. Default is 160.}
 
-\item{subsample}{The proportion of the data to be used. Default is 1 (no subsampling).}
+\item{MC_sample}{Numeric between 0 and 1. The share of the data used in each Monte Carlo sample (a new random sample each time). Default is 1 (all data).}
 
 \item{metric}{Type of metric: "RMSE", "Kappa" or "LogLoss". Default is 'RMSE'.}
 
@@ -54,9 +55,9 @@ perm.test(
 
 \item{tail}{Specifies whether the test is one-tailed ("left" or "right") or two-tailed. Default is NA.}
 
-\item{robust}{Logical. If TRUE, uses a robust method for permutation. Default is TRUE.}
+\item{robust}{Logical. If TRUE and the conditioning set Z contains any categorical variables (factor, character or logical), X is permuted within the groups defined by the categorical variables in Z (stratified permutation). This keeps the relationship between X and the categorical part of Z under the null hypothesis. If FALSE, X is always permuted over all observations. Default is TRUE.}
 
-\item{metricfunc}{An optional custom function to calculate the performance metric based on the model's predictions. Default is NULL.}
+\item{metricfunc}{Optional custom performance metric: a function \code{function(actual, predictions, ...)} returning a single number. Set \code{tail} to "right" if higher values mean better predictions and "left" if lower values do. \code{actual} is numeric for a numeric Y and a factor for a categorical Y. For a numeric Y, \code{predictions} is numeric. For a categorical Y, \code{predictions} are the predicted classes (a factor) for methods "rf", "svm" and "KNN", and class probabilities for "xgboost": the probability of the second class level for two classes, or an n x K matrix with the class levels as column names for more classes. The \code{...} arguments are only passed on if the function accepts them. Default is NULL.}
 
 \item{mlfunc}{An optional custom machine learning function to use instead of the predefined methods. Default is NULL.}
 
@@ -78,10 +79,12 @@ perm.test(
 
 \item{distance}{Numeric. Parameter of Minkowski distance for the "KNN" method. Default is 2.}
 
+\item{subsample}{Deprecated, use \code{MC_sample}.}
+
 \item{...}{Additional arguments to pass to the machine learning model fitting function.}
 }
 \value{
-An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data.
+An object of class 'CCI' containing the null distribution, observed test statistic, p-values, the machine learning model used, and the data. The element \code{settings} holds all arguments passed to \code{\link{test.gen}} (including custom \code{metricfunc}/\code{mlfunc} and model parameters), so that \code{\link{QQplot}} can repeat the test with the same settings.
 }
 \description{
 Permutation Test for Conditional Independence

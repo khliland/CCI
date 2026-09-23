@@ -8,14 +8,15 @@
 #' @param method Character. The modeling method to be used. Options include "xgboost" for gradient boosting, or "rf" for random forests or "svm" for Support Vector Machine.
 #' @param metric Character. The type of metric: can be "RMSE", "Kappa" or "LogLoss". Default is 'RMSE'
 #' @param nperm Integer. The number of generated Monte Carlo samples. Default is 160.
-#' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
+#' @param MC_sample Numeric between 0 and 1. The share of the data used in each Monte Carlo sample (a new random sample each time). Default is 1 (all data).
+#' @param subsample Deprecated, use `MC_sample`.
 #' @param p Numeric. The proportion of the data to be used for training. The remaining data will be used for testing. Default is 0.5.
 #' @param nrounds Integer. The number of rounds (trees) for methods like 'xgboost' and 'rf'. Default is 600.
 #' @param mtry Integer. The number of variables to possibly split at in each node for method 'rf'. Default is the rounded down square root of numbers of columns in data.
 #' @param nthread Integer. The number of threads to use for parallel processing. Only relevant for methods 'rf' and 'xgboost'. Default is 1.
 #' @param permutation Logical. Whether to perform permutation of the 'X' variable. Used to generate a null distribution. Default is FALSE.
-#' @param robust Logical. If TRUE, automatically performs stratified permutation if all conditional variables are factor or categorical. Default is TRUE.
-#' @param metricfunc Function. A custom metric function provided by the user. It must take arguments: \code{actual}, \code{predictions}, and optionally \code{...}, and return a single numeric performance value.
+#' @param robust Logical. If TRUE and the conditioning set Z contains any categorical variables (factor, character or logical), X is permuted within the groups defined by the categorical variables in Z (stratified permutation). If FALSE, X is always permuted over all observations. Default is TRUE.
+#' @param metricfunc Optional custom performance metric: a function \code{function(actual, predictions, ...)} returning a single number. Set \code{tail} to "right" if higher values mean better predictions and "left" if lower values do. \code{actual} is numeric for a numeric Y and a factor for a categorical Y. For a numeric Y, \code{predictions} is numeric. For a categorical Y, \code{predictions} are the predicted classes (a factor) for methods "rf", "svm" and "KNN", and class probabilities for "xgboost": the probability of the second class level for two classes, or an n x K matrix with the class levels as column names for more classes. The \code{...} arguments are only passed on if the function accepts them. Default is NULL.
 #' @param mlfunc Function. A custom machine learning function provided by the user. The function must have the arguments: \code{formula}, \code{data}, \code{train_indices}, \code{test_indices}, and \code{...}, and return a single value performance metric. Default is NULL.
 #' @param progress Logical. A logical value indicating whether to show a progress bar during when building the null distribution. Default is TRUE.
 #' @param center Logical. If TRUE, the data is centered before model fitting. Default is TRUE.
@@ -56,7 +57,7 @@ test.gen <- function(formula,
                      method = "rf",
                      metric = 'RMSE',
                      nperm = 160,
-                     subsample = 1,
+                     MC_sample = 1,
                      p = 0.5,
                      nrounds = 600,
                      mtry =  NULL,
@@ -73,7 +74,10 @@ test.gen <- function(formula,
                      positive = NULL,
                      kernel = "optimal",
                      distance = 2,
+                     subsample = NULL,
                      ...) {
+
+  MC_sample <- deprecated_arg(MC_sample, subsample, "subsample", "MC_sample")
   
   if (permutation && nperm < 10) {
     stop("nperm can't be less than 10")
@@ -124,10 +128,10 @@ test.gen <- function(formula,
   null <- matrix(NA, nrow = nperm, ncol = 1)
 
   for (iteration in 1:nperm) {
-    if (subsample <= 0 || subsample > 1) {
-      stop("Subsample must be between 0 and 1.")
-    } else if (subsample < 1) {
-      sub_data <- data[sample(nrow(data), size = round(nrow(data) * subsample)), ]
+    if (MC_sample <= 0 || MC_sample > 1) {
+      stop("MC_sample must be between 0 and 1.")
+    } else if (MC_sample < 1) {
+      sub_data <- data[sample(nrow(data), size = round(nrow(data) * MC_sample)), ]
       N <- nrow(sub_data)
     } else  {
       sub_data <- data
@@ -191,7 +195,7 @@ test.gen <- function(formula,
           metricfunc    = metricfunc,
           nrounds       = nrounds,
           nthread       = nthread,
-          subsample     = subsample,
+          MC_sample     = MC_sample,
           ...
         )
       } else if (method == "rf") {

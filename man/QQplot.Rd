@@ -42,13 +42,21 @@ QQplot(
 
 \item{progress}{Logical indicating whether to show progress during computation}
 
-\item{...}{Additional arguments to pass to the \code{test.gen} function.}
+\item{...}{Arguments passed to \code{\link{test.gen}}. By default the test statistic is recomputed
+\code{nperm} times with exactly the settings used to create \code{object} (method, metric, custom
+\code{metricfunc}/\code{mlfunc}, model parameters, scaling, etc.). Arguments given here override
+them, e.g. \code{nperm = 50}.}
 }
 \value{
 A QQ-plot of the p-values in ggplot2 format.
 }
 \description{
 QQ-plot for multiple testing in CCI
+}
+\details{
+The test statistic (without permutation) is recomputed on \code{nperm} new random
+train/test splits, and the p-value of each is computed against the stored null distribution.
+Under the null hypothesis the p-values should be roughly uniform.
 }
 \examples{
 dat <- data.frame(x1 = rnorm(100), x2 = rnorm(100), y = rnorm(100))

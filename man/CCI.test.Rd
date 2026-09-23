@@ -19,8 +19,8 @@ CCI.test(
   poly = TRUE,
   degree = 3,
   robust = TRUE,
-  subsample = "Auto",
-  subsample_set,
+  MC_sample = "Auto",
+  MC_sample_set = NULL,
   min_child_weight = 1,
   colsample_bytree = 1,
   eta = 0.3,
@@ -47,6 +47,8 @@ CCI.test(
   nthread = 2,
   verbose = FALSE,
   progress = TRUE,
+  subsample = NULL,
+  subsample_set = NULL,
   ...
 )
 }
@@ -75,11 +77,11 @@ CCI.test(
 
 \item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
 
-\item{robust}{Logical. If TRUE, uses a robust method for permutation. Default is TRUE.}
+\item{robust}{Logical. If TRUE and the conditioning set Z contains any categorical variables (factor, character or logical), X is permuted within the groups defined by the categorical variables in Z (stratified permutation). This keeps the relationship between X and the categorical part of Z under the null hypothesis. If FALSE, X is always permuted over all observations. Default is TRUE.}
 
-\item{subsample}{Character. Specifies whether to use automatic subsampling based on sample size ("Auto"), user-defined subsampling ("Yes"), or no subsampling ("No"). Default is "Auto"}
+\item{MC_sample}{Character. The share of the data used in each Monte Carlo sample: "Auto" uses \eqn{(900/n)^{0.75}} of the data when n > 900 and all data otherwise, "Yes" uses the share given in \code{MC_sample_set}, and "No" always uses all data. A different random sample is drawn in each Monte Carlo sample. Default is "Auto".}
 
-\item{subsample_set}{Numeric. If \code{subsample} is set to "Yes", this parameter defines the proportion of data to use for subsampling. Default is NA.}
+\item{MC_sample_set}{Numeric between 0 and 1. The share of the data used in each Monte Carlo sample when \code{MC_sample = "Yes"}.}
 
 \item{min_child_weight}{Numeric. The minimum sum of instance weight (hessian) needed in a child for methods like xgboost. Default is 1.}
 
@@ -95,7 +97,7 @@ CCI.test(
 
 \item{mode}{Character. Specifies the mode of operation: "numeric_only" or "mixed". Default is "numeric_only".}
 
-\item{metricfunc}{Optional the user can pass a custom function for calculating a performance metric based on the model's predictions. Default is NULL.}
+\item{metricfunc}{Optional custom performance metric: a function \code{function(actual, predictions, ...)} returning a single number. Set \code{tail} to "right" if higher values mean better predictions and "left" if lower values do. \code{actual} is numeric for a numeric Y and a factor for a categorical Y. For a numeric Y, \code{predictions} is numeric. For a categorical Y, \code{predictions} are the predicted classes (a factor) for methods "rf", "svm" and "KNN", and class probabilities for "xgboost": the probability of the second class level for two classes, or an n x K matrix with the class levels as column names for more classes. The \code{...} arguments are only passed on if the function accepts them. Default is NULL.}
 
 \item{mlfunc}{Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.}
 
@@ -132,6 +134,10 @@ CCI.test(
 \item{verbose}{Logical. If TRUE, additional information is printed during the execution of the function. Default is FALSE.}
 
 \item{progress}{Logical. If TRUE, a progress bar is displayed during the permutation process. Default is TRUE.}
+
+\item{subsample}{Deprecated, use \code{MC_sample}.}
+
+\item{subsample_set}{Deprecated, use \code{MC_sample_set}.}
 
 \item{...}{Additional arguments to pass to the \code{perm.test} function.}
 }

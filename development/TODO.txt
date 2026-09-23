@@ -1,8 +1,0 @@
-<<<<<<< HEAD
-=======
-# TO do programmering
-- Update pretuner til å håndtere KNN, eventuelt ta bort pretuner?
-- Lage en løsning for CRT-CCI testing
-- Lage en løsning for testing med QRF
-
-

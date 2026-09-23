@@ -1,0 +1,221 @@
+---
+title: "Custom models and performance metrics"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Custom models and performance metrics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(CCI)
+```
+
+The CCI test only needs two things: a way to train a model on part of the data, and a way to measure
+how well it predicts the rest. The package has four built-in learners (`rf`, `xgboost`, `svm`,
+`KNN`) and three built-in metrics (RMSE, Kappa, LogLoss), but both can be replaced:
+
+- `metricfunc`: keep a built-in learner, but measure performance with your own metric.
+- `mlfunc`: replace both the learner and the metric with your own function.
+
+In both cases you must tell CCI which direction is "better" with the `tail` argument:
+
+- `tail = "left"` if **lower** values mean better predictions (errors and losses, like RMSE);
+- `tail = "right"` if **higher** values mean better predictions (like $R^2$ or accuracy).
+
+We use the same kind of data as in `vignette("Testing-CI-with-CCI", package = "CCI")`, where
+$Y \perp\!\!\!\perp X \mid Z_1, Z_2$ is true and $Y \perp\!\!\!\perp X \mid Z_1$ is false.
+
+```{r}
+normal_data <- function(n) {
+  Z1 <- rnorm(n)
+  Z2 <- rnorm(n)
+  X <- Z1 + Z2 + rnorm(n)
+  Y <- Z1 + Z2 + rnorm(n)
+  data.frame(Z1, Z2, X, Y)
+}
+set.seed(1)
+dat <- normal_data(500)
+```
+
+# Custom performance metrics with `metricfunc`
+
+A metric function takes the observed values of the test data and the model's predictions, and
+returns a single number:
+
+```{r, eval = FALSE}
+my_metric <- function(actual, predictions) {
+  # compute and return one number
+}
+```
+
+It may also have a `...` argument, in which case additional arguments given to `CCI.test()` are
+passed on to it. What `actual` and `predictions` contain depends on the learner and on the type of
+$Y$:
+
+| `method` | Numeric $Y$ (regression) | Categorical $Y$ (classification) |
+|---|---|---|
+| `"rf"`, `"svm"`, `"KNN"` | numeric, numeric predictions | factor, predicted classes (factor) |
+| `"xgboost"` | numeric, numeric predictions | factor, class probabilities: the probability of the second class for two classes, an $n \times K$ matrix with the classes as column names for more |
+
+## Regression: $R^2$
+
+$R^2$ is higher for better predictions, so `tail = "right"`:
+
+```{r}
+r_squared <- function(actual, predictions) {
+  1 - sum((actual - predictions)^2) / sum((actual - mean(actual))^2)
+}
+res_r2 <- CCI.test(Y ~ X | Z1, data = dat, metricfunc = r_squared, tail = "right",
+                   seed = 1, progress = FALSE)
+summary(res_r2)
+```
+
+The summary shows the name of the metric function. The mean absolute error (MAE) is lower for better
+predictions, so `tail = "left"`. Here with the KNN learner:
+
+```{r}
+mae <- function(actual, predictions) mean(abs(actual - predictions))
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat, method = "KNN", metricfunc = mae, tail = "left",
+                 seed = 1, progress = FALSE))
+```
+
+## Classification: balanced accuracy and Brier score
+
+With a categorical $Y$, the built-in learners except xgboost give the predicted classes. Balanced
+accuracy, the average share of correct predictions within each class, is robust to unequal class
+sizes:
+
+```{r}
+set.seed(2)
+cat_data <- normal_data(500)
+cat_data$Y <- factor(ifelse(cat_data$Y > 1, "high", "low"))   # unequal class sizes
+table(cat_data$Y)
+
+balanced_accuracy <- function(actual, predictions) {
+  mean(tapply(as.character(predictions) == as.character(actual), actual, mean))
+}
+summary(CCI.test(Y ~ X | Z1, data = cat_data, metricfunc = balanced_accuracy, tail = "right",
+                 seed = 1, progress = FALSE))
+```
+
+xgboost gives class probabilities instead. For two classes, `predictions` is the probability of the
+second class level (`"low"` here), which allows metrics like the Brier score (lower is better):
+
+```{r}
+brier <- function(actual, predictions) {
+  mean((as.numeric(actual == levels(actual)[2]) - predictions)^2)
+}
+summary(CCI.test(Y ~ X | Z1, data = cat_data, method = "xgboost", nrounds = 100, eta = 0.1,
+                 metricfunc = brier, tail = "left", seed = 1, progress = FALSE))
+```
+
+# Custom learners with `mlfunc`
+
+An `mlfunc` function trains a model on the training rows, predicts the test rows, and returns the
+performance as a single number. It must have these arguments:
+
+- `formula`: a regression formula `Y ~ X + Z1 + ...` (the `|` is replaced by `+`);
+- `data`: the data, with $X$ permuted when the null distribution is built;
+- `train_indices` and `test_indices`: the rows to train on and to evaluate on;
+- `...`: additional arguments given to `CCI.test()`, e.g. tuning parameters for the model.
+
+The general structure is:
+
+```{r, eval = FALSE}
+my_wrapper <- function(formula, data, train_indices, test_indices, ...) {
+  model <- train_model(formula, data = data[train_indices, ], ...)
+  predictions <- predict(model, data[test_indices, ])
+  actual <- data[test_indices, all.vars(formula)[1]]
+  compute_metric(actual, predictions)
+}
+```
+
+The formula and data include the polynomial and interaction terms that `CCI.test()` adds to $Z$
+(see `poly` and `interaction`). Set `poly = FALSE` and `interaction = FALSE` if your model should
+only see the original variables.
+
+## A linear model
+
+With a linear regression as learner, the test compares how well a linear model predicts $Y$ with and
+without the real $X$. With the polynomial and interaction terms of $Z$, this is a flexible and very
+fast test:
+
+```{r}
+lm_wrapper <- function(formula, data, train_indices, test_indices, ...) {
+  model <- lm(formula, data = data[train_indices, ])
+  predictions <- predict(model, newdata = data[test_indices, ])
+  actual <- data[test_indices, all.vars(formula)[1]]
+  sqrt(mean((actual - predictions)^2))   # RMSE: lower is better
+}
+summary(CCI.test(Y ~ X | Z1 + Z2, data = dat, mlfunc = lm_wrapper, tail = "left",
+                 seed = 1, progress = FALSE))
+summary(CCI.test(Y ~ X | Z1, data = dat, mlfunc = lm_wrapper, tail = "left",
+                 seed = 1, progress = FALSE))
+```
+
+## Logistic regression with extra arguments
+
+Arguments that `CCI.test()` does not know are passed on to `mlfunc` through `...`. Here a logistic
+regression returns the log loss of the predicted probabilities, and the constant used to keep the
+probabilities away from 0 and 1 is given as an argument:
+
+```{r}
+logistic_wrapper <- function(formula, data, train_indices, test_indices, clip = 1e-6, ...) {
+  model <- glm(formula, data = data[train_indices, ], family = binomial)
+  prob <- predict(model, newdata = data[test_indices, ], type = "response")
+  prob <- pmin(pmax(prob, clip), 1 - clip)
+  actual <- data[test_indices, all.vars(formula)[1]]
+  is_second <- actual == levels(actual)[2]    # glm models the probability of the second level
+  -mean(ifelse(is_second, log(prob), log(1 - prob)))   # log loss: lower is better
+}
+summary(CCI.test(Y ~ X | Z1, data = cat_data, mlfunc = logistic_wrapper, tail = "left",
+                 clip = 1e-4, poly = FALSE, interaction = FALSE, seed = 1, progress = FALSE))
+```
+
+Probability-based metrics like the log loss usually give more power than the share of correct
+classifications, since they use how confident the predictions are.
+
+## Any model from caret
+
+The caret package gives a common interface to more than 200 models, which makes a general wrapper
+easy. The caret method and model parameters are given as arguments:
+
+```{r}
+caret_wrapper <- function(formula, data, train_indices, test_indices, caret_method, ...) {
+  model <- caret::train(formula, data = data[train_indices, ], method = caret_method,
+                        trControl = caret::trainControl(method = "none"), ...)
+  predictions <- predict(model, newdata = data[test_indices, ])
+  actual <- data[test_indices, all.vars(formula)[1]]
+  sqrt(mean((actual - predictions)^2))
+}
+summary(CCI.test(Y ~ X | Z1, data = dat, mlfunc = caret_wrapper, tail = "left",
+                 caret_method = "knn", tuneGrid = data.frame(k = 15),
+                 seed = 1, progress = FALSE))
+```
+
+# Tips
+
+- Return a single number. If a model fails to fit in a Monte Carlo sample, that sample is left out
+  with a warning, so errors in your function show up as warnings about missing values in the null
+  distribution.
+- Always set `tail`. `CCI.test()` stops with an error if a `metricfunc` or `mlfunc` is given
+  without it.
+- The functions are stored in the result, so `QQplot()` repeats the test with the same custom
+  model and metric.
+- Use `seed` in `CCI.test()` for reproducible results.
+
+```{r}
+QQplot(res_r2, nperm = 40, progress = FALSE)
+```

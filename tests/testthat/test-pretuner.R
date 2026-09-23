@@ -72,7 +72,7 @@ test_that("user given xgboost parameters reach the model in CCI.test", {
   used_eta <- NULL
   local_mocked_bindings(
     wrapper_xgboost = function(formula, data, train_indices, test_indices, metric,
-                               metricfunc = NULL, nrounds = 500, nthread = 1, subsample = 1, ...) {
+                               metricfunc = NULL, nrounds = 500, nthread = 1, MC_sample = 1, ...) {
       used_eta <<- c(used_eta, list(...)$eta)
       stats::runif(1)
     }
