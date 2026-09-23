@@ -19,7 +19,7 @@ library(dplyr)
 library(CIsimdata)
 # Testing of functions
 set.seed(123)
-data <- NormalData(300)
+data <- NormalData(100)
 
 # General test for CCI.test() with continous data
 # debug(CCI.test)

@@ -34,7 +34,7 @@ CCI.test(
   tune = FALSE,
   samples = 35,
   folds = 5,
-  tune_length = 10,
+  tune_length = NULL,
   k = 15,
   center = TRUE,
   scale = TRUE,
@@ -101,13 +101,13 @@ CCI.test(
 
 \item{tail}{Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using \code{metricfunc} or \code{mlfunc}. Default is NA.}
 
-\item{tune}{Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.}
+\item{tune}{Logical. If TRUE, hyperparameters for the specified machine learning method are tuned with \code{\link{CCI.pretuner}} before testing, and the best parameters are used in the test. Available for methods 'rf', 'xgboost' and 'svm'. Default is FALSE.}
 
 \item{samples}{Integer. Number of hyperparameter combinations used in tuning. Default is 35.}
 
 \item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 5.}
 
-\item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
+\item{tune_length}{Deprecated and ignored. Use \code{samples} to control the number of parameter combinations tried in tuning.}
 
 \item{k}{Integer. The number of nearest neighbors to use for KNN method. Default is 15.}
 

@@ -281,16 +281,13 @@ wrapper_ranger <- function(formula,
   if (!is.null(metricfunc)) {
     metric_value <- metricfunc(actual, predictions, ...)
   } else if (metric %in% c("Kappa")) {
-    if (nlevels(factor(actual)) > 2) {
-      pred_class <- apply(predictions, 1, which.max)
-      pred_class <- factor(pred_class, levels = 1:nlevels(factor(actual)), labels = levels(factor(actual)))
-      cm <- caret::confusionMatrix(pred_class, factor(actual))
-      metric_value <- cm$overall["Kappa"]
-    } else {
-      pred_class <- ifelse(predictions[, 2] > 0.5, 1, 0)
-      conf_matrix <- try(caret::confusionMatrix(factor(pred_class, levels = levels(factor(test_label))), factor(test_label)), silent = TRUE)
-      metric_value <- conf_matrix$overall["Kappa"]
-      }
+    # Probability columns are named by class, but not necessarily in the order of levels(factor(actual))
+    classes <- colnames(predictions)
+    if (is.null(classes)) classes <- as.character(model$forest$class.values)
+    lev <- union(levels(factor(actual)), classes)
+    pred_class <- factor(classes[max.col(predictions, ties.method = "first")], levels = lev)
+    cm <- caret::confusionMatrix(pred_class, factor(actual, levels = lev))
+    metric_value <- cm$overall["Kappa"]
     } else if (metric == "RMSE") {
       metric_value <- sqrt(mean((predictions - actual)^2))
     } else if (metric == "LogLoss") {

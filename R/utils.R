@@ -151,7 +151,8 @@ get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left
 #'
 #' @param tuned_model A model object returned from the CCI.pretuner function. This object contains the tuned parameters and other relevant information.
 #'
-#' @return A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost). Returns \code{NULL} for unsupported methods.
+#' @return A named list of tuned parameters specific to the model method (e.g., \code{mtry} for random forest, \code{eta}, \code{max_depth} for xgboost), named as the arguments of \code{\link{CCI.test}}. Returns \code{NULL} for unsupported methods.
+#' The xgboost row \code{subsample} is not returned, since \code{subsample} in \code{CCI.test} controls subsampling of the data.
 #' @export
 #'
 
@@ -166,14 +167,10 @@ get_tuned_params <- function(tuned_model) {
   } else if (tuned_model$method == 'xgboost') {
     return(list(eta = tuned_model$eta,
                 max_depth = tuned_model$max_depth,
-                subsample = tuned_model$subsample,
                 gamma = tuned_model$gamma,
                 colsample_bytree = tuned_model$colsample_bytree,
                 min_child_weight = tuned_model$min_child_weight,
                 nrounds = tuned_model$nrounds))
-  } else if (tuned_model$method == 'nnet') {
-    return(list(size = tuned_model$size,
-                decay = tuned_model$decay))
   } else if (tuned_model$method == 'svm') {
     return(list(gamma = tuned_model$sigma,
                 cost = tuned_model$C))

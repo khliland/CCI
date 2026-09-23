@@ -7,3 +7,6 @@ development
 ^Meta$
 ^\.positai$
 ^\.claude$
+^TODO\.md$
+^tests/testthat/dev\.R$
+^BUGFIXES\.md$

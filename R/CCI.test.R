@@ -28,9 +28,9 @@
 #' @param mlfunc Optional the user can pass a custom machine learning wrapper function to use instead of the predefined methods. Default is NULL.
 #' @param parametric Logical, indicating whether to compute a parametric p-value instead of the empirical p-value. A parametric p-value assumes that the null distribution is gaussian. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values, depending on the performance metric used. Only applicable if using `metricfunc` or `mlfunc`. Default is NA.
-#' @param tune Logical. If TRUE, the function will perform hyperparameter tuning for the specified machine learning method. Default is FALSE.
+#' @param tune Logical. If TRUE, hyperparameters for the specified machine learning method are tuned with \code{\link{CCI.pretuner}} before testing, and the best parameters are used in the test. Available for methods 'rf', 'xgboost' and 'svm'. Default is FALSE.
 #' @param folds Integer. The number of folds for cross-validation during the tuning process. Default is 5.
-#' @param tune_length Integer. The number of parameter combinations to try during the tuning process. Default is 10.
+#' @param tune_length Deprecated and ignored. Use `samples` to control the number of parameter combinations tried in tuning.
 #' @param k Integer. The number of nearest neighbors to use for KNN method. Default is 15.
 #' @param center Logical. If TRUE, the data will be centered before fitting the model
 #' @param scale Logical. If TRUE, the data will be scaled before fitting the model. Default is TRUE.
@@ -89,7 +89,7 @@ CCI.test <- function(formula = NULL,
                      tune = FALSE,
                      samples = 35,
                      folds = 5,
-                     tune_length = 10,
+                     tune_length = NULL,
                      k = 15,
                      center = TRUE,
                      scale = TRUE,
@@ -118,8 +118,11 @@ CCI.test <- function(formula = NULL,
     stop("Formula is missing")
   }
   
-  if (tune && (folds < 1 || tune_length < 1)) {
-    stop("folds and tune_length must be positive integers.")
+  if (tune && folds < 2) {
+    stop("folds must be an integer of at least 2.")
+  }
+  if (!is.null(tune_length)) {
+    warning("'tune_length' is deprecated and ignored. Use 'samples' to control the number of combinations tried.")
   }
   if (!is.null(mlfunc) && !is.null(metricfunc)) {
     stop("You can only use one of mlfunc or metricfunc.")
@@ -223,17 +226,29 @@ CCI.test <- function(formula = NULL,
     )
   }
   if (tune && is.null(mlfunc)) {
-
+    if (!method %in% c("rf", "xgboost", "svm")) {
+      stop("Tuning is only available for methods 'rf', 'xgboost' and 'svm'.")
+    }
+    # A custom metricfunc can not be tuned on directly, so fall back to the default metric for the response type
+    tune_metric <- if (metric %in% c("RMSE", "Kappa", "LogLoss")) {
+      metric
+    } else if (is.numeric(data[[all.vars(formula)[1]]])) {
+      "RMSE"
+    } else {
+      "Kappa"
+    }
+    # Polynomial and interaction terms are already added to data and formula
     best_params <- CCI.pretuner(formula = formula,
                                 data = data,
                                 method = method,
-                                subsample = subsample,
+                                metric = tune_metric,
                                 folds = folds,
-                                tune_length = tune_length,
                                 random_grid = random_grid,
-                                metric = metric,
                                 samples = samples,
-                                verbose = verbose)
+                                poly = FALSE,
+                                interaction = FALSE,
+                                verbose = verbose,
+                                progress = progress)
     params <- get_tuned_params(best_params$best_param)
     tune_warning <- best_params$warnings
   } else if (tune && !is.null(mlfunc)) {
@@ -256,7 +271,7 @@ CCI.test <- function(formula = NULL,
     method
   }
 
-  result <- perm.test(
+  perm_args <- list(
     formula = formula,
     data = data,
     p = p,
@@ -279,10 +294,11 @@ CCI.test <- function(formula = NULL,
     eps = eps,
     positive = positive,
     kernel = kernel,
-    distance = distance,
-    params,
-    ...
+    distance = distance
   )
+  # Model parameters (tuned or user given) must be passed as named arguments to reach the model
+  perm_args <- utils::modifyList(perm_args, params)
+  result <- do.call(perm.test, c(perm_args, list(...)))
   if (!is.null(metricfunc)) {
     result$metric <- deparse(substitute(metricfunc))
   }

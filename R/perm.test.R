@@ -116,9 +116,10 @@ perm.test <- function(formula,
                              ...)
 
 
-  if (metric %in% c("Kappa", "LogLoss")) {
+  # Under dependence the test statistic is better than the null: higher for Kappa, lower for RMSE and LogLoss
+  if (metric == "Kappa") {
     tail <- "right"
-  } else if (metric == "RMSE") {
+  } else if (metric %in% c("RMSE", "LogLoss")) {
     tail <- "left"
   } else if (is.na(tail)) {
     stop("Please specify the tail direction for the metric.")

@@ -13,107 +13,127 @@ CCI.pretuner(
   validation_method = "cv",
   folds = 4,
   training_share = 0.7,
-  tune_length = 4,
+  tune_length = NULL,
   random_grid = TRUE,
   samples = 35,
   poly = TRUE,
   degree = 3,
   interaction = TRUE,
-  verboseIter = FALSE,
+  verboseIter = NULL,
   include_explanatory = FALSE,
   verbose = FALSE,
-  parallel = FALSE,
-  mtry = 1:10,
-  nrounds = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
+  progress = TRUE,
+  parallel = NULL,
+  nthread = 1,
+  num_trees = 500,
+  mtry = NULL,
+  nrounds = seq(100, 1000, by = 100),
   eta = seq(0.01, 0.3, by = 0.05),
   max_depth = 2:6,
   gamma = c(0, 1, 2, 3),
   colsample_bytree = c(0.8, 0.9, 1),
   min_child_weight = c(1, 3),
-  subsample = 1,
+  subsample = NULL,
   sigma = seq(0.1, 2, by = 0.3),
   C = seq(0.1, 2, by = 0.5),
   ...
 )
 }
 \arguments{
-\item{formula}{Model formula specifying the relationship between dependent and independent variables.}
+\item{formula}{Model formula of the form \code{Y ~ X | Z1 + Z2} (or \code{Y ~ X + Z1 + Z2}).}
 
 \item{data}{A data frame containing the variables specified in the formula.}
 
-\item{method}{Character. Specifies the machine learning method to use. Supported methods are random forest "rf", extreme gradient boosting "xgboost" and Support Vector Machine "svm".}
+\item{method}{Character. The machine learning method to tune: random forest \code{"rf"}, extreme gradient boosting \code{"xgboost"} or Support Vector Machine \code{"svm"}. Default is \code{"rf"}.}
 
-\item{metric}{Character. The performance metric to optimize during tuning. Default is "RMSE".}
+\item{metric}{Character. The performance metric to optimize: \code{"RMSE"} (continuous outcome), \code{"Kappa"} or \code{"LogLoss"} (categorical outcome). Default is \code{"RMSE"}.}
 
-\item{validation_method}{Character. Specifies the resampling method. Default is "cv".}
+\item{validation_method}{Character. The resampling method. One of \code{"cv"} (k-fold cross-validation), \code{"LGOCV"} (leave-group-out / Monte Carlo cross-validation) or \code{"boot"} (bootstrap, evaluated on the out-of-bag observations). Default is \code{"cv"}.}
 
-\item{folds}{Integer. The number of folds for cross-validation during the tuning process. Default is 10.}
+\item{folds}{Integer. Number of folds (\code{"cv"}) or resamples (\code{"LGOCV"}, \code{"boot"}). Default is 4.}
 
-\item{training_share}{Numeric. For leave-group out cross-validation: the training percentage. Default is 0.7.}
+\item{training_share}{Numeric. Training share for \code{validation_method = "LGOCV"}. Default is 0.7.}
 
-\item{tune_length}{Integer. The number of parameter combinations to try during the tuning process. Default is 10.}
+\item{tune_length}{Deprecated and ignored. Use \code{samples} to control the number of parameter combinations tried.}
 
-\item{random_grid}{Logical. If TRUE, a random grid search is performed. If FALSE, a full grid search is performed. Default is TRUE.}
+\item{random_grid}{Logical. If TRUE, \code{samples} combinations are drawn at random from the full grid. If FALSE, the full grid is evaluated. Default is TRUE.}
 
-\item{samples}{Integer. The number of random samples to take from the grid. Default is 30.}
+\item{samples}{Integer. The number of random combinations to draw from the grid when \code{random_grid = TRUE}. Default is 35.}
 
-\item{poly}{Logical. If TRUE, polynomial terms of the conditional variables are included in the model. Default is TRUE.}
+\item{poly}{Logical. If TRUE, polynomial terms of the conditioning variables are added. Set to FALSE if \code{data} already contains them (as when called from \code{CCI.test}). Default is TRUE.}
 
-\item{degree}{Integer. The degree of polynomial terms to include if poly is TRUE. Default is 3.}
+\item{degree}{Integer. The degree of polynomial terms to include if \code{poly} is TRUE. Default is 3.}
 
-\item{interaction}{Logical. If TRUE, interaction terms of the conditional variables are included in the model. Default is TRUE.}
+\item{interaction}{Logical. If TRUE, pairwise interaction terms of the conditioning variables are added. Default is TRUE.}
 
-\item{verboseIter}{Logical. If TRUE, the function will print the tuning process. Default is FALSE.}
+\item{verboseIter}{Deprecated and ignored.}
 
-\item{include_explanatory}{Logical. If TRUE, given the condition Y \emph{||} X |  Z, the function will include explanatory variable X in the model for Y. Default is FALSE}
+\item{include_explanatory}{Logical. If TRUE, given the condition Y \emph{||} X | Z, the explanatory variable X is included when tuning the model for Y. Default is FALSE.}
 
-\item{verbose}{Logical. If TRUE, the function will print the tuning process. Default is FALSE..}
+\item{verbose}{Logical. If TRUE, prints details about the tuning process. Default is FALSE.}
 
-\item{parallel}{Logical. If TRUE, the function will use parallel processing. Default is TRUE.}
+\item{progress}{Logical. If TRUE, shows a progress bar. Default is TRUE.}
 
-\item{mtry}{Integer. The number of variables randomly sampled as candidates at each split for random forest. Default is 1:5.}
+\item{parallel}{Deprecated and ignored. Use \code{nthread} for multithreaded model fitting.}
 
-\item{nrounds}{Integer. The number of rounds (trees) for methods such as xgboost and random forest. Default is seq(50, 200, by = 25).}
+\item{nthread}{Integer. Number of threads used when fitting rf and xgboost models. Default is 1.}
 
-\item{eta}{Numeric. The learning rate for xgboost. Default is seq(0.01, 0.3, by = 0.05).}
+\item{num_trees}{Integer. Number of trees used when tuning random forest. Default is 500.}
 
-\item{max_depth}{Integer. The maximum depth of the tree for xgboost. Default is 1:6.}
+\item{mtry}{Integer vector. Candidate values for the number of variables sampled at each split in random forest. Default is \code{NULL}, which uses \code{1:min(p, max(5, ceiling(p / 2)))} where p is the number of predictors.}
 
-\item{gamma}{Numeric. The minimum loss reduction required to make a further partition on a leaf node for xgboost. Default is seq(0, 5, by = 1).}
+\item{nrounds}{Integer vector. Candidate numbers of boosting rounds for xgboost. Default is \code{seq(100, 1000, by = 100)}.}
 
-\item{colsample_bytree}{Numeric. The subsample ratio of columns when constructing each tree for xgboost. Default is seq(0.5, 1, by = 0.1).}
+\item{eta}{Numeric vector. Candidate learning rates for xgboost. Default is \code{seq(0.01, 0.3, by = 0.05)}.}
 
-\item{min_child_weight}{Integer. The minimum sum of instance weight (hessian) needed in a child for xgboost. Default is 1:5.}
+\item{max_depth}{Integer vector. Candidate maximum tree depths for xgboost. Default is \code{2:6}.}
 
-\item{subsample}{Numeric. The subsample ratio of the training. Default is 1.}
+\item{gamma}{Numeric vector. Candidate minimum loss reductions for xgboost. Default is \code{c(0, 1, 2, 3)}.}
 
-\item{sigma}{Numeric. The standard deviation of the Gaussian kernel for Gaussian Process Regression. Default is seq(0.1, 2, by = 0.3).}
+\item{colsample_bytree}{Numeric vector. Candidate column subsample ratios for xgboost. Default is \code{c(0.8, 0.9, 1)}.}
 
-\item{C}{Numeric. The regularization parameter for Support Vector Machine. Default is seq(0.1, 2, by = 0.5).}
+\item{min_child_weight}{Numeric vector. Candidate minimum child weights for xgboost. Default is \code{c(1, 3)}.}
 
-\item{...}{Additional arguments to pass to the \code{CCI.tuner} function.}
+\item{subsample}{Deprecated and ignored.}
+
+\item{sigma}{Numeric vector. Candidate RBF kernel widths for svm (passed as \code{gamma} to \code{e1071::svm}). Default is \code{seq(0.1, 2, by = 0.3)}.}
+
+\item{C}{Numeric vector. Candidate cost (regularization) values for svm (passed as \code{cost} to \code{e1071::svm}). Default is \code{seq(0.1, 2, by = 0.5)}.}
+
+\item{...}{Additional arguments passed to the model wrapper. A custom grid can be supplied as \code{tuneGrid}, a data frame with one column per parameter (\code{mtry} for rf; \code{nrounds}, \code{eta}, \code{max_depth}, \code{gamma}, \code{colsample_bytree}, \code{min_child_weight} for xgboost; \code{sigma}, \code{C} for svm).}
 }
 \value{
 A list containing:
 \itemize{
-\item \code{best_param}: A data frame with the best parameters.
-\item \code{tuning_result}: A data frame with all tested parameter combinations and their performance metrics.
-\item \code{warnings}: A character vector of warnings issued during tuning.
+\item \code{best_param}: A one-row data frame with the best parameters, their mean performance and its standard deviation across resamples, and the \code{method}.
+\item \code{tuning_result}: A data frame with all tested parameter combinations and their performance, best first.
+\item \code{warnings}: A character vector of warnings and errors issued during tuning.
 }
 }
 \description{
-The \code{CCI.tuner} function performs a grid search over parameters for a conditional independence test using machine learning model supported by CCI.test. The tuner use the caret package for tuning.
+The \code{CCI.pretuner} function performs a (random) grid search over hyperparameters for the
+machine learning models used by \code{\link{CCI.test}}. Each parameter combination is evaluated
+with the same model wrappers as used in \code{CCI.test} (\code{\link{wrapper_ranger}},
+\code{\link{wrapper_xgboost}} and \code{\link{wrapper_svm}}), and all combinations are evaluated
+on the same resampling splits, so differences in performance reflect the parameters and not the
+random splits.
+}
+\details{
+By default the model is tuned for predicting Y from the conditioning set Z only
+(\code{include_explanatory = FALSE}), i.e. under the null hypothesis.
 }
 \examples{
 set.seed(123)
 data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), y = rnorm(100))
 # Tune random forest parameters
 result <- CCI.pretuner(formula = y ~ x1 | x2 + x3,
-data = data,
-samples = 5,
-folds = 3,
-method = "rf")
+                       data = data,
+                       samples = 5,
+                       folds = 3,
+                       method = "rf",
+                       progress = FALSE)
+result$best_param
 }
 \seealso{
-\code{\link{CCI.test} \link{perm.test}}, \code{\link{print.summary.CCI}}, \code{\link{plot.CCI}}, \code{\link{QQplot}}
+\code{\link{CCI.test}}, \code{\link{get_tuned_params}}, \code{\link{perm.test}}
 }
