@@ -1,16 +1,30 @@
 #' Extreme Gradient Boosting wrapper for CCI
 #'
+#' Fits an xgboost model on the training rows and returns its performance on the test rows.
+#'
+#' The type of task is decided from the metric and the response: \code{"RMSE"} gives regression,
+#' \code{"Kappa"} and \code{"LogLoss"} give classification (binary or multiclass). With a custom
+#' \code{metricfunc}, a numeric response gives regression and a factor, character or logical
+#' response gives classification. Classes are encoded as 0..K-1 internally, so any class labels work.
+#'
+#' A custom \code{metricfunc} is called as \code{metricfunc(actual, predictions, ...)} (with the
+#' \code{...} arguments only if the function accepts them), where
+#' \code{actual} has the type of the response (numeric for regression, factor for classification) and
+#' \code{predictions} is a numeric vector for regression, the probability of the second class level for
+#' binary classification, and an n x K probability matrix with the class levels as column names for
+#' multiclass classification.
+#'
 #' @param formula Model formula
 #' @param data Data frame
 #' @param train_indices Indices for training data
-#' @param test_indices Indices for training data
+#' @param test_indices Indices for test data
 #' @param nrounds Number of boosting rounds
-#' @param metric Type of metric ("RMSE", "Kappa" or "Log Loss")
-#' @param metricfunc A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value
+#' @param metric Type of metric ("RMSE", "Kappa" or "LogLoss"), or the name of a custom metric when \code{metricfunc} is given
+#' @param metricfunc Optional user-defined function \code{function(actual, predictions, ...)} returning a numeric performance value. See Details.
 #' @param nthread Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.
 #' @param eps Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.
-#' @param subsample Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).
-#' @param ... Additional arguments passed to xgb.train
+#' @param subsample Not used by the model. Subsampling of the data is done in \code{\link{test.gen}} before the wrapper is called.
+#' @param ... Additional arguments passed to \code{xgb.train} as parameters (e.g. \code{eta}, \code{max_depth}, \code{objective}).
 #'
 #' @importFrom xgboost xgb.DMatrix xgb.train
 #' @importFrom stats model.matrix predict
@@ -32,196 +46,110 @@ wrapper_xgboost <- function(formula,
                             eps = 1e-15,
                             subsample = 1,
                             ...) {
-  
+
   independent <- all.vars(formula)[-1]
   dependent <- all.vars(formula)[1]
-  
-  # Keep original labels for metrics; but xgboost needs numeric labels
-  y_orig <- data[[dependent]]
-  
-  # If dependent is factor, encode to numeric 0..K-1 for xgboost
-  if (is.factor(data[[dependent]])) {
-    data[[dependent]] <- as.numeric(data[[dependent]]) - 1
-  }
-  
-  training <- data[train_indices, ]
-  testing  <- data[test_indices, ]
-  
-  if (any(sapply(training[independent], is.factor))) {
-    train_features <- stats::model.matrix(~ . - 1, data = training[independent])
-    test_features  <- stats::model.matrix(~ . - 1, data = testing[independent])
-  } else {
-    train_features <- as.matrix(training[independent])
-    test_features  <- as.matrix(testing[independent])
-  }
-  
-  train_label <- training[[dependent]]
-  test_label  <- testing[[dependent]]
-  
-  dtrain <- xgboost::xgb.DMatrix(data = train_features, label = as.numeric(train_label))
-  dtest  <- test_features
-  
-  # For classification metrics, we prefer to work with factor levels
-  # If original response was factor, preserve its level ordering
-  y_test_factor <- NULL
-  if (is.factor(y_orig)) {
-    y_test_factor <- factor(y_orig[test_indices], levels = levels(y_orig))
-  } else {
-    # numeric case: will treat as factor for multi-class logloss if needed
-    y_test_factor <- factor(test_label)
-  }
-  
-  # Determine data_type (minimal change: extend for LogLoss)
-  if (is.numeric(train_label) && length(unique(train_label)) > 2 && metric == "RMSE") {
-    data_type <- "continuous"
-  } else if (is.numeric(train_label) && length(unique(train_label)) == 2 && metric %in% c("Kappa", "LogLoss")) {
-    data_type <- "binary"
-  } else if (is.numeric(train_label) && length(unique(train_label)) == 2 && metric == "RMSE") {
-    data_type <- "continuous"
-  } else if (is.numeric(train_label) && length(unique(train_label)) > 2 && metric %in% c("Kappa", "LogLoss")) {
-    data_type <- "categorical"
+  y <- data[[dependent]]
+
+  # ---- Type of task ----
+  if (metric %in% c("Kappa", "LogLoss")) {
+    classification <- TRUE
   } else if (metric == "RMSE") {
+    classification <- FALSE
+  } else {
+    # Custom metric: decided by the type of the response
+    classification <- is.factor(y) || is.character(y) || is.logical(y)
+  }
+
+  if (classification) {
+    # Encode classes as 0..K-1, whatever the original labels are
+    y <- droplevels(factor(y))
+    lev <- levels(y)
+    num_class <- length(lev)
+    if (num_class < 2) stop("The response must have at least two classes for classification.")
+    if (num_class > 6) {
+      warning("More than 6 classes detected. Consider RMSE for continuous targets, or be cautious with classification metrics.")
+    }
+    label <- as.integer(y) - 1L
+    data_type <- if (num_class == 2) "binary" else "categorical"
+  } else {
+    if (!is.numeric(y)) stop("Metric '", metric, "' requires a numeric response.")
+    label <- as.numeric(y)
     data_type <- "continuous"
-  } else if (is.numeric(train_label) && length(unique(train_label)) == 1) {
-    data_type <- "categorical"
-  } else if (length(unique(train_label)) > 6 && metric %in% c("Kappa", "LogLoss")) {
-    data_type <- "categorical"
-    warning("More than 6 classes detected. Consider RMSE for continuous targets, or be cautious with classification metrics.")
-  } else {
-    data_type <- "categorical"
   }
-  
-  
-  if (data_type == "categorical") {
-    num_class <- length(unique(data[[dependent]]))
+
+  # ---- Features: one design matrix, so train and test get the same columns ----
+  X <- data[independent]
+  if (all(vapply(X, is.numeric, logical(1)))) {
+    features <- as.matrix(X)
   } else {
-    num_class <- NULL
+    features <- stats::model.matrix(~ . - 1, data = X)
   }
-  dots <- list(...)
-  
-  
-  if (!"objective" %in% names(args)) {
-    params <- list(
-      objective = switch(data_type,
-                         continuous   = "reg:squarederror",
-                         binary       = "binary:logistic",
-                         categorical  = "multi:softprob"),
-      eval_metric = switch(data_type,
-                           continuous   = "rmse",
-                           binary       = "error",
-                           categorical  = "merror"),
-      nthread   = nthread
-    )
-  } else {
-    params <- list(
-      objective = args$objective,
-      eval_metric = switch(data_type,
-                           continuous   = "rmse",
-                           binary       = "error",
-                           categorical  = "merror"),
-      nthread   = nthread,
-      subsample = subsample
-      )
-  }
-  
-  
-  params <- utils::modifyList(params, dots)
-  params <- utils::modifyList(params, list(num_class = num_class))
-  params <- params[!sapply(params, is.null)]
-  
-  model <- xgboost::xgb.train(
-    data      = dtrain,
-    params    = params,
-    nrounds   = nrounds,
-    verbose   = 0
+
+  dtrain <- xgboost::xgb.DMatrix(data = features[train_indices, , drop = FALSE], label = label[train_indices])
+  test_features <- features[test_indices, , drop = FALSE]
+
+  # ---- Fit ----
+  params <- list(
+    objective = switch(data_type,
+                       continuous  = "reg:squarederror",
+                       binary      = "binary:logistic",
+                       categorical = "multi:softprob"),
+    eval_metric = switch(data_type,
+                         continuous  = "rmse",
+                         binary      = "error",
+                         categorical = "merror"),
+    nthread = nthread
   )
-  
-  predictions <- stats::predict(model, newdata = dtest)
-  
-  # Remove non-finite entries safely
-  # (predictions may be vector; actual may be matrix)
-  eps_bad <- !is.finite(predictions)
-  if (any(eps_bad)) predictions <- predictions[!eps_bad]
-  
-  if (!is.null(metricfunc)) {
-    metric_value <- metricfunc(y_test_factor, predictions, ...)
-    return(metric_value)
+  params <- utils::modifyList(params, list(...))
+  if (data_type == "categorical") params$num_class <- num_class
+  params <- params[!vapply(params, is.null, logical(1))]
+
+  model <- xgboost::xgb.train(
+    data    = dtrain,
+    params  = params,
+    nrounds = nrounds,
+    verbose = 0
+  )
+  predictions <- stats::predict(model, newdata = test_features)
+
+  # ---- Evaluate ----
+  if (data_type == "continuous") {
+    actual <- label[test_indices]
+    keep <- is.finite(predictions) & is.finite(actual)
+    predictions <- predictions[keep]
+    actual <- actual[keep]
+    if (!is.null(metricfunc)) return(call_metricfunc(metricfunc, actual, predictions, ...))
+    return(sqrt(mean((predictions - actual)^2)))
   }
-  
-  # --- Metrics ---
-  if (params$objective %in% c("reg:squarederror", "reg:squaredlogerror", "reg:pseudohubererror")) {
-    
-    actual <- as.numeric(test_label)
-    metric_value <- sqrt(mean((predictions - actual)^2))
-    
-  } else if (params$objective %in% "binary:logistic") {
-    
-    if (metric == "LogLoss") {
-      # Binary log loss
-      eps <- eps
-      p <- pmin(pmax(as.numeric(predictions), eps), 1 - eps)
-      
-      # Need y in {0,1} with 1 as "positive"
-      # If original was factor, treat 2nd level as positive by convention
-      if (!is.null(y_test_factor) && nlevels(y_test_factor) == 2) {
-        pos <- levels(y_test_factor)[2]
-        y01 <- as.integer(y_test_factor == pos)
-      } else {
-        y01 <- as.integer(test_label == 1)
-      }
-      
-      metric_value <- -mean(y01 * log(p) + (1 - y01) * log(1 - p))
-      
-    } else {
-      # Kappa (your existing behavior)
-      pred_class <- ifelse(predictions > 0.5, 1, 0)
-      conf_matrix <- try(
-        caret::confusionMatrix(
-          factor(pred_class, levels = levels(factor(test_label))),
-          factor(test_label)
-        ),
-        silent = TRUE
-      )
-      metric_value <- conf_matrix$overall[2]
-    }
-    
-  } else if (params$objective %in% "multi:softprob") {
-    
-    # reshape to n x K
-    P <- matrix(predictions, ncol = num_class, byrow = TRUE)
-    
-    if (metric == "LogLoss") {
-      # Multiclass log loss: -log p_true
-      eps <- 1e-15
-      P <- pmax(P, eps)
-      
-      # True class indices must be 1..K
-      # test_label is 0..K-1
-      true_idx <- as.integer(test_label) + 1L
-      
-      p_true <- P[cbind(seq_along(true_idx), true_idx)]
-      metric_value <- -mean(log(p_true))
-      
-    } else {
-      # Kappa (your existing behavior)
-      lev <- levels(factor(train_label))
-      pred_class <- max.col(P) - 1
-      conf_matrix <- try(
-        caret::confusionMatrix(
-          factor(pred_class, levels = lev),
-          factor(test_label, levels = lev)
-        ),
-        silent = TRUE
-      )
-      metric_value <- conf_matrix$overall[2]
-    }
-    
+
+  actual <- y[test_indices]
+  if (data_type == "binary") {
+    # Probability of the second class level
+    P <- as.numeric(predictions)
+    P <- cbind(1 - P, P)
   } else {
-    stop("Objective function for XGBoost is not supported")
+    P <- if (is.matrix(predictions)) predictions else matrix(predictions, ncol = num_class, byrow = TRUE)
   }
-  
-  return(metric_value)
+  colnames(P) <- lev
+
+  if (!is.null(metricfunc)) {
+    pred_out <- if (data_type == "binary") P[, 2] else P
+    return(call_metricfunc(metricfunc, actual, pred_out, ...))
+  }
+
+  if (metric == "LogLoss") {
+    P <- pmin(pmax(P, eps), 1 - eps)
+    p_true <- P[cbind(seq_along(actual), as.integer(actual))]
+    return(-mean(log(p_true)))
+  }
+
+  # Kappa
+  pred_class <- factor(lev[max.col(P, ties.method = "first")], levels = lev)
+  cm <- caret::confusionMatrix(pred_class, actual)
+  unname(cm$overall["Kappa"])
 }
+
 
 
 #' Random Forest wrapper for CCI

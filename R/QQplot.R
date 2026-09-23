@@ -108,9 +108,25 @@ QQplot <- function(object,
                           progress = progress,
                           ...)
 
+  # Remove failed model fits once here, so get_pvalues() does not warn for every test statistic
+  null_dist <- unlist(null_dist)
+  if (anyNA(null_dist)) {
+    warning(sum(is.na(null_dist)), " of ", length(null_dist), " values in the null distribution are missing ",
+            "(failed model fits) and were removed.", call. = FALSE)
+    null_dist <- null_dist[!is.na(null_dist)]
+  }
   test_stats <- unlist(test_result$distribution)
+  if (all(is.na(test_stats))) {
+    stop("All ", length(test_stats), " model fits for the test statistics failed, so there are no p-values to plot.",
+         call. = FALSE)
+  }
+  if (anyNA(test_stats)) {
+    warning(sum(is.na(test_stats)), " of ", length(test_stats), " test statistics are missing ",
+            "(failed model fits) and were left out of the plot.", call. = FALSE)
+    test_stats <- test_stats[!is.na(test_stats)]
+  }
   p_values <- data.frame(sapply(test_stats, function(stat) {
-    get_pvalues(unlist(null_dist), stat, parametric = parametric, tail = tail)
+    get_pvalues(null_dist, stat, parametric = parametric, tail = tail)
   }))
   colnames(p_values) <- c("pvalues")
   pvalues <- NULL # Dummy to avoid 'globals' warning in package test.

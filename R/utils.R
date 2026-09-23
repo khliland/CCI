@@ -107,6 +107,11 @@ unclean_formula <- function(f) {
 #' @param parametric Logical. If TRUE, calculates parametric p-values assuming the null distribution is normal. If FALSE, calculates empirical p-values. Default is FALSE.
 #' @param tail Character. Specifies whether to calculate left-tailed or right-tailed p-values. Must be either "left" or "right". Default is "left".
 #'
+#' @details Missing values (\code{NA}/\code{NaN}) in \code{dist}, typically from model fits that failed
+#' during the permutations, are removed with a warning, and the p-value is computed from the remaining
+#' values. If the test statistic is missing, or fewer than two valid null values remain, \code{NA} is
+#' returned with a warning.
+#'
 #' @importFrom stats pnorm sd
 #' @return Numeric. The calculated p-value.
 #' @export
@@ -119,14 +124,31 @@ unclean_formula <- function(f) {
 #' print(p_value)
 
 get_pvalues <- function(dist, test_statistic, parametric = FALSE, tail = c("left", "right")) {
+  tail <- match.arg(tail)  # Ensure tail is either "left" or "right"
   dist <- as.numeric(dist)
   test_statistic <- as.numeric(test_statistic)
+
+  if (length(test_statistic) != 1L || is.na(test_statistic)) {
+    warning("The test statistic is missing (the model fit failed), so the p-value is NA.", call. = FALSE)
+    return(NA_real_)
+  }
+  n_missing <- sum(is.na(dist))
+  if (n_missing > 0) {
+    dist <- dist[!is.na(dist)]
+    warning(n_missing, " of ", n_missing + length(dist), " values in the null distribution are missing ",
+            "(failed model fits) and were removed. The p-value is based on the remaining ", length(dist), ".",
+            call. = FALSE)
+  }
+  if (length(dist) < 2L) {
+    warning("Fewer than two valid values in the null distribution, so the p-value is NA.", call. = FALSE)
+    return(NA_real_)
+  }
+
   null_mean <- mean(dist)
   null_sd <- stats::sd(dist)
   if (parametric && null_sd == 0) {
     stop("Cannot compute parametric p-value: null distribution has zero standard deviation.")
   }
-  tail <- match.arg(tail)  # Ensure tail is either "left" or "right"
 
   pvalue <- if (parametric == FALSE) {
     if (tail == "left") {
@@ -478,4 +500,23 @@ permute_within_strata <- function(x, strata, seed = NULL,
   }
   
   out
+}
+
+#' Call a user-supplied metric function
+#'
+#' Additional arguments (e.g. model parameters passed through \code{...}) are only passed on when
+#' \code{metricfunc} accepts \code{...}, so a metric defined as \code{function(actual, predictions)} also works.
+#'
+#' @param metricfunc The user's metric function.
+#' @param actual Observed values of the test set.
+#' @param predictions Predictions for the test set.
+#' @param ... Additional arguments.
+#' @return The value returned by \code{metricfunc}.
+#' @noRd
+call_metricfunc <- function(metricfunc, actual, predictions, ...) {
+  if ("..." %in% names(formals(metricfunc))) {
+    metricfunc(actual, predictions, ...)
+  } else {
+    metricfunc(actual, predictions)
+  }
 }

@@ -26,6 +26,12 @@ Numeric. The calculated p-value.
 \description{
 This function calculates p-values based on the comparison of a test statistic against a null distribution. It can perform either empirical or parametric p-value calculations and supports both left-tailed and right-tailed tests.
 }
+\details{
+Missing values (\code{NA}/\code{NaN}) in \code{dist}, typically from model fits that failed
+during the permutations, are removed with a warning, and the p-value is computed from the remaining
+values. If the test statistic is missing, or fewer than two valid null values remain, \code{NA} is
+returned with a warning.
+}
 \examples{
 set.seed(123)
 null_dist <- rnorm(1000)

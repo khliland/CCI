@@ -25,25 +25,38 @@ wrapper_xgboost(
 
 \item{train_indices}{Indices for training data}
 
-\item{test_indices}{Indices for training data}
+\item{test_indices}{Indices for test data}
 
-\item{metric}{Type of metric ("RMSE", "Kappa" or "Log Loss")}
+\item{metric}{Type of metric ("RMSE", "Kappa" or "LogLoss"), or the name of a custom metric when \code{metricfunc} is given}
 
 \item{nrounds}{Number of boosting rounds}
 
-\item{metricfunc}{A user specific metric function which have the arguments data, model test_indices and test_matrix and returns a numeric value}
+\item{metricfunc}{Optional user-defined function \code{function(actual, predictions, ...)} returning a numeric performance value. See Details.}
 
 \item{nthread}{Integer. Number of threads to use for parallel computation during model training in XGBoost. Default is 1.}
 
 \item{eps}{Small value to avoid log(0) in LogLoss calculations. Default is 1e-15.}
 
-\item{subsample}{Numeric. The proportion of the data to be used for subsampling. Default is 1 (no subsampling).}
+\item{subsample}{Not used by the model. Subsampling of the data is done in \code{\link{test.gen}} before the wrapper is called.}
 
-\item{...}{Additional arguments passed to xgb.train}
+\item{...}{Additional arguments passed to \code{xgb.train} as parameters (e.g. \code{eta}, \code{max_depth}, \code{objective}).}
 }
 \value{
 Performance metric
 }
 \description{
-Extreme Gradient Boosting wrapper for CCI
+Fits an xgboost model on the training rows and returns its performance on the test rows.
+}
+\details{
+The type of task is decided from the metric and the response: \code{"RMSE"} gives regression,
+\code{"Kappa"} and \code{"LogLoss"} give classification (binary or multiclass). With a custom
+\code{metricfunc}, a numeric response gives regression and a factor, character or logical
+response gives classification. Classes are encoded as 0..K-1 internally, so any class labels work.
+
+A custom \code{metricfunc} is called as \code{metricfunc(actual, predictions, ...)} (with the
+\code{...} arguments only if the function accepts them), where
+\code{actual} has the type of the response (numeric for regression, factor for classification) and
+\code{predictions} is a numeric vector for regression, the probability of the second class level for
+binary classification, and an n x K probability matrix with the class levels as column names for
+multiclass classification.
 }

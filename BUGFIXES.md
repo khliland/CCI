@@ -88,7 +88,61 @@ Tuned values now override the defaults, for example `nrounds`.
 
 **Tests:** "LogLoss uses the left tail, so dependence gives a small p-value" and "metrics get the correct tail direction" in `tests/testthat/test-perm-test.R`.
 
+## 7. One failed model fit made the p-value NA
+
+**Files:** `R/utils.R`, `R/QQplot.R`
+
+**Symptom:** If a single permutation failed, `CCI.test` reported `P-value: NA`. In a run with 50 permutations where a model failed in 9 of them, the whole test was lost. `QQplot` returned a normal-looking but empty plot when every fit failed (e.g. KNN, see the known issues).
+
+**Cause:** `test.gen` turns an error in an iteration into a warning and `NA`, so the rest of the loop continues. `get_pvalues` then used `sum(dist <= test_statistic)` and `mean(dist)` without removing `NA`s, so one `NA` made the p-value `NA`.
+
+**Fix:** `get_pvalues` removes missing values from the null distribution with one warning ("9 of 50 values in the null distribution are missing (failed model fits) and were removed. The p-value is based on the remaining 41."). It returns `NA` with a warning when the test statistic is missing or fewer than two valid null values remain. `QQplot` removes missing values once (so the warning is not repeated `nperm` times) and stops with an informative error if all test statistics are missing. Results without missing values are unchanged.
+
+**Result:** The run above now gives p = 0.048 (1/42, the smallest possible with 41 valid null values) instead of `NA`.
+
+**Tests:** `tests/testthat/test-pvalues.R`.
+
+## 8. `wrapper_xgboost` bugs
+
+**File:** `R/wrappers.R` (the function was rewritten; binary and continuous results are identical to before, checked on the same splits).
+
+### 8a. Multiclass predictions were scrambled with xgboost 3.x
+
+**Symptom:** For outcomes with three or more classes (Kappa or LogLoss), the model predicted at chance level. On a 3-class example, accuracy dropped from 0.57 to 0.33, and LogLoss was 2.60, worse than uniform guessing (log 3 = 1.10). The test therefore had almost no power for multiclass outcomes.
+
+**Cause:** Since xgboost 3.x, `predict()` returns an n x K probability matrix for `multi:softprob`. The wrapper reshaped it with `matrix(predictions, ncol = num_class, byrow = TRUE)`, which assumes the older flat vector and mixes up rows and classes (rows no longer sum to 1).
+
+**Fix:** The matrix is used as returned. A flat vector (older xgboost) is still reshaped.
+
+**Impact:** Multiclass xgboost results computed with xgboost 3.x should be recomputed. Results computed with older xgboost versions were correct.
+
+### 8b. Custom `metricfunc` failed for continuous outcomes
+
+**Symptom:** `CCI.test(..., method = "xgboost", metricfunc = R2)` with a continuous Y gave `P-value: NA`; every model fit failed.
+
+**Cause:** The type of task was decided from `metric`. With a custom metric, `metric` is the function name (e.g. `"R2"`), which fell through to the catch-all "categorical" branch. A continuous Y was fitted as a multiclass problem with one class per unique value, and the metric function got the actual values as a factor.
+
+**Fix:** RMSE gives regression; Kappa and LogLoss give classification. For a custom metric, a numeric response gives regression and a factor, character or logical response gives classification. The metric function gets numeric actual values and predictions for regression. For classification it gets a factor, plus the probability of the second class (binary) or an n x K probability matrix with class names (multiclass).
+
+### 8c. Numeric class labels had to be coded 0..K-1
+
+**Symptom:** A numeric response coded 1/2 or 1/2/3 with `metric = "Kappa"` gave `P-value: NA`; xgboost stopped with "base_score must be in (0,1)" or an invalid label error.
+
+**Cause:** Numeric labels were passed to xgboost unchanged. Only factors were converted to 0..K-1.
+
+**Fix:** For classification, the response is always converted to a factor and encoded as 0..K-1. Predicted classes are mapped back to the original labels.
+
+### 8d. Smaller fixes
+
+- The design matrix was built separately for the training and test rows, so a factor level missing in one of them gave mismatched columns. It is now built once and split. Character predictors are also one-hot encoded.
+- Non-finite predictions were removed without removing the matching actual values. Both are now removed.
+- The custom-objective branch checked `names(args)`, but `args` was never defined (it resolved to `base::args`), so the branch was dead. A custom `objective` passed through `...` still works through `modifyList`.
+- A `metricfunc` without a `...` argument failed because model parameters (e.g. `eta`) were passed to it. The new internal helper `call_metricfunc()` only passes them when the function accepts `...`.
+
+**Tests:** `tests/testthat/test-wrapper-xgboost.R`.
+
 ## Known, not yet fixed
 
 - `wrapper_ranger` does not pass `...` to `ranger()` for RMSE, so extra ranger arguments are ignored for continuous outcomes.
-- `wrapper_xgboost` only uses `subsample` when a custom `objective` is supplied.
+- `wrapper_xgboost` does not use xgboost's own row `subsample`; the name is taken by the data subsampling in `CCI.test`.
+- Only `wrapper_xgboost` uses `call_metricfunc()`; the other wrappers still pass `...` to `metricfunc` unconditionally, and `wrapper_knn` stops for any custom metric.

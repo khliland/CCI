@@ -10,4 +10,17 @@
 - [ ] 4. Code improvements
   - [x] `perm.test` used `tail = "right"` for LogLoss; now `"left"` (see BUGFIXES.md #6)
   - `wrapper_ranger` drops `...` for RMSE, so extra ranger arguments are ignored for continuous outcomes
-  - `wrapper_xgboost` uses `subsample` only when a custom `objective` is given
+  - [x] `wrapper_xgboost` dead `args` branch removed (BUGFIXES.md #8d); xgboost row `subsample` still not available
+  - Package audit 2026-09-23 (all confirmed by running code):
+    - [x] One failed iteration makes the p-value NA (`get_pvalues` has no NA handling), see BUGFIXES.md #7
+    - [x] `wrapper_xgboost` gives `metricfunc` the actual values as a factor even for continuous Y, so the p-value is NA (BUGFIXES.md #8b)
+    - [x] `wrapper_xgboost` fails for numeric class labels not coded 0..K-1 (e.g. 1/2), so the p-value is NA (BUGFIXES.md #8c)
+    - [x] `wrapper_xgboost` scrambled multiclass predictions with xgboost 3.x (BUGFIXES.md #8a)
+    - [ ] Other wrappers: use `call_metricfunc()`; `wrapper_knn` stops for any custom metric
+    - [ ] `QQplot`: `additional_args` passed unnamed (xgboost params lost); the CCI object lacks k, center, scale, mtry, nthread, metricfunc, mlfunc, eps, kernel, distance, so KNN and custom metrics give all-NA p-values
+    - [ ] `CCI.direction` compares raw RMSE of Y and X (scale dependent: Y*100 flips the choice); uses caret rf/svmRadial (randomForest/kernlab not deps); summary shows the original formula, not the chosen direction
+    - [ ] No `print.CCI` method: printing a result shows an almost empty htest print
+    - [ ] `robust` docs say "all Z categorical", code uses "any"
+    - [ ] `poly` is turned off for all Z if any Z is a factor
+    - [ ] `plot.CCI` y-axis says "Freq." but shows density
+    - [ ] `development/TODO.txt` has an unresolved merge-conflict marker
