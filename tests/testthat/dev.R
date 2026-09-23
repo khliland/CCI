@@ -29,7 +29,6 @@ QQplot(res)
 res <- CCI.test(Y ~ X | Z1, nperm = 500, data = data, verbose = TRUE, seed = 1) # Basic case
 QQplot(res)
 
-
 res <- CCI.test(Y ~ X | Z1, data = data, method = "xgboost", seed = 1) # Basic case
 summary(res)
 plot(res)
@@ -119,6 +118,7 @@ summary(CCI.test(Y ~ X | Z1 + Z2,
                  data = data, 
                  method = 'rf',
                  tune = TRUE))
+
 summary(CCI.test(Y ~ X | Z1 + Z2, 
                  data = data, 
                  method = 'xgboost',
@@ -158,8 +158,6 @@ QQplot(result)
 set.seed(1985)
 data <- NormalData(80)
 CCI_obj <- CCI.test(formula = Y ~ X | Z1 + Z2, data = data, nperm = 200, parametric = T)
-debug(test.gen)
-QQplot(CCI_obj) 
 # Testing a false Null
 CCI_obj <- CCI.test(formula = Y ~ X | Z2, data = data, nperm = 200, parametric = T)
 QQplot(CCI_obj) 

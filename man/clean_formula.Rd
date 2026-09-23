@@ -7,7 +7,7 @@
 clean_formula(formula)
 }
 \arguments{
-\item{formula}{Formula. The model formula that specifies the relationship between the dependent and independent variables, and potentially the conditioning variables. The formula is expected to follow the format \code{Y ~ X + Z1 + Z2} or \code{Y ~ X | Z1 + Z2}.}
+\item{formula}{Formula. The model formula that specifies the relationship between the dependent and independent variables, and potentially the conditioning variables. The formula is expected to follow the format \code{Y ~ X + Z1 + Z2} or \code{Y ~ X | Z1 + Z2}, or \code{Y ~ X | 1} or \code{Y ~ X + 1} for an unconditional test.}
 }
 \value{
 A reformatted formula in the correct format for conditional independence testing. The returned formula will either retain the original format or be transformed to include conditioning variables.
@@ -16,7 +16,13 @@ A reformatted formula in the correct format for conditional independence testing
 This function processes and reformats  formula string to ensure it is in the correct format for conditional independence testing.
 The function checks if the formula uses the '+' operator for additive models and transforms it into a format that includes a conditioning variable separated by '|'.
 }
+\details{
+For an unconditional test of Y \emph{||} X (no conditioning variables), the formula must be written
+\code{Y ~ X | 1} or \code{Y ~ X + 1}; both are returned as \code{Y ~ X | 1}. A formula without
+conditioning variables and without the explicit \code{1}, such as \code{Y ~ X}, gives an error.
+}
 \examples{
 clean_formula(y ~ x | z + v)
 clean_formula(y ~ x + z + v)
+clean_formula(y ~ x + 1) # unconditional test
 }

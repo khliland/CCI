@@ -177,9 +177,6 @@ CCI.pretuner <- function(formula,
   }
   formula <- stats::as.formula(paste(outcome, "~", paste(rhs, collapse = " + ")))
   check_formula(formula, data)
-  if (verbose) {
-    cat("Tuning with formula:", paste(deparse(formula), collapse = " "), "\n")
-  }
 
   # ---- Parameter grid ----
   dots <- list(...)

@@ -3,7 +3,7 @@
 #' The `CCI.test` function performs a conditional independence test using a specified machine learning model or a custom model provided by the user. It calculates the test statistic, generates a null distribution via permutations, computes p-values, and optionally generates a plot of the null distribution with the observed test statistic.
 #' The 'CCI.test' function serves as a wrapper around the 'perm.test' function
 #'
-#' @param formula Model formula specifying the relationship between dependent and independent variables. (Ex: Y ~ X | Z1 + Z2 for Y _||_ X | Z1, Z2)  
+#' @param formula Model formula specifying the relationship between dependent and independent variables. (Ex: Y ~ X | Z1 + Z2 for Y _||_ X | Z1, Z2). For an unconditional test of Y _||_ X, write Y ~ X | 1 or Y ~ X + 1; Y ~ X alone gives an error.
 #' @param data A data frame containing the variables specified in the formula.
 #' @param p Numeric. Proportion of data used for training the model. Default is 0.5.
 #' @param nperm Integer. The number of permutations to perform. Default is 60.
@@ -182,11 +182,6 @@ CCI.test <- function(formula = NULL,
   check_formula(formula, data)
   
   formula <- clean_formula(formula)
-  
-  
-  if (verbose) {
-    cat("Using formula: ", deparse(formula), "\n")
-  }
 
   if (!is.null(metricfunc)) {
     metric <- deparse(substitute(metricfunc))
@@ -247,6 +242,8 @@ CCI.test <- function(formula = NULL,
                                 samples = samples,
                                 poly = FALSE,
                                 interaction = FALSE,
+                                # Unconditional test: nothing to tune on without X
+                                include_explanatory = is.null(Z),
                                 verbose = verbose,
                                 progress = progress)
     params <- get_tuned_params(best_params$best_param)

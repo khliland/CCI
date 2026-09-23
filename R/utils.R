@@ -28,7 +28,11 @@ check_formula <- function(formula, data) {
 #' This function processes and reformats  formula string to ensure it is in the correct format for conditional independence testing.
 #' The function checks if the formula uses the '+' operator for additive models and transforms it into a format that includes a conditioning variable separated by '|'.
 #'
-#' @param formula Formula. The model formula that specifies the relationship between the dependent and independent variables, and potentially the conditioning variables. The formula is expected to follow the format `Y ~ X + Z1 + Z2` or `Y ~ X | Z1 + Z2`.
+#' For an unconditional test of Y _||_ X (no conditioning variables), the formula must be written
+#' \code{Y ~ X | 1} or \code{Y ~ X + 1}; both are returned as \code{Y ~ X | 1}. A formula without
+#' conditioning variables and without the explicit \code{1}, such as \code{Y ~ X}, gives an error.
+#'
+#' @param formula Formula. The model formula that specifies the relationship between the dependent and independent variables, and potentially the conditioning variables. The formula is expected to follow the format `Y ~ X + Z1 + Z2` or `Y ~ X | Z1 + Z2`, or `Y ~ X | 1` or `Y ~ X + 1` for an unconditional test.
 #'
 #' @return A reformatted formula in the correct format for conditional independence testing. The returned formula will either retain the original format or be transformed to include conditioning variables.
 #'
@@ -37,27 +41,48 @@ check_formula <- function(formula, data) {
 #' @examples
 #' clean_formula(y ~ x | z + v)
 #' clean_formula(y ~ x + z + v)
+#' clean_formula(y ~ x + 1) # unconditional test
 
 
 clean_formula <- function(formula) {
-  
-  # If already conditional, return as is
+  unconditional_msg <- paste("Formula must be 'Y ~ X | Z' or 'Y ~ X + Z1 + ...' for conditional testing,",
+                             "or 'Y ~ X | 1' or 'Y ~ X + 1' for unconditional testing.")
+
+  # Already conditional: check that the conditioning part is variables or 1
   if ("|" %in% all.names(formula)) {
+    rhs <- formula[[3]]
+    if (!identical(rhs[[1]], as.name("|")) || length(all.vars(rhs[[2]])) == 0 ||
+        (length(all.vars(rhs[[3]])) == 0 && !has_explicit_one(rhs[[3]]))) {
+      stop(unconditional_msg, call. = FALSE)
+    }
     return(formula)
   }
-  
+
   terms_rhs <- attr(stats::terms(formula), "term.labels")
-  
-  if (length(terms_rhs) < 2) {
-    stop("Formula must be either 'Y ~ X | Z' or 'Y ~ X + Z1 + ...'.",
-         call. = FALSE)
+  response <- paste(deparse(formula[[2]]), collapse = " ")
+
+  if (length(terms_rhs) == 1 && has_explicit_one(formula[[3]])) {
+    return(as.formula(paste(response, "~", terms_rhs, "| 1")))
   }
-  
-  response <- deparse(formula[[2]])
+  if (length(terms_rhs) < 2) {
+    stop(unconditional_msg, call. = FALSE)
+  }
+
   X <- terms_rhs[1]
   Z <- paste(terms_rhs[-1], collapse = " + ")
-  
+
   as.formula(paste(response, "~", X, "|", Z))
+}
+
+#' Check whether an expression contains the constant 1 (as in Y ~ X + 1 or Y ~ X | 1)
+#'
+#' @param expr An expression (part of a formula).
+#' @return Logical scalar.
+#' @noRd
+has_explicit_one <- function(expr) {
+  if (is.numeric(expr)) return(length(expr) == 1 && expr == 1)
+  if (is.call(expr)) return(any(vapply(as.list(expr)[-1], has_explicit_one, logical(1))))
+  FALSE
 }
 
 #' Convert CI-style formula Y ~ X | Z into regression-style Y ~ X + Z
@@ -234,7 +259,7 @@ get_tuned_params <- function(tuned_model) {
 #' print(poly_terms$new_terms)
 
 add_poly_terms <- function(data, Z, degree = 3, poly = TRUE) {
-  if (!poly || degree <= 1) {
+  if (!poly || degree <= 1 || length(Z) == 0) {
     return(list(data = data, new_terms = character(0), poly = FALSE))
   }
 
@@ -364,8 +389,9 @@ build_formula <- function(formula, poly_terms = NULL, interaction_terms = NULL) 
   X <- all.vars(formula[[3]][[2]])  # e.g., x1 in x1 | z1 + z2
   Z <- all.vars(formula[[3]][[3]])  # conditioning variables
 
-  # Combine all RHS terms
+  # Combine all RHS terms. Without conditioning variables, keep the explicit 1 (unconditional test)
   rhs_vars <- unique(c(X, Z, poly_terms, interaction_terms))
+  if (length(rhs_vars) == 1) rhs_vars <- c(rhs_vars, "1")
   formula_string <- paste(Y, "~", paste(rhs_vars, collapse = " + "))
 
   return(as.formula(formula_string))

@@ -51,7 +51,7 @@ CCI.test(
 )
 }
 \arguments{
-\item{formula}{Model formula specifying the relationship between dependent and independent variables. (Ex: Y ~ X | Z1 + Z2 for Y \emph{||} X | Z1, Z2)}
+\item{formula}{Model formula specifying the relationship between dependent and independent variables. (Ex: Y ~ X | Z1 + Z2 for Y \emph{||} X | Z1, Z2). For an unconditional test of Y \emph{||} X, write Y ~ X | 1 or Y ~ X + 1; Y ~ X alone gives an error.}
 
 \item{data}{A data frame containing the variables specified in the formula.}
 

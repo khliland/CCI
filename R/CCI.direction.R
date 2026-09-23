@@ -48,13 +48,9 @@ CCI.direction <- function(formula,
    cat("Deciding best direction, Y ~ X | Z or X ~ Y | Z...\n")
   }
 
-  formula <- as.formula(formula)
+  formula <- clean_formula(as.formula(formula))
   outcome_var <- all.vars(formula[[2]])
   rhs_vars <- all.vars(formula[[3]])
-
-  if (length(rhs_vars) < 2) {
-    stop("Formula must have at least two variables on the right-hand side (X and Z).")
-  }
 
   X_var <- rhs_vars[1]
   Z_vars <- rhs_vars[-1]
@@ -151,11 +147,12 @@ CCI.direction <- function(formula,
   rhs_vars <- all.vars(formula[[3]])
   X_var <- rhs_vars[1]
   Z_vars <- rhs_vars[-1]
+  Z_part <- if (length(Z_vars) == 0) "1" else paste(Z_vars, collapse = "+")  # 1 = unconditional test
   # Return the selected formula
   if (best_direction == "Y ~ X | Z") {
-    final_formula <- as.formula(paste(outcome_var, "~", X_var, "|", paste(Z_vars, collapse = "+")))
+    final_formula <- as.formula(paste(outcome_var, "~", X_var, "|", Z_part))
   } else {
-    final_formula <- as.formula(paste(X_var, "~", outcome_var, "|", paste(Z_vars, collapse = "+")))
+    final_formula <- as.formula(paste(X_var, "~", outcome_var, "|", Z_part))
   }
   if (verbose) {
     cat("Selected formula:", deparse(final_formula), "\n")

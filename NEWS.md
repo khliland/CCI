@@ -1,5 +1,13 @@
 # CCI 0.3.7
 
+## New features
+
+* Unconditional tests of Y ⊥ X (no conditioning variables) are now supported.
+  Write the formula as `Y ~ X | 1` or `Y ~ X + 1`. A formula without
+  conditioning variables and without the explicit `1`, such as `Y ~ X`, gives
+  an error explaining the syntax. This works in `CCI.test()`, `perm.test()`,
+  `CCI.pretuner()`, `CCI.direction()` and `QQplot()`.
+
 ## Bug fixes
 
 * `metric = "LogLoss"` now uses a left-tailed test. Earlier versions used the
